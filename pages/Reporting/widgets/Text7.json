@@ -1,0 +1,63 @@
+{
+  "animateLoading": true,
+  "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
+  "bottomRow": 233,
+  "dynamicBindingPathList": [
+    {
+      "key": "truncateButtonColor"
+    },
+    {
+      "key": "fontFamily"
+    },
+    {
+      "key": "borderRadius"
+    },
+    {
+      "key": "text"
+    },
+    {
+      "key": "isVisible"
+    }
+  ],
+  "dynamicHeight": "AUTO_HEIGHT",
+  "dynamicPropertyPathList": [
+    {
+      "key": "isVisible"
+    }
+  ],
+  "dynamicTriggerPathList": [],
+  "fontFamily": "{{appsmith.theme.fontFamily.appFont}}",
+  "fontSize": "1rem",
+  "fontStyle": "BOLD",
+  "isLoading": false,
+  "isVisible": "{{ReportTypeSelect.selectedOptionValue === 'service_billing'}}",
+  "key": "6afsfw35ma",
+  "leftColumn": 0,
+  "maxDynamicHeight": 9000,
+  "minDynamicHeight": 4,
+  "minWidth": 450,
+  "mobileBottomRow": 247,
+  "mobileLeftColumn": 0,
+  "mobileRightColumn": 4,
+  "mobileTopRow": 243,
+  "needsErrorInfo": false,
+  "originalBottomRow": 233,
+  "originalTopRow": 229,
+  "overflow": "NONE",
+  "parentColumnSpace": 17.859375,
+  "parentId": "0",
+  "parentRowSpace": 10,
+  "renderMode": "CANVAS",
+  "responsiveBehavior": "fill",
+  "rightColumn": 41,
+  "shouldTruncate": false,
+  "text": "  {{(() => {\n      // Calculate total from delivered and returned orders (both billable)\n      const orders = ServiceBillingReport.data || [];\n      const billableOrders = orders.filter(order =>\n        order.billing_status === 'Billable - Delivered ✅' ||\n        order.billing_status === 'Billable - Returned ↩️'\n      );\n      const totalUSD = billableOrders.reduce((sum, order) =>\n        sum + (parseFloat(order.order_fee_usd) || 0), 0\n      );\n\n      const BGN_TO_EUR = 0.511292; // 1 USD = 0.92 EUR (approximate)\n\n      const totalEUR = totalUSD * BGN_TO_EUR;\n\n      return `💰 Total Amount Owed: ${totalUSD.toFixed(2)} BGN | ${totalEUR.toFixed(2)} EUR`;\n    })()}}",
+  "textAlign": "LEFT",
+  "textColor": "#231F20",
+  "topRow": 229,
+  "truncateButtonColor": "{{appsmith.theme.colors.primaryColor}}",
+  "type": "TEXT_WIDGET",
+  "version": 1,
+  "widgetId": "faaond50xu",
+  "widgetName": "Text7"
+}

@@ -1,0 +1,67 @@
+{
+  "accentColor": "{{appsmith.theme.colors.primaryColor}}",
+  "animateLoading": true,
+  "autoFocus": false,
+  "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
+  "bottomRow": 13,
+  "boxShadow": "none",
+  "defaultText": "",
+  "dynamicBindingPathList": [
+    {
+      "key": "accentColor"
+    },
+    {
+      "key": "borderRadius"
+    }
+  ],
+  "dynamicHeight": "FIXED",
+  "dynamicPropertyPathList": [
+    {
+      "key": "onTextChanged"
+    }
+  ],
+  "dynamicTriggerPathList": [
+    {
+      "key": "onTextChanged"
+    }
+  ],
+  "iconAlign": "left",
+  "inputType": "TEXT",
+  "isDisabled": false,
+  "isLoading": false,
+  "isRequired": false,
+  "isVisible": true,
+  "key": "gnxtfpd5ih",
+  "label": "Pickup Address",
+  "labelAlignment": "left",
+  "labelPosition": "Top",
+  "labelStyle": "",
+  "labelTextSize": "0.875rem",
+  "labelWidth": 5,
+  "leftColumn": 1,
+  "maxDynamicHeight": 9000,
+  "minDynamicHeight": 4,
+  "minWidth": 450,
+  "mobileBottomRow": 12,
+  "mobileLeftColumn": 1,
+  "mobileRightColumn": 21,
+  "mobileTopRow": 5,
+  "needsErrorInfo": false,
+  "onTextChanged": "{{(() => {\n     // Clear existing timeout\n     clearInterval(appsmith.store.newPickupGeoTimeout);\n\n     if (NewPickupAddressInput.text && NewPickupAddressInput.text.length > 2) {\n       // Create new timeout\n       const timeoutId = setInterval(() => {\n         GeocodeNewPickupAddress.run().then(() => {\n           if (GeocodeNewPickupAddress.data?.length > 0) {\n             LocationManager.updateNewPickupFromGeocode();\n           }\n         });\n         // Clear after running once\n         clearInterval(appsmith.store.newPickupGeoTimeout);\n       }, 1500);\n\n       // Store timeout ID\n       storeValue('newPickupGeoTimeout', timeoutId);\n     }\n   })()}}",
+  "originalBottomRow": 13,
+  "originalTopRow": 6,
+  "parentColumnSpace": 16.1146240234375,
+  "parentId": "z6y81ags76",
+  "parentRowSpace": 10,
+  "placeholderText": "Enter full address (e.g., 123 Main St, Sofia, Bulgaria)",
+  "renderMode": "CANVAS",
+  "resetOnSubmit": true,
+  "responsiveBehavior": "fill",
+  "rightColumn": 27,
+  "showStepArrows": false,
+  "topRow": 6,
+  "type": "INPUT_WIDGET_V2",
+  "version": 2,
+  "widgetId": "2dxqat7w43",
+  "widgetName": "NewPickupAddressInput"
+}

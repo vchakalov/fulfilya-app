@@ -1,0 +1,32 @@
+  SELECT
+    COALESCE(e.sku, CONCAT('ITEM-', ROW_NUMBER() OVER ())) as item_id,
+    e.name,
+    e.description,
+    e.price,
+    e.sale_price,
+    COUNT(*) as quantity,
+    MIN(e.weight) as weight,
+    e.dimensions_unit,
+    e.weight_unit,
+    e.sku,
+    GROUP_CONCAT(DISTINCT tn.tracking_number SEPARATOR ', ') as tracking_numbers,
+    (e.price * COUNT(*)) as line_total
+  FROM entities e
+  JOIN payloads p ON e.payload_uuid = p.uuid
+  JOIN orders o ON o.payload_uuid = p.uuid
+  LEFT JOIN tracking_numbers tn ON e.uuid = tn.owner_uuid AND tn.owner_type = 'Fleetbase\\FleetOps\\Models\\Entity'
+  WHERE o.public_id = {{OrdersTable.selectedRow.order_id}}
+    AND e.deleted_at <=> NULL
+  GROUP BY
+    CASE
+      WHEN e.sku <=> NULL = 0 AND e.sku != '' THEN e.sku
+      ELSE CONCAT(e.name, '|', e.price, '|', COALESCE(e.description, ''))
+    END,
+    e.name,
+    e.description,
+    e.price,
+    e.sale_price,
+    e.dimensions_unit,
+    e.weight_unit,
+    e.sku
+  ORDER BY e.name;

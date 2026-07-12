@@ -1,0 +1,12 @@
+  SELECT
+    sq.uuid as service_quote_uuid,
+    sq.public_id,
+    sq.amount,
+    sq.currency,
+    sr.service_name
+  FROM service_quotes sq
+  JOIN service_rates sr ON sq.service_rate_uuid = sr.uuid
+  WHERE sq.service_rate_uuid = '{{OrderShippingSelect.selectedOptionValue}}'
+    AND sq.deleted_at IS NULL
+  ORDER BY sq.created_at DESC
+  LIMIT 1;

@@ -1,0 +1,67 @@
+{
+  "accentColor": "{{appsmith.theme.colors.primaryColor}}",
+  "animateLoading": true,
+  "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
+  "bottomRow": 14,
+  "boxShadow": "none",
+  "defaultOptionValue": "{\"label\": \"📦 All Orders\", \"value\": \"all_orders\"}",
+  "dynamicBindingPathList": [
+    {
+      "key": "accentColor"
+    },
+    {
+      "key": "borderRadius"
+    }
+  ],
+  "dynamicHeight": "FIXED",
+  "dynamicPropertyPathList": [
+    {
+      "key": "sourceData"
+    },
+    {
+      "key": "onOptionChange"
+    }
+  ],
+  "dynamicTriggerPathList": [
+    {
+      "key": "onOptionChange"
+    }
+  ],
+  "isDisabled": false,
+  "isFilterable": false,
+  "isLoading": false,
+  "isRequired": false,
+  "isVisible": true,
+  "key": "2du83gvy9e",
+  "labelAlignment": "left",
+  "labelPosition": "Top",
+  "labelText": "",
+  "labelTextSize": "0.875rem",
+  "labelWidth": 5,
+  "leftColumn": 19,
+  "maxDynamicHeight": 9000,
+  "minDynamicHeight": 4,
+  "minWidth": 450,
+  "mobileBottomRow": 22,
+  "mobileLeftColumn": 19,
+  "mobileRightColumn": 39,
+  "mobileTopRow": 15,
+  "needsErrorInfo": false,
+  "onOptionChange": "{{ReportManager.switchReport(ReportTypeSelect.selectedOptionValue)}}",
+  "optionLabel": "label",
+  "optionValue": "value",
+  "parentColumnSpace": 9.60205078125,
+  "parentId": "kj2dduef6j",
+  "parentRowSpace": 10,
+  "placeholderText": "Select report",
+  "renderMode": "CANVAS",
+  "responsiveBehavior": "fill",
+  "rightColumn": 58,
+  "serverSideFiltering": false,
+  "sourceData": "[  {\"label\": \"📦 All Orders Report\", \"value\": \"all_orders\"}, {\n    \"label\": \"💰 Service Billing\",\n    \"value\": \"service_billing\"\n  }\n             ]",
+  "topRow": 10,
+  "type": "SELECT_WIDGET",
+  "version": 1,
+  "widgetId": "sxchh9p2td",
+  "widgetName": "ReportTypeSelect"
+}

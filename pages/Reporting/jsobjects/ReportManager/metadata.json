@@ -1,0 +1,16 @@
+{
+  "gitSyncId": "68600ba97c31ed49d151bad2_c6414e53-aa78-4f21-a063-b70f66f6ffd0",
+  "id": "Reporting_ReportManager",
+  "unpublishedCollection": {
+    "name": "ReportManager",
+    "pageId": "Reporting",
+    "pluginId": "js-plugin",
+    "pluginType": "JS",
+    "variables": [
+      {
+        "name": "currentReport",
+        "value": "'all_orders'"
+      }
+    ]
+  }
+}

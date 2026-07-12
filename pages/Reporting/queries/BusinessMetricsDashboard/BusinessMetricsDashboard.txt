@@ -1,0 +1,67 @@
+  SELECT
+    -- Time Period Info
+    '{{moment(StartDatePicker.selectedDate).format("YYYY-MM-DD")}}' as period_start,
+    '{{moment(EndDatePicker.selectedDate).format("YYYY-MM-DD")}}' as period_end,
+    DATEDIFF('{{moment(EndDatePicker.selectedDate).format("YYYY-MM-DD")}}',
+  '{{moment(StartDatePicker.selectedDate).format("YYYY-MM-DD")}}') + 1 as total_days,
+
+    -- Order Volume KPIs  
+    COUNT(DISTINCT o.uuid) as total_orders,
+    ROUND(COUNT(DISTINCT o.uuid) / (DATEDIFF('{{moment(EndDatePicker.selectedDate).format("YYYY-MM-DD")}}',
+  '{{moment(StartDatePicker.selectedDate).format("YYYY-MM-DD")}}') + 1), 1) as avg_orders_per_day,
+    COUNT(DISTINCT o.customer_uuid) as active_customers,
+    ROUND(COUNT(DISTINCT o.uuid) / COUNT(DISTINCT o.customer_uuid), 1) as avg_orders_per_customer,
+
+    -- Payment Method Distribution
+    COUNT(DISTINCT CASE WHEN payment_data.payment_method = 'COD' THEN o.uuid END) as cod_orders_count,
+    COUNT(DISTINCT CASE WHEN payment_data.payment_method = 'Paid' THEN o.uuid END) as paid_orders_count,
+    ROUND(COUNT(DISTINCT CASE WHEN payment_data.payment_method = 'COD' THEN o.uuid END) * 100.0 / COUNT(DISTINCT o.uuid), 1) as
+  cod_percentage,
+    ROUND(COUNT(DISTINCT CASE WHEN payment_data.payment_method = 'Paid' THEN o.uuid END) * 100.0 / COUNT(DISTINCT o.uuid), 1) as
+  paid_percentage,
+
+    -- Revenue Metrics
+    SUM(CASE
+      WHEN (o.status = 'delivered' OR payment_data.payment_method = 'Paid') AND payment_data.cod_amount > 0
+      THEN payment_data.cod_amount
+      ELSE 0
+    END) as total_revenue,
+
+    ROUND(AVG(CASE WHEN payment_data.cod_amount > 0 THEN payment_data.cod_amount END), 2) as avg_order_value,
+
+    SUM(CASE
+      WHEN payment_data.payment_method = 'COD' AND o.status IN ('created', 'dispatched', 'in_transit') AND payment_data.cod_amount > 0
+      THEN payment_data.cod_amount
+      ELSE 0
+    END) as pending_cod_amount,
+
+    -- Performance KPIs
+    COUNT(DISTINCT CASE WHEN o.status = 'delivered' THEN o.uuid END) as delivered_orders,
+    COUNT(DISTINCT CASE WHEN o.status = 'canceled' THEN o.uuid END) as cancelled_orders,
+    COUNT(DISTINCT CASE WHEN o.status IN ('created', 'dispatched', 'in_transit') THEN o.uuid END) as active_orders,
+
+    ROUND(COUNT(DISTINCT CASE WHEN o.status = 'delivered' THEN o.uuid END) * 100.0 / COUNT(DISTINCT o.uuid), 1) as
+  overall_delivery_rate,
+    ROUND(COUNT(DISTINCT CASE WHEN o.status = 'canceled' THEN o.uuid END) * 100.0 / COUNT(DISTINCT o.uuid), 1) as cancellation_rate,
+
+    -- Operational Metrics
+    COUNT(DISTINCT payment_data.store_type) as active_store_platforms,
+    COUNT(DISTINCT o.driver_assigned_uuid) as drivers_utilized
+
+  FROM orders o
+  LEFT JOIN (
+    SELECT
+      o2.uuid,
+      MAX(CASE WHEN cf.name = 'payment-method' THEN cfv.value END) as payment_method,
+      MAX(CASE WHEN cf.name = 'store-type' THEN cfv.value END) as store_type,
+      COALESCE(CAST(MAX(CASE WHEN cf.name = 'cod-amount:' THEN REPLACE(REPLACE(cfv.value, '$', ''), ',', '') END) AS DECIMAL(10,2)), 0)
+   as cod_amount
+    FROM orders o2
+    LEFT JOIN custom_field_values cfv ON o2.uuid = cfv.subject_uuid AND cfv.subject_type = 'Fleetbase\\FleetOps\\Models\\Order'
+    LEFT JOIN custom_fields cf ON cfv.custom_field_uuid = cf.uuid
+    WHERE cf.name IN ('payment-method', 'cod-amount:', 'store-type')
+    GROUP BY o2.uuid
+  ) payment_data ON o.uuid = payment_data.uuid
+   WHERE o.customer_uuid = '{{appsmith.store.customer_uuid}}'
+    AND DATE(o.created_at) >= '{{moment(StartDatePicker.selectedDate).format("YYYY-MM-DD")}}'
+    AND DATE(o.created_at) <= '{{moment(EndDatePicker.selectedDate).format("YYYY-MM-DD")}}'

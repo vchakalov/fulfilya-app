@@ -1,0 +1,18 @@
+  -- UpdatePickupLocationWithCoords
+  UPDATE places
+  SET
+    name = SUBSTRING_INDEX('{{PickupAddressInput.text}}', ',', 1),
+    street1 = '{{PickupAddressInput.text}}',
+    latitude = '{{PickupLatHidden.text}}',
+    longitude = '{{PickupLngHidden.text}}',
+    location = ST_GeomFromText(CONCAT('POINT(', '{{PickupLngHidden.text}}', ' ', '{{PickupLatHidden.text}}', ')')),
+    updated_at = NOW()
+  WHERE uuid = (
+    SELECT p.pickup_uuid
+    FROM orders o
+    JOIN payloads p ON o.payload_uuid = p.uuid
+    WHERE o.public_id = '{{OrdersTable.selectedRow.order_id}}'
+    LIMIT 1
+  )
+  AND LENGTH('{{PickupLatHidden.text}}') > 0
+  AND LENGTH('{{PickupLngHidden.text}}') > 0;

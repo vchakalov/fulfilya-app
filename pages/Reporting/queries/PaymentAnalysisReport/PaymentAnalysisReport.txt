@@ -1,0 +1,46 @@
+  SELECT
+    COALESCE(payment_data.payment_method, 'Not Specified') as payment_method,
+    COUNT(DISTINCT o.uuid) as total_orders,
+    COUNT(DISTINCT CASE WHEN o.status = 'delivered' THEN o.uuid END) as delivered_orders,
+    COUNT(DISTINCT CASE WHEN o.status = 'canceled' THEN o.uuid END) as cancelled_orders,
+    COUNT(DISTINCT CASE WHEN o.status IN ('created', 'dispatched', 'in_transit') THEN o.uuid END) as in_progress_orders,
+
+    -- Success Rates
+    ROUND(COUNT(DISTINCT CASE WHEN o.status = 'delivered' THEN o.uuid END) * 100.0 / COUNT(DISTINCT o.uuid), 1) as
+  delivery_success_rate,
+    ROUND(COUNT(DISTINCT CASE WHEN o.status = 'canceled' THEN o.uuid END) * 100.0 / COUNT(DISTINCT o.uuid), 1) as cancellation_rate,
+
+    -- Financial Analysis
+    SUM(CASE
+      WHEN o.status = 'delivered' AND payment_data.cod_amount > 0
+      THEN payment_data.cod_amount
+      ELSE 0
+    END) as total_revenue,
+
+    SUM(CASE
+      WHEN o.status IN ('created', 'dispatched', 'in_transit') AND payment_data.cod_amount > 0
+      THEN payment_data.cod_amount
+      ELSE 0
+    END) as pending_revenue,
+
+    -- Average Order Value
+    ROUND(AVG(CASE WHEN payment_data.cod_amount > 0 THEN payment_data.cod_amount END), 2) as avg_order_value
+
+  FROM orders o
+  LEFT JOIN (
+    SELECT
+      o2.uuid,
+      MAX(CASE WHEN cf.name = 'payment-method' THEN cfv.value END) as payment_method,
+      COALESCE(CAST(MAX(CASE WHEN cf.name = 'cod-amount:' THEN REPLACE(REPLACE(cfv.value, '$', ''), ',', '') END) AS DECIMAL(10,2)), 0)
+   as cod_amount
+    FROM orders o2
+    LEFT JOIN custom_field_values cfv ON o2.uuid = cfv.subject_uuid AND cfv.subject_type = 'Fleetbase\\FleetOps\\Models\\Order'
+    LEFT JOIN custom_fields cf ON cfv.custom_field_uuid = cf.uuid
+    WHERE cf.name IN ('payment-method', 'cod-amount:')
+    GROUP BY o2.uuid
+  ) payment_data ON o.uuid = payment_data.uuid
+  WHERE o.customer_uuid = '{{appsmith.store.customer_uuid}}'
+    AND o.created_at >= '{{moment(StartDatePicker.selectedDate).format("YYYY-MM-DD")}}'
+    AND o.created_at <= '{{moment(EndDatePicker.selectedDate).format("YYYY-MM-DD")}} 23:59:59'
+  GROUP BY COALESCE(payment_data.payment_method, 'Not Specified')
+  ORDER BY total_orders DESC;

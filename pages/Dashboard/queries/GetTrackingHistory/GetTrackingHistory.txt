@@ -1,0 +1,13 @@
+SELECT 
+  ts.status,
+  ts.details,
+  ts.created_at,
+  ts.latitude,
+  ts.longitude,
+  ts.city,
+  ts.complete
+FROM tracking_statuses ts
+JOIN tracking_numbers tn ON ts.tracking_number_uuid = tn.uuid
+JOIN orders o ON o.tracking_number_uuid = tn.uuid
+WHERE o.public_id = {{OrdersTable.selectedRow.order_id || 'order_7JtwugB'}}
+ORDER BY ts.created_at ASC;

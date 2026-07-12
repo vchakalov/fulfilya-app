@@ -1,0 +1,108 @@
+  SELECT
+    o.public_id as order_id,
+    DATE_FORMAT(o.created_at, '%Y-%m-%d') as order_date,
+    o.status as raw_status,
+
+    -- Service information
+    COALESCE(sr.service_name, 'No Service Rate') as service_rate_name,
+    ROUND(COALESCE(o.distance, 0) / 1000.0, 2) as distance_km,
+
+    -- ACTUAL QUOTED PRICE (from service_quotes.amount via purchase_rate)
+    CASE
+      WHEN (o.status = 'completed' AND NOT EXISTS (
+        SELECT 1 FROM activity a
+        WHERE a.subject_id = o.uuid
+        AND JSON_EXTRACT(a.properties, '$.attributes.status') = 'order_cancelled'
+      )) OR EXISTS (
+        SELECT 1 FROM activity a
+        WHERE a.subject_id = o.uuid
+        AND JSON_EXTRACT(a.properties, '$.attributes.status') = 'order_returned'
+      ) THEN ROUND(COALESCE(sq.amount, 0) / 100.0, 2)
+      ELSE 0.00
+    END as order_fee_usd,
+
+    -- Determine actual billing status based on activity
+    CASE
+			WHEN o.status = 'completed' AND EXISTS (
+			  SELECT 1 from activity a 
+				where a.subject_id = o.uuid
+				AND JSON_EXTRACT(a.properties, '$.attributes.status') IN ('order_cod_completed')
+			) THEN 'Delivered & Card'
+      WHEN o.status = 'completed' AND NOT EXISTS (
+        SELECT 1 FROM activity a
+        WHERE a.subject_id = o.uuid
+        AND JSON_EXTRACT(a.properties, '$.attributes.status') IN ('order_returned', 'order_cancelled')
+      ) THEN 'Delivered'
+      WHEN EXISTS (
+        SELECT 1 FROM activity a
+        WHERE a.subject_id = o.uuid
+        AND JSON_EXTRACT(a.properties, '$.attributes.status') = 'order_returned'
+      ) THEN 'Returned'
+      WHEN EXISTS (
+        SELECT 1 FROM activity a
+        WHERE a.subject_id = o.uuid
+        AND JSON_EXTRACT(a.properties, '$.attributes.status') = 'order_cancelled'
+      ) THEN 'Cancelled'
+      ELSE o.status
+    END as actual_status,
+
+    -- Billing status for display
+    CASE
+      WHEN o.status = 'completed' AND NOT EXISTS (
+        SELECT 1 FROM activity a
+        WHERE a.subject_id = o.uuid
+        AND JSON_EXTRACT(a.properties, '$.attributes.status') IN ('order_returned', 'order_cancelled')
+      ) THEN 'Billable - Delivered ✅'
+      WHEN EXISTS (
+        SELECT 1 FROM activity a
+        WHERE a.subject_id = o.uuid
+        AND JSON_EXTRACT(a.properties, '$.attributes.status') = 'order_returned'
+      ) THEN 'Billable - Returned ↩️'
+      WHEN EXISTS (
+        SELECT 1 FROM activity a
+        WHERE a.subject_id = o.uuid
+        AND JSON_EXTRACT(a.properties, '$.attributes.status') = 'order_cancelled'
+      ) THEN 'Not Billable - Cancelled ❌'
+      ELSE 'Other'
+    END as billing_status,
+
+    -- Additional order info
+    COALESCE(pickup.name, 'Unknown') as pickup_location,
+    COALESCE(dropoff.name, 'Unknown') as dropoff_location,
+    COALESCE(MAX(CASE WHEN cf.name = 'payment-method' THEN cfv.value END), 'Not Specified') as payment_method
+
+  FROM orders o
+  -- Use purchase_rate to get the actual service quote amount
+  JOIN purchase_rates pr ON o.purchase_rate_uuid = pr.uuid
+  JOIN service_quotes sq ON pr.service_quote_uuid = sq.uuid
+  LEFT JOIN service_rates sr ON sq.service_rate_uuid = sr.uuid
+  LEFT JOIN custom_field_values cfv ON o.uuid = cfv.subject_uuid AND cfv.subject_type = 'Fleetbase\\FleetOps\\Models\\Order'
+  LEFT JOIN custom_fields cf ON cfv.custom_field_uuid = cf.uuid
+  LEFT JOIN payloads p ON o.payload_uuid = p.uuid
+  LEFT JOIN places pickup ON p.pickup_uuid = pickup.uuid
+  LEFT JOIN places dropoff ON p.dropoff_uuid = dropoff.uuid
+
+  WHERE o.customer_uuid = '{{appsmith.store.customer_uuid}}'
+    AND DATE(o.created_at) >= COALESCE(
+      NULLIF('{{StartDatePicker.formattedDate}}', ''),
+      DATE(NOW()) - INTERVAL 30 DAY
+    )
+    AND DATE(o.created_at) <= COALESCE(
+      NULLIF('{{EndDatePicker.formattedDate}}', ''),
+      DATE(NOW())
+    )
+    -- Only include orders that have billing events
+    AND (
+      o.status = 'completed'
+      OR EXISTS (
+        SELECT 1 FROM activity a
+        WHERE a.subject_id = o.uuid
+        AND JSON_EXTRACT(a.properties, '$.attributes.status') IN ('order_returned', 'order_cancelled')
+      )
+    )
+
+  GROUP BY
+    o.uuid, o.public_id, o.created_at, o.status, o.distance,
+    sq.amount, sr.service_name, pickup.name, dropoff.name
+
+  ORDER BY o.created_at DESC;

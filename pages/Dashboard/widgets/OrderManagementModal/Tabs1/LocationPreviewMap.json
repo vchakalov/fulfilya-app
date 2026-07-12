@@ -1,0 +1,57 @@
+{
+  "allowZoom": true,
+  "animateLoading": true,
+  "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
+  "bottomRow": 71,
+  "boxShadow": "{{appsmith.theme.boxShadow.appBoxShadow}}",
+  "defaultMarkers": "{{(() => {\n    const markers = [];\n    \n    // Pickup marker (green)\n    const pickupLat = PickupLatHidden.text || GetOrderDetails.data[0]?.pickup_lat;\n    const pickupLng = PickupLngHidden.text || GetOrderDetails.data[0]?.pickup_lng;\n    if (pickupLat && pickupLng) {\n      markers.push({\n        lat: parseFloat(pickupLat),\n        long: parseFloat(pickupLng),\n        title: \"📍 Pickup: \" + (PickupAddressInput.text || GetOrderDetails.data[0]?.pickup_name),\n        color: \"green\"\n      });\n    }\n    \n    // Dropoff marker (red)\n    const dropoffLat = DropoffLatHidden.text || GetOrderDetails.data[0]?.dropoff_lat;\n    const dropoffLng = DropoffLngHidden.text || GetOrderDetails.data[0]?.dropoff_lng;\n    if (dropoffLat && dropoffLng) {\n      markers.push({\n        lat: parseFloat(dropoffLat),\n        long: parseFloat(dropoffLng),\n        title: \"🚚 Delivery: \" + (DropoffAddressInput.text || GetOrderDetails.data[0]?.dropoff_name),\n        color: \"red\"\n      });\n    }\n    \n    return markers;\n  })()}}",
+  "dynamicBindingPathList": [
+    {
+      "key": "borderRadius"
+    },
+    {
+      "key": "boxShadow"
+    },
+    {
+      "key": "defaultMarkers"
+    }
+  ],
+  "dynamicPropertyPathList": [],
+  "dynamicTriggerPathList": [],
+  "enableCreateMarker": false,
+  "enableMapTypeControl": false,
+  "enablePickLocation": true,
+  "enableSearch": false,
+  "flexVerticalAlignment": "start",
+  "isClickedMarkerCentered": true,
+  "isDisabled": false,
+  "isLoading": false,
+  "isVisible": true,
+  "key": "ypoed5oovn",
+  "leftColumn": 0,
+  "mapCenter": {
+    "lat": 42.697705,
+    "long": 23.3217462,
+    "title": "Sofia Center, Sofia, Bulgaria"
+  },
+  "minWidth": 450,
+  "mobileBottomRow": 73,
+  "mobileLeftColumn": 0,
+  "mobileRightColumn": 12,
+  "mobileTopRow": 33,
+  "needsErrorInfo": false,
+  "originalBottomRow": 64,
+  "originalTopRow": 24,
+  "parentColumnSpace": 9.63828125,
+  "parentId": "imxgvif03d",
+  "parentRowSpace": 10,
+  "renderMode": "CANVAS",
+  "responsiveBehavior": "fill",
+  "rightColumn": 62,
+  "topRow": 31,
+  "type": "MAP_WIDGET",
+  "version": 1,
+  "widgetId": "d87et0rc6j",
+  "widgetName": "LocationPreviewMap",
+  "zoomLevel": 55
+}

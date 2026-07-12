@@ -1,0 +1,24 @@
+UPDATE orders o
+JOIN contacts c ON o.customer_uuid = c.uuid
+SET 
+  o.purchase_rate_uuid = (
+    -- Find ANY existing purchase_rate for the selected service_rate
+    -- Using the same customer email logic as GetAvailableServiceRates
+    SELECT pr.uuid
+    FROM service_rates sr
+    JOIN service_quotes sq ON sr.uuid = sq.service_rate_uuid
+    JOIN purchase_rates pr ON sq.uuid = pr.service_quote_uuid
+    WHERE sr.uuid = '{{serviceRateUuid}}'
+      AND sr.company_uuid = o.company_uuid
+      AND sr.deleted_at IS NULL
+      AND sr.service_type = 'e-commerce-with-cod'
+      AND (
+        sr.service_name = CONCAT(c.email, '-standard')
+        OR sr.service_name = CONCAT(c.email, '-express')
+      )
+      AND sq.deleted_at IS NULL
+      AND pr.deleted_at IS NULL
+    LIMIT 1
+  ),
+  o.updated_at = NOW()
+WHERE o.public_id = '{{OrdersTable.selectedRow.order_id}}';

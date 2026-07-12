@@ -1,0 +1,55 @@
+{
+  "animateLoading": true,
+  "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
+  "bottomRow": 8,
+  "dynamicBindingPathList": [
+    {
+      "key": "truncateButtonColor"
+    },
+    {
+      "key": "fontFamily"
+    },
+    {
+      "key": "borderRadius"
+    },
+    {
+      "key": "text"
+    }
+  ],
+  "dynamicHeight": "AUTO_HEIGHT",
+  "dynamicTriggerPathList": [],
+  "fontFamily": "{{appsmith.theme.fontFamily.appFont}}",
+  "fontSize": "1rem",
+  "fontStyle": "BOLD",
+  "isLoading": false,
+  "isVisible": true,
+  "key": "osgguplw3e",
+  "leftColumn": 21,
+  "maxDynamicHeight": 9000,
+  "minDynamicHeight": 4,
+  "minWidth": 450,
+  "mobileBottomRow": 4,
+  "mobileLeftColumn": 0,
+  "mobileRightColumn": 16,
+  "mobileTopRow": 0,
+  "needsErrorInfo": false,
+  "originalBottomRow": 11,
+  "originalTopRow": 7,
+  "overflow": "NONE",
+  "parentColumnSpace": 9.265625,
+  "parentId": "ns7hpdm4m3",
+  "parentRowSpace": 10,
+  "renderMode": "CANVAS",
+  "responsiveBehavior": "fill",
+  "rightColumn": 37,
+  "shouldTruncate": false,
+  "text": "{{(() => {\n                    const type = ReportTypeSelect.selectedOptionValue;\n                    switch(type) {\n                      case 'all_orders': \n                        return AllOrdersReport.data?.length || 0;\n                      case 'daily_cash_flow': \n                        return DailyCashFlowReport.data?.reduce((sum, row) => sum + row.total_orders, 0) || 0;\n                      case 'payment_analysis': \n                        return PaymentAnalysisReport.data?.reduce((sum, row) => sum + row.total_orders, 0) || 0;\n                      case 'monthly_summary': \n                        return MonthlyFinancialSummary.data?.reduce((sum, row) => sum + row.total_orders, 0) || 0;\n                      case 'business_metrics': \n                        return BusinessMetricsDashboard.data?.[0]?.total_orders || 0;\n                      default: \n                        return 0;\n                    }\n                  })()}}",
+  "textAlign": "CENTER",
+  "textColor": "#1f2937",
+  "topRow": 4,
+  "truncateButtonColor": "{{appsmith.theme.colors.primaryColor}}",
+  "type": "TEXT_WIDGET",
+  "version": 1,
+  "widgetId": "0s8zvg3uyn",
+  "widgetName": "Text4Copy"
+}

@@ -1,0 +1,154 @@
+START TRANSACTION;
+
+-- Create pickup place
+SET @pickup_uuid = UUID();
+INSERT INTO places (
+  uuid, 
+  public_id,
+  company_uuid,
+  name,
+  street1,
+  latitude,
+  longitude,
+  location,
+  type,
+  created_at,
+  updated_at
+) VALUES (
+  @pickup_uuid,
+  CONCAT('place_', SUBSTRING(MD5(RAND()), 1, 7)),
+  '23679f96-daa1-44a7-b614-5413a2e10e9e',
+  SUBSTRING_INDEX('{{NewPickupAddressInput.text}}', ',', 1),
+  '{{NewPickupAddressInput.text}}',
+  '{{NewPickupLatHidden.text}}',
+  '{{NewPickupLngHidden.text}}',
+  ST_GeomFromText(CONCAT('POINT(', '{{NewPickupLngHidden.text}}', ' ', '{{NewPickupLatHidden.text}}', ')')),
+  'place',
+  NOW(),
+  NOW()
+);
+
+-- Create dropoff place
+SET @dropoff_uuid = UUID();
+INSERT INTO places (
+  uuid,
+  public_id,
+  company_uuid,
+  name,
+  street1,
+  latitude,
+  longitude,
+  location,
+  type,
+  created_at,
+  updated_at
+) VALUES (
+  @dropoff_uuid,
+  CONCAT('place_', SUBSTRING(MD5(RAND()), 1, 7)),
+  '23679f96-daa1-44a7-b614-5413a2e10e9e',
+  SUBSTRING_INDEX('{{NewDropoffAddressInput.text}}', ',', 1),
+  '{{NewDropoffAddressInput.text}}',
+  '{{NewDropoffLatHidden.text}}',
+  '{{NewDropoffLngHidden.text}}',
+  ST_GeomFromText(CONCAT('POINT(', '{{NewDropoffLngHidden.text}}', ' ', '{{NewDropoffLatHidden.text}}', ')')),
+  'place',
+  NOW(),
+  NOW()
+);
+
+-- Create payload
+SET @payload_uuid = UUID();
+INSERT INTO payloads (
+  uuid,
+  public_id,
+  company_uuid,
+  pickup_uuid,
+  dropoff_uuid,
+  type,
+  created_at,
+  updated_at
+) VALUES (
+  @payload_uuid,
+  CONCAT('payload_', SUBSTRING(MD5(RAND()), 1, 7)),
+  '23679f96-daa1-44a7-b614-5413a2e10e9e',
+  @pickup_uuid,
+  @dropoff_uuid,
+  'cargo',
+  NOW(),
+  NOW()
+);
+
+-- Create order
+SET @order_uuid = UUID();
+SET @order_public_id = CONCAT('order_', SUBSTRING(MD5(RAND()), 1, 7));
+INSERT INTO orders (
+  uuid,
+  public_id,
+  company_uuid,
+  customer_uuid,
+  customer_type,
+  payload_uuid,
+  order_config_uuid,
+  type,
+  status,
+  scheduled_at,
+  notes,
+  created_at,
+  updated_at
+) VALUES (
+  @order_uuid,
+  @order_public_id,
+  '23679f96-daa1-44a7-b614-5413a2e10e9e',
+  '21816565-c4a5-40f4-a617-c97119105bc5',
+  'Fleetbase\\FleetOps\\Models\\Contact',
+  @payload_uuid,
+  '80465677-b66d-4423-bc82-b6076dd23e6b',
+  'e-commerce-with-cod',
+  'created',
+  STR_TO_DATE('{{moment(ScheduledDeliveryPicker.selectedDate).format("YYYY-MM-DD HH:mm:ss")}}', '%Y-%m-%d %H:%i:%s'),
+  '{{DeliveryNotesInput.text}}',
+  NOW(),
+  NOW()
+);
+
+-- Create tracking number for order
+SET @tracking_uuid = UUID();
+INSERT INTO tracking_numbers (
+  uuid,
+  public_id,
+  owner_uuid,
+  owner_type,
+  tracking_number,
+  region,
+  created_at,
+  updated_at
+) VALUES (
+  @tracking_uuid,
+  CONCAT('track_', SUBSTRING(MD5(RAND()), 1, 7)),
+  @order_uuid,
+  'Fleetbase\\FleetOps\\Models\\Order',
+  CONCAT('ORD', FLOOR(1000000000 + RAND() * 9000000000), 'BG'),
+  'BG',
+  NOW(),
+  NOW()
+);
+
+-- Update order with tracking number
+UPDATE orders SET tracking_number_uuid = @tracking_uuid WHERE uuid = @order_uuid;
+
+-- Insert custom field values
+INSERT INTO custom_field_values (uuid, company_uuid, custom_field_uuid, subject_uuid, subject_type, value, value_type, created_at, updated_at)
+VALUES
+  -- Payment Method
+  (UUID(), '23679f96-daa1-44a7-b614-5413a2e10e9e', 'edac241c-15b7-4df9-b171-089bbd71e6a1', @order_uuid, 'Fleetbase\\FleetOps\\Models\\Order', '{{NewPaymentMethodSelect.selectedOptionValue}}', 'text', NOW(), NOW()),
+  -- COD Amount
+  (UUID(), '23679f96-daa1-44a7-b614-5413a2e10e9e', '61306d56-f3cd-4259-b1a7-3b4605c35442', @order_uuid, 'Fleetbase\\FleetOps\\Models\\Order', CONCAT('$', '{{NewAmountInput.text || "0.00"}}'), 'text', NOW(), NOW()),
+  -- Store Type
+  (UUID(), '23679f96-daa1-44a7-b614-5413a2e10e9e', '9f959d52-adad-4adb-96c4-23b0c19dcd97', @order_uuid, 'Fleetbase\\FleetOps\\Models\\Order', '{{StoreTypeSelect.selectedOptionValue}}', 'text', NOW(), NOW()),
+  -- Order Source ID
+  (UUID(), '23679f96-daa1-44a7-b614-5413a2e10e9e', '1c672697-d260-4b13-a14a-70567f54260d', @order_uuid, 'Fleetbase\\FleetOps\\Models\\Order', '{{OrderSourceIdInput.text || ""}}', 'text', NOW(), NOW());
+
+-- Return the created order ID
+SELECT @order_public_id as order_id;
+
+COMMIT;

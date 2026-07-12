@@ -1,0 +1,14 @@
+  SELECT
+    DATE(o.created_at) as report_date,
+    DAYNAME(DATE(o.created_at)) as day_of_week,
+    COUNT(*) as total_orders,
+    COUNT(CASE WHEN o.status = 'delivered' THEN 1 END) as delivered_orders,
+    COUNT(CASE WHEN o.status = 'canceled' THEN 1 END) as cancelled_orders,
+    ROUND(COUNT(CASE WHEN o.status = 'delivered' THEN 1 END) * 100.0 / COUNT(*), 1) as delivery_rate_percent
+
+  FROM orders o
+  WHERE o.customer_uuid = '{{appsmith.store.customer_uuid || "21816565-c4a5-40f4-a617-c97119105bc5"}}'
+    AND o.created_at >= '{{StartDatePicker.selectedDate || "2025-06-01"}}'
+    AND o.created_at <= '{{EndDatePicker.selectedDate || "2025-07-31"}} 23:59:59'
+  GROUP BY DATE(o.created_at), DAYNAME(DATE(o.created_at))
+  ORDER BY report_date DESC;

@@ -1,0 +1,11 @@
+{
+  "gitSyncId": "68600ba97c31ed49d151bad2_f5da9d23-032c-46e6-9e37-07f2f26b63f5",
+  "id": "Dashboard_LocationManager",
+  "unpublishedCollection": {
+    "name": "LocationManager",
+    "pageId": "Dashboard",
+    "pluginId": "js-plugin",
+    "pluginType": "JS",
+    "variables": []
+  }
+}

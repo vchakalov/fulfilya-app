@@ -1,0 +1,78 @@
+{
+  "accentColor": "{{appsmith.theme.colors.primaryColor}}",
+  "animateLoading": true,
+  "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
+  "bottomRow": 8,
+  "boxShadow": "none",
+  "closeOnSelection": true,
+  "dateFormat": "YYYY-MM-DD",
+  "datePickerType": "DATE_PICKER",
+  "defaultDate": "{{moment().tz('Europe/Sofia').format()}}",
+  "dynamicBindingPathList": [
+    {
+      "key": "accentColor"
+    },
+    {
+      "key": "borderRadius"
+    },
+    {
+      "key": "maxDate"
+    },
+    {
+      "key": "defaultDate"
+    }
+  ],
+  "dynamicHeight": "FIXED",
+  "dynamicPropertyPathList": [
+    {
+      "key": "defaultDate"
+    },
+    {
+      "key": "maxDate"
+    },
+    {
+      "key": "onDateSelected"
+    }
+  ],
+  "dynamicTriggerPathList": [
+    {
+      "key": "onDateSelected"
+    }
+  ],
+  "firstDayOfWeek": 0,
+  "isDisabled": false,
+  "isLoading": false,
+  "isRequired": false,
+  "isVisible": true,
+  "key": "763147u0tc",
+  "label": "From",
+  "labelAlignment": "left",
+  "labelPosition": "Top",
+  "labelTextSize": "0.875rem",
+  "labelWidth": 5,
+  "leftColumn": 19,
+  "maxDate": "{{moment().format('YYYY-MM-DD')}}",
+  "maxDynamicHeight": 9000,
+  "minDate": "1920-12-31T18:30:00.000Z",
+  "minDynamicHeight": 4,
+  "minWidth": 450,
+  "mobileBottomRow": 13,
+  "mobileLeftColumn": 1,
+  "mobileRightColumn": 21,
+  "mobileTopRow": 6,
+  "needsErrorInfo": false,
+  "onDateSelected": "{{ReportManager.refreshAllReports()()}}",
+  "parentColumnSpace": 9.60205078125,
+  "parentId": "kj2dduef6j",
+  "parentRowSpace": 10,
+  "renderMode": "CANVAS",
+  "responsiveBehavior": "fill",
+  "rightColumn": 36,
+  "shortcuts": false,
+  "timePrecision": "minute",
+  "topRow": 1,
+  "type": "DATE_PICKER_WIDGET2",
+  "version": 2,
+  "widgetId": "07cqpp4nl5",
+  "widgetName": "StartDatePicker"
+}

@@ -1,0 +1,80 @@
+{
+  "accentColor": "{{appsmith.theme.colors.primaryColor}}",
+  "allowCurrencyChange": false,
+  "animateLoading": true,
+  "autoFocus": false,
+  "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
+  "bottomRow": 14,
+  "boxShadow": "none",
+  "decimals": 2,
+  "defaultCurrencyCode": "BGN",
+  "defaultText": "{{GetOrderDetails.data[0]?.amount?.replace('$', '')}}",
+  "dynamicBindingPathList": [
+    {
+      "key": "accentColor"
+    },
+    {
+      "key": "borderRadius"
+    },
+    {
+      "key": "defaultText"
+    },
+    {
+      "key": "isDisabled"
+    }
+  ],
+  "dynamicHeight": "FIXED",
+  "dynamicPropertyPathList": [
+    {
+      "key": "isVisible"
+    },
+    {
+      "key": "isDisabled"
+    },
+    {
+      "key": "onTextChanged"
+    }
+  ],
+  "dynamicTriggerPathList": [
+    {
+      "key": "onTextChanged"
+    }
+  ],
+  "iconAlign": "left",
+  "isDisabled": "{{GetOrderDetails.data[0]?.payment_method === 'Paid'}} ",
+  "isLoading": false,
+  "isRequired": false,
+  "isVisible": "true",
+  "key": "3vkfaofi6t",
+  "label": "Amount:",
+  "labelAlignment": "left",
+  "labelPosition": "Top",
+  "labelStyle": "",
+  "labelTextSize": "0.875rem",
+  "labelWidth": 5,
+  "leftColumn": 1,
+  "maxDynamicHeight": 9000,
+  "minDynamicHeight": 4,
+  "minWidth": 450,
+  "mobileBottomRow": 17,
+  "mobileLeftColumn": 1,
+  "mobileRightColumn": 21,
+  "mobileTopRow": 10,
+  "needsErrorInfo": false,
+  "onTextChanged": "{{\n    // Debounce to avoid too many updates\n    clearTimeout(window.codTimeout);\n    window.codTimeout = setTimeout(() => {\n      if (CODAmountInput.text && CODAmountInput.text.length > 0) {\n        UpdateCODAmount.run().then(() => {\n          showAlert(\"COD amount updated!\", \"success\");\n        }).catch(err => {\n          showAlert(\"Error updating COD amount\", \"error\");\n        });\n      }\n    }, 1000);\n  }}",
+  "originalBottomRow": 15,
+  "originalTopRow": 8,
+  "parentColumnSpace": 9.63828125,
+  "parentId": "9wdjgi2xsh",
+  "parentRowSpace": 10,
+  "renderMode": "CANVAS",
+  "resetOnSubmit": true,
+  "responsiveBehavior": "fill",
+  "rightColumn": 21,
+  "showStepArrows": false,
+  "topRow": 7,
+  "type": "CURRENCY_INPUT_WIDGET",
+  "version": 1,
+  "widgetId": "4dscvnxpmv",
+  "widgetName": "CurrencyInput1"
+}

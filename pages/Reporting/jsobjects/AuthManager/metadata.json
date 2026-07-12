@@ -1,0 +1,11 @@
+{
+  "gitSyncId": "68600ba97c31ed49d151bad2_41d6fc5a-e502-46a3-8c35-9e5612c619b1",
+  "id": "Reporting_AuthManager",
+  "unpublishedCollection": {
+    "name": "AuthManager",
+    "pageId": "Reporting",
+    "pluginId": "js-plugin",
+    "pluginType": "JS",
+    "variables": []
+  }
+}

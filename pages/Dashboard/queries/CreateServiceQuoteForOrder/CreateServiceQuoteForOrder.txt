@@ -1,0 +1,28 @@
+  INSERT INTO service_quotes (
+      uuid,
+      public_id,
+      company_uuid,
+      service_rate_uuid,
+      amount,
+      currency,
+      created_at,
+      updated_at
+  )
+  SELECT
+    UUID(),
+    CONCAT('quote_', LEFT(MD5(RAND()), 7)),
+    sr.company_uuid,
+    sr.uuid,
+    sr.base_fee,
+    sr.currency,
+    NOW(),
+    NOW()
+  FROM service_rates sr
+  WHERE sr.uuid = '{{OrderShippingSelect.selectedOptionValue}}'
+    AND sr.deleted_at IS NULL
+    AND NOT EXISTS (
+          SELECT 1 FROM service_quotes sq
+          WHERE sq.service_rate_uuid = sr.uuid
+          AND sq.deleted_at IS NULL
+          AND sq.created_at > DATE_SUB(NOW(), INTERVAL 1 DAY)
+      );

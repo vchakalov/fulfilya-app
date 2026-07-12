@@ -1,0 +1,11 @@
+{
+  "gitSyncId": "68600ba97c31ed49d151bad2_219e047f-3835-4bca-912e-f7e74ebe1fba",
+  "id": "Reporting_PageGuard",
+  "unpublishedCollection": {
+    "name": "PageGuard",
+    "pageId": "Reporting",
+    "pluginId": "js-plugin",
+    "pluginType": "JS",
+    "variables": []
+  }
+}

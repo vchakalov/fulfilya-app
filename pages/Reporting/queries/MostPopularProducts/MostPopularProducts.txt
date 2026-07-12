@@ -1,0 +1,80 @@
+  SELECT
+    -- Product identification
+    COALESCE(NULLIF(e.sku, ''), e.name, 'Unknown Product') as product_identifier,
+    CASE
+      WHEN e.sku IS NOT NULL AND e.sku != '' THEN 'SKU'
+      WHEN e.name IS NOT NULL THEN 'Name'
+      ELSE 'Unknown'
+    END as identifier_type,
+
+    -- Product details
+    e.name as product_name,
+    e.sku as product_sku,
+    COALESCE(e.description, 'No description') as product_description,
+
+    -- Frequency and popularity metrics
+    COUNT(*) as total_orders,
+    COUNT(CASE WHEN o.status IN ('delivered', 'completed') THEN 1 END) as delivered_orders,
+
+    -- Calculate percentage of total orders for this customer
+    ROUND(COUNT(*) * 100.0 / (
+      SELECT COUNT(*)
+      FROM orders o2
+      JOIN payloads p2 ON o2.payload_uuid = p2.uuid
+      JOIN entities e2 ON e2.payload_uuid = p2.uuid
+      WHERE o2.customer_uuid = '{{appsmith.store.customer_uuid}}'
+        AND DATE(o2.created_at) >= COALESCE(
+          NULLIF('{{StartDatePicker.selectedDate}}', ''),
+          DATE(NOW()) - INTERVAL 30 DAY
+        )
+        AND DATE(o2.created_at) <= COALESCE(
+          NULLIF('{{EndDatePicker.selectedDate}}', ''),
+          DATE(NOW())
+        )
+        AND o2.deleted_at IS NULL
+        AND e2.deleted_at IS NULL
+    ), 1) as order_percentage,
+
+    -- Financial metrics
+    COALESCE(AVG(
+      CASE
+        WHEN e.price REGEXP '^[0-9]+\\.?[0-9]*$' THEN CAST(e.price AS DECIMAL(10,2))
+        WHEN e.price REGEXP '^[0-9]+,[0-9]+$' THEN CAST(REPLACE(e.price, ',', '.') AS DECIMAL(10,2))
+        ELSE 0
+      END
+    ), 0) as avg_product_price,
+
+    -- Last ordered
+    DATE_FORMAT(MAX(o.created_at), '%Y-%m-%d') as last_ordered_date,
+
+    -- Order frequency (orders per week in the period)
+    ROUND(COUNT(*) / GREATEST(
+      DATEDIFF(
+        COALESCE(NULLIF('{{EndDatePicker.selectedDate}}', ''), DATE(NOW())),
+        COALESCE(NULLIF('{{StartDatePicker.selectedDate}}', ''), DATE(NOW()) - INTERVAL 30 DAY)
+      ) / 7,
+      1
+    ), 1) as orders_per_week
+
+  FROM orders o
+  JOIN payloads p ON o.payload_uuid = p.uuid
+  JOIN entities e ON e.payload_uuid = p.uuid
+
+  WHERE o.customer_uuid = '{{appsmith.store.customer_uuid}}'
+    AND DATE(o.created_at) >= COALESCE(
+      NULLIF('{{StartDatePicker.selectedDate}}', ''),
+      DATE(NOW()) - INTERVAL 30 DAY
+    )
+    AND DATE(o.created_at) <= COALESCE(
+      NULLIF('{{EndDatePicker.selectedDate}}', ''),
+      DATE(NOW())
+    )
+    AND o.deleted_at IS NULL
+    AND e.deleted_at IS NULL
+
+  GROUP BY
+    COALESCE(NULLIF(e.sku, ''), e.name, 'Unknown Product'),
+    e.name, e.sku, e.description
+
+  ORDER BY total_orders DESC, delivered_orders DESC
+  LIMIT 50;

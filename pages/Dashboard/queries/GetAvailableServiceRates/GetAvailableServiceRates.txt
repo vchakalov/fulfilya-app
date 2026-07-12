@@ -1,0 +1,42 @@
+SELECT 
+  sr.uuid as service_rate_uuid,
+  sr.service_name,
+  sr.base_fee as amount,
+  sr.currency,
+  sr.duration_terms,
+  sr.estimated_days,
+  -- Extract service type from the service name
+  CASE 
+    WHEN sr.service_name LIKE '%-express' THEN 'Express Delivery'
+    WHEN sr.service_name LIKE '%-standard' THEN 'Standard Delivery'
+    ELSE 'Delivery Service'
+  END as display_name,
+  CASE 
+    WHEN sr.service_name LIKE '%-express' THEN '⚡'
+    WHEN sr.service_name LIKE '%-standard' THEN '📦'
+    ELSE '🚚'
+  END as icon,
+  CASE 
+    WHEN sr.service_name LIKE '%-express' THEN CONCAT('Express delivery in ', sr.estimated_days, ' day(s)')
+    WHEN sr.service_name LIKE '%-standard' THEN CONCAT('Standard delivery in ', sr.estimated_days, ' day(s)')
+    ELSE CONCAT('Delivery in ', sr.estimated_days, ' day(s)')
+  END as description
+FROM service_rates sr
+JOIN orders o ON o.public_id = '{{OrdersTable.selectedRow.order_id}}'
+JOIN contacts c ON o.customer_uuid = c.uuid
+WHERE sr.company_uuid = o.company_uuid
+  AND sr.deleted_at IS NULL
+  AND sr.service_type = 'e-commerce-with-cod'
+  -- Filter by customer email pattern
+  AND (
+    sr.service_name = CONCAT(c.email, '-standard')
+    OR sr.service_name = CONCAT(c.email, '-express')
+  )
+ORDER BY 
+  CASE 
+    WHEN sr.service_name LIKE '%-standard' THEN 1
+    WHEN sr.service_name LIKE '%-express' THEN 2
+    ELSE 3
+  END,
+  sr.estimated_days ASC, 
+  sr.base_fee ASC;

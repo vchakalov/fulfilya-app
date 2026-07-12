@@ -1,0 +1,55 @@
+{
+  "animateLoading": true,
+  "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
+  "bottomRow": 20,
+  "boxShadow": "none",
+  "buttonColor": "{{appsmith.theme.colors.primaryColor}}",
+  "buttonVariant": "PRIMARY",
+  "disabledWhenInvalid": false,
+  "dynamicBindingPathList": [
+    {
+      "key": "buttonColor"
+    },
+    {
+      "key": "borderRadius"
+    }
+  ],
+  "dynamicPropertyPathList": [
+    {
+      "key": "onClick"
+    }
+  ],
+  "dynamicTriggerPathList": [
+    {
+      "key": "onClick"
+    }
+  ],
+  "isDefaultClickDisabled": true,
+  "isDisabled": false,
+  "isLoading": false,
+  "isVisible": true,
+  "key": "1680lcn7k2",
+  "leftColumn": 31,
+  "minWidth": 120,
+  "mobileBottomRow": 19,
+  "mobileLeftColumn": 21,
+  "mobileRightColumn": 37,
+  "mobileTopRow": 15,
+  "needsErrorInfo": false,
+  "onClick": "{{ReportManager.setDateRange('week')}}",
+  "parentColumnSpace": 10.390625,
+  "parentId": "kj2dduef6j",
+  "parentRowSpace": 10,
+  "placement": "CENTER",
+  "recaptchaType": "V3",
+  "renderMode": "CANVAS",
+  "resetFormOnClick": false,
+  "responsiveBehavior": "hug",
+  "rightColumn": 42,
+  "text": "WEEK",
+  "topRow": 16,
+  "type": "BUTTON_WIDGET",
+  "version": 1,
+  "widgetId": "wbui8ja73c",
+  "widgetName": "Button2Copy"
+}

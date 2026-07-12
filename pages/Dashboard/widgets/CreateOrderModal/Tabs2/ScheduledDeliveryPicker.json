@@ -1,0 +1,73 @@
+{
+  "accentColor": "{{appsmith.theme.colors.primaryColor}}",
+  "animateLoading": true,
+  "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
+  "bottomRow": 17,
+  "boxShadow": "none",
+  "closeOnSelection": true,
+  "dateFormat": "DD/MM/YYYY HH:mm",
+  "datePickerType": "DATE_PICKER",
+  "defaultDate": "{{moment().add(1,'days').startOf('day').add(9, \"hours\");}}",
+  "dynamicBindingPathList": [
+    {
+      "key": "accentColor"
+    },
+    {
+      "key": "borderRadius"
+    },
+    {
+      "key": "defaultDate"
+    },
+    {
+      "key": "minDate"
+    }
+  ],
+  "dynamicHeight": "FIXED",
+  "dynamicPropertyPathList": [
+    {
+      "key": "dateFormat"
+    },
+    {
+      "key": "minDate"
+    },
+    {
+      "key": "defaultDate"
+    }
+  ],
+  "dynamicTriggerPathList": [],
+  "firstDayOfWeek": 0,
+  "isDisabled": false,
+  "isLoading": false,
+  "isRequired": false,
+  "isVisible": true,
+  "key": "rr3cz5jv4u",
+  "label": "Scheduled Delivery Time",
+  "labelAlignment": "left",
+  "labelPosition": "Top",
+  "labelTextSize": "0.875rem",
+  "labelWidth": 5,
+  "leftColumn": 1,
+  "maxDate": "2121-12-31T18:29:00.000Z",
+  "maxDynamicHeight": 9000,
+  "minDate": "{{moment().add(1,'days').startOf('day').add(9, \"hours\");}}",
+  "minDynamicHeight": 4,
+  "minWidth": 450,
+  "mobileBottomRow": 19,
+  "mobileLeftColumn": 1,
+  "mobileRightColumn": 21,
+  "mobileTopRow": 12,
+  "needsErrorInfo": false,
+  "parentColumnSpace": 16.1146240234375,
+  "parentId": "dqpf5acdio",
+  "parentRowSpace": 10,
+  "renderMode": "CANVAS",
+  "responsiveBehavior": "fill",
+  "rightColumn": 21,
+  "shortcuts": false,
+  "timePrecision": "minute",
+  "topRow": 10,
+  "type": "DATE_PICKER_WIDGET2",
+  "version": 2,
+  "widgetId": "3fnwqepwtu",
+  "widgetName": "ScheduledDeliveryPicker"
+}

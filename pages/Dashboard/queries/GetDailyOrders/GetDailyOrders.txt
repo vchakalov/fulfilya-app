@@ -1,0 +1,10 @@
+  SELECT
+      DATE(created_at) as order_date,
+      COUNT(*) as order_count,
+      COUNT(CASE WHEN status IN ('delivered', 'completed') THEN 1 END) as delivered_count,
+      COUNT(CASE WHEN status IN ('dispatched', 'in_transit') THEN 1 END) as in_transit_count
+  FROM orders
+  WHERE created_at >= DATE_FORMAT(NOW(), '%Y-%m-01') 
+  AND orders.customer_uuid = '{{appsmith.store.customer_uuid}}'
+  GROUP BY DATE(created_at)
+  ORDER BY order_date;

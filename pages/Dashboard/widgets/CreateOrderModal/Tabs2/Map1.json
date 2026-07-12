@@ -1,0 +1,54 @@
+{
+  "allowZoom": true,
+  "animateLoading": true,
+  "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
+  "bottomRow": 64,
+  "boxShadow": "{{appsmith.theme.boxShadow.appBoxShadow}}",
+  "defaultMarkers": "{{(() => {\n     const markers = [];\n     \n     // Pickup marker\n     if (NewPickupLatHidden.text && NewPickupLngHidden.text) {\n       markers.push({\n         lat: parseFloat(NewPickupLatHidden.text),\n         long: parseFloat(NewPickupLngHidden.text),\n         title: \"Pickup: \" + (NewPickupAddressInput.text || \"\"),\n         color: \"green\"\n       });\n     }\n     \n     // Dropoff marker\n     if (NewDropoffLatHidden.text && NewDropoffLngHidden.text) {\n       markers.push({\n         lat: parseFloat(NewDropoffLatHidden.text),\n         long: parseFloat(NewDropoffLngHidden.text),\n         title: \"Delivery: \" + (NewDropoffAddressInput.text || \"\"),\n         color: \"red\"\n       });\n     }\n     \n     return markers;\n   })()}}",
+  "dynamicBindingPathList": [
+    {
+      "key": "borderRadius"
+    },
+    {
+      "key": "boxShadow"
+    },
+    {
+      "key": "defaultMarkers"
+    }
+  ],
+  "dynamicTriggerPathList": [],
+  "enableMapTypeControl": false,
+  "enablePickLocation": false,
+  "enableSearch": false,
+  "flexVerticalAlignment": "start",
+  "isClickedMarkerCentered": true,
+  "isDisabled": false,
+  "isLoading": false,
+  "isVisible": true,
+  "key": "ds9au2y10s",
+  "leftColumn": 1,
+  "mapCenter": {
+    "lat": 40.7128,
+    "long": -74.006
+  },
+  "minWidth": 450,
+  "mobileBottomRow": 63,
+  "mobileLeftColumn": 1,
+  "mobileRightColumn": 25,
+  "mobileTopRow": 23,
+  "needsErrorInfo": false,
+  "originalBottomRow": 64,
+  "originalTopRow": 24,
+  "parentColumnSpace": 16.1146240234375,
+  "parentId": "z6y81ags76",
+  "parentRowSpace": 10,
+  "renderMode": "CANVAS",
+  "responsiveBehavior": "fill",
+  "rightColumn": 62,
+  "topRow": 24,
+  "type": "MAP_WIDGET",
+  "version": 1,
+  "widgetId": "ydte3s4nqg",
+  "widgetName": "Map1",
+  "zoomLevel": 55
+}

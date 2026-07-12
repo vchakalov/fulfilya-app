@@ -1,0 +1,19 @@
+  UPDATE places
+  SET
+    name = SUBSTRING_INDEX('{{DropoffAddressInput.text}}', ',', 1),
+    street1 = '{{DropoffAddressInput.text}}',
+    latitude = '{{DropoffLatHidden.text}}',
+    longitude = '{{DropoffLngHidden.text}}',
+    location = ST_GeomFromText(CONCAT('POINT(', '{{DropoffLngHidden.text}}', ' ', '{{DropoffLatHidden.text}}', ')')),
+    updated_at = NOW()
+  WHERE uuid = (
+    SELECT p.dropoff_uuid
+    FROM orders o
+    JOIN payloads p ON o.payload_uuid = p.uuid
+    WHERE o.public_id = '{{OrdersTable.selectedRow.order_id}}'
+    LIMIT 1
+  )
+  AND '{{DropoffLatHidden.text}}' <=> NULL = 0
+  AND '{{DropoffLngHidden.text}}' <=> NULL = 0
+  AND '{{DropoffLatHidden.text}}' != ''
+  AND '{{DropoffLngHidden.text}}' != '';

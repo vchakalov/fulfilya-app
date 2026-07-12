@@ -1,0 +1,67 @@
+SELECT 
+  -- Order information
+  o.public_id,
+  o.status as order_status,
+  o.created_at,
+  o.updated_at,
+  o.dispatched_at,
+  o.started_at,
+  o.scheduled_at,
+
+  -- Customer information
+  c.name as customer_name,
+  c.email as customer_email,
+  c.phone as customer_phone,
+
+  -- Driver information
+  d.public_id as driver_id,
+  u.name as driver_name,
+  u.phone as driver_phone,
+  u.email as driver_email,
+  d.latitude as driver_lat,
+  d.longitude as driver_lng,
+  d.online as driver_online,
+  d.current_status as driver_status,
+
+  -- Place names (coordinates are in routes table)
+  pickup.name as pickup_name,
+  dropoff.name as dropoff_name,
+
+  -- Route information with coordinates
+  r.details as route_details,
+
+  -- Extract coordinates from route JSON
+  JSON_UNQUOTE(JSON_EXTRACT(r.details, '$.waypoints[0].latLng.lat')) as pickup_lat,
+  JSON_UNQUOTE(JSON_EXTRACT(r.details, '$.waypoints[0].latLng.lng')) as pickup_lng,
+  JSON_UNQUOTE(JSON_EXTRACT(r.details, '$.waypoints[1].latLng.lat')) as dropoff_lat,
+  JSON_UNQUOTE(JSON_EXTRACT(r.details, '$.waypoints[1].latLng.lng')) as dropoff_lng,
+
+  -- Route summary
+  JSON_UNQUOTE(JSON_EXTRACT(r.details, '$.summary.totalDistance')) as total_distance,
+  JSON_UNQUOTE(JSON_EXTRACT(r.details, '$.summary.totalTime')) as total_time,
+
+  -- Tracking number
+  tn.tracking_number,
+  tn.uuid as tracking_number_uuid
+
+FROM orders o
+-- Customer
+LEFT JOIN contacts c ON o.customer_uuid = c.uuid
+
+-- Driver info
+LEFT JOIN drivers d ON o.driver_assigned_uuid = d.uuid
+LEFT JOIN users u ON d.user_uuid = u.uuid
+
+-- Locations
+LEFT JOIN payloads p ON o.payload_uuid = p.uuid
+LEFT JOIN places pickup ON p.pickup_uuid = pickup.uuid
+LEFT JOIN places dropoff ON p.dropoff_uuid = dropoff.uuid
+
+-- Route with coordinates
+LEFT JOIN routes r ON r.order_uuid = o.uuid
+
+-- Tracking
+LEFT JOIN tracking_numbers tn ON o.tracking_number_uuid = tn.uuid
+
+WHERE o.public_id = {{OrdersTable.selectedRow.order_id || 'order_7JtwugB'}}
+LIMIT 1;

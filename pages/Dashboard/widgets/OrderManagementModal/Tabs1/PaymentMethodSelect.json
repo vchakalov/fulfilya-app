@@ -1,0 +1,75 @@
+{
+  "accentColor": "{{appsmith.theme.colors.primaryColor}}",
+  "animateLoading": true,
+  "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
+  "bottomRow": 14,
+  "boxShadow": "none",
+  "defaultOptionValue": "{{ ((options, serverSideFiltering) => ( GetOrderDetails.data[0]?.payment_method))(PaymentMethodSelect.options, PaymentMethodSelect.serverSideFiltering) }}",
+  "dynamicBindingPathList": [
+    {
+      "key": "accentColor"
+    },
+    {
+      "key": "borderRadius"
+    },
+    {
+      "key": "defaultOptionValue"
+    }
+  ],
+  "dynamicHeight": "FIXED",
+  "dynamicPropertyPathList": [
+    {
+      "key": "sourceData"
+    },
+    {
+      "key": "onOptionChange"
+    },
+    {
+      "key": "isDisabled"
+    }
+  ],
+  "dynamicTriggerPathList": [
+    {
+      "key": "onOptionChange"
+    }
+  ],
+  "isDisabled": "",
+  "isFilterable": false,
+  "isLoading": false,
+  "isRequired": false,
+  "isVisible": true,
+  "key": "k6hoagtt0l",
+  "labelAlignment": "left",
+  "labelPosition": "Top",
+  "labelText": "Payment Method",
+  "labelTextSize": "0.875rem",
+  "labelWidth": 5,
+  "leftColumn": 23,
+  "maxDynamicHeight": 9000,
+  "minDynamicHeight": 4,
+  "minWidth": 450,
+  "mobileBottomRow": 9,
+  "mobileLeftColumn": 3,
+  "mobileRightColumn": 23,
+  "mobileTopRow": 2,
+  "needsErrorInfo": false,
+  "onOptionChange": "{{\n    UpdatePaymentMethod.run().then(() => {\n    \n      GetOrderDetails.run(); // Refresh data\n    }).catch(err => {\n      showAlert(\"Error updating payment method\", \"error\");\n    });\n  }}",
+  "optionLabel": "label",
+  "optionValue": "value",
+  "originalBottomRow": 14,
+  "originalTopRow": 7,
+  "parentColumnSpace": 9.63828125,
+  "parentId": "9wdjgi2xsh",
+  "parentRowSpace": 10,
+  "placeholderText": "Select option",
+  "renderMode": "CANVAS",
+  "responsiveBehavior": "fill",
+  "rightColumn": 43,
+  "serverSideFiltering": false,
+  "sourceData": "[\n {\"label\": \"Cash on Delivery\", \"value\": \"COD\"},\n    {\"label\": \"Pre-paid\", \"value\": \"Paid\"}\n]",
+  "topRow": 7,
+  "type": "SELECT_WIDGET",
+  "version": 1,
+  "widgetId": "ut35w16wbd",
+  "widgetName": "PaymentMethodSelect"
+}

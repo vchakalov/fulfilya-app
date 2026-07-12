@@ -1,0 +1,55 @@
+{
+  "animateLoading": true,
+  "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
+  "bottomRow": 8,
+  "dynamicBindingPathList": [
+    {
+      "key": "truncateButtonColor"
+    },
+    {
+      "key": "fontFamily"
+    },
+    {
+      "key": "borderRadius"
+    },
+    {
+      "key": "text"
+    }
+  ],
+  "dynamicHeight": "AUTO_HEIGHT",
+  "dynamicTriggerPathList": [],
+  "fontFamily": "{{appsmith.theme.fontFamily.appFont}}",
+  "fontSize": "1rem",
+  "fontStyle": "BOLD",
+  "isLoading": false,
+  "isVisible": true,
+  "key": "osgguplw3e",
+  "leftColumn": 22,
+  "maxDynamicHeight": 9000,
+  "minDynamicHeight": 4,
+  "minWidth": 450,
+  "mobileBottomRow": 4,
+  "mobileLeftColumn": 0,
+  "mobileRightColumn": 16,
+  "mobileTopRow": 0,
+  "needsErrorInfo": false,
+  "originalBottomRow": 10,
+  "originalTopRow": 5,
+  "overflow": "NONE",
+  "parentColumnSpace": 9.265625,
+  "parentId": "7nh0bg3mv3",
+  "parentRowSpace": 10,
+  "renderMode": "CANVAS",
+  "responsiveBehavior": "fill",
+  "rightColumn": 38,
+  "shouldTruncate": false,
+  "text": "{{(() => {\n\tconst type = ReportTypeSelect.selectedOptionValue;\n\tswitch(type) {\n\t\tcase 'all_orders': \n\t\t\tconst delivered = AllOrdersReport.data?.filter(o => o.status_display?.includes('Delivered') || o.payment_status?.includes('Already Paid')).length || 0;\n\t\t\treturn delivered;\n\t\tcase 'daily_cash_flow': \n\t\t\tconst totalRev = DailyCashFlowReport.data?.reduce((sum, row) => sum + (row.total_revenue || 0), 0) || 0;\n\t\t\treturn `$${totalRev.toFixed(0)}`;\n\t\tcase 'payment_analysis': \n\t\t\tconst analysisRev = PaymentAnalysisReport.data?.reduce((sum, row) => sum + (row.total_revenue || 0), 0) || 0;\n\t\t\treturn `$${analysisRev.toFixed(0)}`;\n\t\tcase 'monthly_summary': \n\t\t\tconst monthlyRev = MonthlyFinancialSummary.data?.reduce((sum, row) => sum + (row.total_revenue || 0), 0) || 0;\n\t\t\treturn `$${monthlyRev.toFixed(0)}`;\n\t\tcase 'business_metrics': \n\t\t\tconst metricsRev = BusinessMetricsDashboard.data?.[0]?.total_revenue || 0;\n\t\t\treturn `$${metricsRev.toFixed(0)}`;\n\t\tdefault: \n\t\t\treturn \"$0\";\n\t}\n})()}}",
+  "textAlign": "CENTER",
+  "textColor": "#1f2937",
+  "topRow": 4,
+  "truncateButtonColor": "{{appsmith.theme.colors.primaryColor}}",
+  "type": "TEXT_WIDGET",
+  "version": 1,
+  "widgetId": "9q4rt5jsl1",
+  "widgetName": "Text4CopyCopy"
+}

@@ -1,0 +1,123 @@
+
+  SELECT
+      -- Current month metrics
+      COUNT(CASE WHEN created_at >= DATE_FORMAT(NOW(), '%Y-%m-01') THEN 1 END) as total_orders,
+      COUNT(CASE WHEN created_at >= DATE_FORMAT(NOW(), '%Y-%m-01')
+                 AND (status IN ('delivered', 'order_delivered')
+                      OR (status = 'completed' AND NOT EXISTS (
+                          SELECT 1 FROM activity a
+                          WHERE a.subject_id = orders.uuid
+                          AND JSON_EXTRACT(a.properties, '$.attributes.status') IN ('order_returned', 'order_cancel')
+                      ))) THEN 1 END) as delivered_orders,
+      COUNT(CASE WHEN created_at >= DATE_FORMAT(NOW(), '%Y-%m-01')
+                 AND status IN ('dispatched', 'in_transit', 'started') THEN 1 END) as in_transit_orders,
+      COUNT(CASE WHEN created_at >= DATE_FORMAT(NOW(), '%Y-%m-01')
+                 AND status = 'created' THEN 1 END) as pending_orders,
+      COUNT(CASE WHEN created_at >= DATE_FORMAT(NOW(), '%Y-%m-01')
+                 AND (status IN ('canceled')
+                      OR EXISTS (
+                          SELECT 1 FROM activity a
+                          WHERE a.subject_id = orders.uuid
+                          AND JSON_EXTRACT(a.properties, '$.attributes.status') IN ('order_returned', 'order_cancel')
+                      )) THEN 1 END) as cancelled_orders,
+      COUNT(CASE WHEN created_at >= DATE_FORMAT(NOW(), '%Y-%m-01')
+                 AND EXISTS (
+                     SELECT 1 FROM activity a
+                     WHERE a.subject_id = orders.uuid
+                     AND JSON_EXTRACT(a.properties, '$.attributes.status') = 'order_returned'
+                 ) THEN 1 END) as returned_orders,
+      ROUND(
+        (COUNT(CASE WHEN created_at >= DATE_FORMAT(NOW(), '%Y-%m-01')
+                     AND (status IN ('delivered', 'order_delivered')
+                          OR (status = 'completed' AND NOT EXISTS (
+                              SELECT 1 FROM activity a
+                              WHERE a.subject_id = orders.uuid
+                              AND JSON_EXTRACT(a.properties, '$.attributes.status') IN ('order_returned', 'order_cancel')
+                          ))) THEN 1 END) /
+         NULLIF(COUNT(CASE WHEN created_at >= DATE_FORMAT(NOW(), '%Y-%m-01') THEN 1 END), 0)) * 100, 1
+      ) as delivery_rate,
+
+      -- Previous month metrics
+      COUNT(CASE WHEN created_at >= DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 1 MONTH), '%Y-%m-01')
+                  AND created_at < DATE_FORMAT(NOW(), '%Y-%m-01') THEN 1 END) as prev_total_orders,
+      COUNT(CASE WHEN created_at >= DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 1 MONTH), '%Y-%m-01')
+                  AND created_at < DATE_FORMAT(NOW(), '%Y-%m-01')
+                  AND (status IN ('delivered', 'order_delivered')
+                       OR (status = 'completed' AND NOT EXISTS (
+                           SELECT 1 FROM activity a
+                           WHERE a.subject_id = orders.uuid
+                           AND JSON_EXTRACT(a.properties, '$.attributes.status') IN ('order_returned', 'order_cancel')
+                       ))) THEN 1 END) as prev_delivered_orders,
+      COUNT(CASE WHEN created_at >= DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 1 MONTH), '%Y-%m-01')
+                  AND created_at < DATE_FORMAT(NOW(), '%Y-%m-01')
+                  AND (status IN ('canceled')
+                       OR EXISTS (
+                           SELECT 1 FROM activity a
+                           WHERE a.subject_id = orders.uuid
+                           AND JSON_EXTRACT(a.properties, '$.attributes.status') IN ('order_returned', 'order_cancel')
+                       )) THEN 1 END) as prev_cancelled_orders,
+
+      -- Month-over-month percentage changes
+      ROUND(
+          ((COUNT(CASE WHEN created_at >= DATE_FORMAT(NOW(), '%Y-%m-01') THEN 1 END) -
+            COUNT(CASE WHEN created_at >= DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 1 MONTH), '%Y-%m-01')
+                        AND created_at < DATE_FORMAT(NOW(), '%Y-%m-01') THEN 1 END)) * 100.0) /
+          NULLIF(COUNT(CASE WHEN created_at >= DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 1 MONTH), '%Y-%m-01')
+                        AND created_at < DATE_FORMAT(NOW(), '%Y-%m-01') THEN 1 END), 0)
+      ) as total_orders_change_percent,
+
+      ROUND(
+          ((COUNT(CASE WHEN created_at >= DATE_FORMAT(NOW(), '%Y-%m-01')
+                       AND (status IN ('delivered', 'order_delivered')
+                            OR (status = 'completed' AND NOT EXISTS (
+                                SELECT 1 FROM activity a
+                                WHERE a.subject_id = orders.uuid
+                                AND JSON_EXTRACT(a.properties, '$.attributes.status') IN ('order_returned', 'order_cancel')
+                            ))) THEN 1 END) -
+            COUNT(CASE WHEN created_at >= DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 1 MONTH), '%Y-%m-01')
+                        AND created_at < DATE_FORMAT(NOW(), '%Y-%m-01')
+                        AND (status IN ('delivered', 'order_delivered')
+                             OR (status = 'completed' AND NOT EXISTS (
+                                 SELECT 1 FROM activity a
+                                 WHERE a.subject_id = orders.uuid
+                                 AND JSON_EXTRACT(a.properties, '$.attributes.status') IN ('order_returned', 'order_cancel')
+                             ))) THEN 1 END)) * 100.0) /
+          NULLIF(COUNT(CASE WHEN created_at >= DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 1 MONTH), '%Y-%m-01')
+                        AND created_at < DATE_FORMAT(NOW(), '%Y-%m-01')
+                        AND (status IN ('delivered', 'order_delivered')
+                             OR (status = 'completed' AND NOT EXISTS (
+                                 SELECT 1 FROM activity a
+                                 WHERE a.subject_id = orders.uuid
+                                 AND JSON_EXTRACT(a.properties, '$.attributes.status') IN ('order_returned', 'order_cancel')
+                             ))) THEN 1 END), 0)
+      ) as delivered_change_percent,
+
+      ROUND(
+          ((COUNT(CASE WHEN created_at >= DATE_FORMAT(NOW(), '%Y-%m-01')
+                       AND (status IN ('canceled')
+                            OR EXISTS (
+                                SELECT 1 FROM activity a
+                                WHERE a.subject_id = orders.uuid
+                                AND JSON_EXTRACT(a.properties, '$.attributes.status') IN ('order_returned', 'order_cancel')
+                            )) THEN 1 END) -
+            COUNT(CASE WHEN created_at >= DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 1 MONTH), '%Y-%m-01')
+                        AND created_at < DATE_FORMAT(NOW(), '%Y-%m-01')
+                        AND (status IN ('canceled')
+                             OR EXISTS (
+                                 SELECT 1 FROM activity a
+                                 WHERE a.subject_id = orders.uuid
+                                 AND JSON_EXTRACT(a.properties, '$.attributes.status') IN ('order_returned', 'order_cancel')
+                             )) THEN 1 END)) * 100.0) /
+          NULLIF(COUNT(CASE WHEN created_at >= DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 1 MONTH), '%Y-%m-01')
+                        AND created_at < DATE_FORMAT(NOW(), '%Y-%m-01')
+                        AND (status IN ('canceled')
+                             OR EXISTS (
+                                 SELECT 1 FROM activity a
+                                 WHERE a.subject_id = orders.uuid
+                                 AND JSON_EXTRACT(a.properties, '$.attributes.status') IN ('order_returned', 'order_cancel')
+                             )) THEN 1 END), 0)
+      ) as cancelled_change_percent
+
+  FROM orders
+  WHERE created_at >= DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 1 MONTH), '%Y-%m-01')
+    AND orders.customer_uuid = '{{appsmith.store.customer_uuid}}';

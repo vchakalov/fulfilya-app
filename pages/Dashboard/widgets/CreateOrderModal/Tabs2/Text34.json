@@ -1,0 +1,63 @@
+{
+  "animateLoading": true,
+  "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
+  "bottomRow": 5,
+  "dynamicBindingPathList": [
+    {
+      "key": "truncateButtonColor"
+    },
+    {
+      "key": "fontFamily"
+    },
+    {
+      "key": "borderRadius"
+    },
+    {
+      "key": "text"
+    },
+    {
+      "key": "textColor"
+    }
+  ],
+  "dynamicHeight": "AUTO_HEIGHT",
+  "dynamicPropertyPathList": [
+    {
+      "key": "textColor"
+    }
+  ],
+  "dynamicTriggerPathList": [],
+  "fontFamily": "{{appsmith.theme.fontFamily.appFont}}",
+  "fontSize": "1rem",
+  "fontStyle": "",
+  "isLoading": false,
+  "isVisible": true,
+  "key": "9s3adk87bv",
+  "leftColumn": 12,
+  "maxDynamicHeight": 9000,
+  "minDynamicHeight": 4,
+  "minWidth": 450,
+  "mobileBottomRow": 4,
+  "mobileLeftColumn": 12,
+  "mobileRightColumn": 28,
+  "mobileTopRow": 0,
+  "needsErrorInfo": false,
+  "originalBottomRow": 5,
+  "originalTopRow": 0,
+  "overflow": "NONE",
+  "parentColumnSpace": 16.1146240234375,
+  "parentId": "z6y81ags76",
+  "parentRowSpace": 10,
+  "renderMode": "CANVAS",
+  "responsiveBehavior": "fill",
+  "rightColumn": 28,
+  "shouldTruncate": false,
+  "text": "{{(() => {\n     if (GeocodeNewPickupAddress.isLoading) return \"🔍 Finding location...\";\n     if (NewPickupLatHidden.text && NewPickupLngHidden.text) return \"✅ Location found and validated\";\n     if (NewPickupAddressInput.text?.length > 3 && !GeocodeNewPickupAddress.isLoading) return \"❌ Address not found - please check spelling\";\n     return \"📍 Enter address to find location\";\n   })()}}",
+  "textAlign": "LEFT",
+  "textColor": "{{(() => {\n     if (GeocodeNewPickupAddress.isLoading) return \"#F59E0B\";\n     if (NewPickupLatHidden.text && NewPickupLngHidden.text) return \"#10B981\";\n     if (NewPickupAddressInput.text?.length > 3) return \"#EF4444\";\n     return \"#6B7280\";\n   })()}}",
+  "topRow": 0,
+  "truncateButtonColor": "{{appsmith.theme.colors.primaryColor}}",
+  "type": "TEXT_WIDGET",
+  "version": 1,
+  "widgetId": "hsi5ugzmcm",
+  "widgetName": "Text34"
+}

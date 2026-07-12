@@ -1,0 +1,127 @@
+{
+  "accentColor": "{{appsmith.theme.colors.primaryColor}}",
+  "additionalStaticProps": [
+    "level",
+    "levelData",
+    "prefixMetaWidgetId",
+    "metaWidgetId"
+  ],
+  "animateLoading": true,
+  "backgroundColor": "transparent",
+  "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
+  "bottomRow": 55,
+  "boxShadow": "{{appsmith.theme.boxShadow.appBoxShadow}}",
+  "children": [
+    {
+      "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
+      "bottomRow": 450,
+      "boxShadow": "{{appsmith.theme.boxShadow.appBoxShadow}}",
+      "canExtend": false,
+      "containerStyle": "none",
+      "detachFromLayout": true,
+      "dropDisabled": true,
+      "dynamicBindingPathList": [
+        {
+          "key": "borderRadius"
+        },
+        {
+          "key": "boxShadow"
+        }
+      ],
+      "dynamicHeight": "AUTO_HEIGHT",
+      "flexLayers": [],
+      "isLoading": false,
+      "isVisible": true,
+      "key": "lqyi7un6jp",
+      "leftColumn": 0,
+      "maxDynamicHeight": 9000,
+      "minDynamicHeight": 4,
+      "minHeight": 400,
+      "minWidth": 450,
+      "mobileBottomRow": 400,
+      "mobileLeftColumn": 0,
+      "mobileRightColumn": 99.16301269531249,
+      "mobileTopRow": 0,
+      "needsErrorInfo": false,
+      "noPad": true,
+      "openParentPropertyPane": true,
+      "parentColumnSpace": 1,
+      "parentId": "tsjgxjknnn",
+      "parentRowSpace": 1,
+      "renderMode": "CANVAS",
+      "responsiveBehavior": "fill",
+      "rightColumn": 99.16301269531249,
+      "topRow": 0,
+      "type": "CANVAS_WIDGET",
+      "version": 1,
+      "widgetId": "8791e8f0f2",
+      "widgetName": "Canvas7"
+    }
+  ],
+  "currentItemsView": "{{[]}}",
+  "dynamicBindingPathList": [
+    {
+      "key": "currentItemsView"
+    },
+    {
+      "key": "selectedItemView"
+    },
+    {
+      "key": "triggeredItemView"
+    },
+    {
+      "key": "primaryKeys"
+    },
+    {
+      "key": "accentColor"
+    },
+    {
+      "key": "borderRadius"
+    },
+    {
+      "key": "boxShadow"
+    },
+    {
+      "key": "listData"
+    }
+  ],
+  "dynamicTriggerPathList": [],
+  "enhancements": true,
+  "flexVerticalAlignment": "start",
+  "gridType": "vertical",
+  "hasMetaWidgets": true,
+  "isCanvas": true,
+  "isLoading": false,
+  "isVisible": true,
+  "itemBackgroundColor": "#FFFFFF",
+  "itemSpacing": 8,
+  "key": "6cl9shp5xm",
+  "leftColumn": 0,
+  "listData": "{{(() => {\n     const history = GetTrackingHistory.data || [];\n     const orderData = GetOrderTracking.data[0] || {};\n     \n     // If we have tracking history, use it\n     if (history.length > 0) {\n       return history.map(event => ({\n         status: event.status,\n         details: event.details,\n         date: moment(event.created_at).format('MMM DD, HH:mm'),\n         completed: event.complete,\n         icon: event.complete ? \"✅\" : \"⭕\"\n       }));\n     }\n     \n     // Otherwise, build from order status\n     const timeline = [];\n     \n     // Order created\n     timeline.push({\n       status: \"Order Created\",\n       details: \"Order has been placed\",\n       date: moment(orderData.created_at).format('MMM DD, HH:mm'),\n       completed: true,\n       icon: \"✅\"\n     });\n     \n     // Order dispatched\n     if (orderData.dispatched_at) {\n       timeline.push({\n         status: \"Order Dispatched\",\n         details: \"Driver assigned\",\n         date: moment(orderData.dispatched_at).format('MMM DD, HH:mm'),\n         completed: true,\n         icon: \"✅\"\n       });\n     }\n     \n     // In transit\n     if (orderData.started_at) {\n       timeline.push({\n         status: \"In Transit\",\n         details: \"On the way\",\n         date: moment(orderData.started_at).format('MMM DD, HH:mm'),\n         completed: true,\n         icon: \"✅\"\n       });\n     }\n     \n     // Add future status\n     if (orderData.order_status !== 'delivered') {\n       timeline.push({\n         status: \"Delivery\",\n         details: \"Estimated delivery\",\n         date: orderData.scheduled_at ? moment(orderData.scheduled_at).format('MMM DD, HH:mm') : \"Today\",\n         completed: false,\n         icon: \"⭕\"\n       });\n     }\n     \n     return timeline;\n   })()}}",
+  "mainCanvasId": "8791e8f0f2",
+  "mainContainerId": "wxel4hdfu5",
+  "minWidth": 450,
+  "mobileBottomRow": 51,
+  "mobileLeftColumn": 0,
+  "mobileRightColumn": 21.999999999999996,
+  "mobileTopRow": 11,
+  "needsErrorInfo": false,
+  "originalBottomRow": 54,
+  "originalTopRow": 9,
+  "pageSize": 4,
+  "parentColumnSpace": 4.5074096679687505,
+  "parentId": "ccudeu205p",
+  "parentRowSpace": 10,
+  "primaryKeys": "{{TrackingTimeline.listData.map((currentItem, currentIndex) => currentItem[\"id\"] )}}",
+  "renderMode": "CANVAS",
+  "requiresFlatWidgetChildren": true,
+  "responsiveBehavior": "fill",
+  "rightColumn": 64,
+  "selectedItemView": "{{{}}}",
+  "templateHeight": 160,
+  "topRow": 10,
+  "triggeredItemView": "{{{}}}",
+  "type": "LIST_WIDGET_V2",
+  "widgetId": "tsjgxjknnn",
+  "widgetName": "TrackingTimeline"
+}

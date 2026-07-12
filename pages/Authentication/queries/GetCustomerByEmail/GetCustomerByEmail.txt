@@ -1,0 +1,9 @@
+SELECT 
+  c.uuid as customer_uuid,
+  c.name as customer_name,
+  c.email as customer_email
+FROM contacts c
+WHERE c.email = '{{EmailInput.text}}'
+  AND c.type = 'customer'
+  AND c.deleted_at IS NULL
+LIMIT 1;

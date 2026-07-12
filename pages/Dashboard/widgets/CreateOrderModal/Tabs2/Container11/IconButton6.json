@@ -1,0 +1,47 @@
+{
+  "animateLoading": true,
+  "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
+  "bottomRow": 8,
+  "boxShadow": "none",
+  "buttonColor": "#86efac",
+  "buttonVariant": "PRIMARY",
+  "dynamicBindingPathList": [
+    {
+      "key": "borderRadius"
+    }
+  ],
+  "dynamicPropertyPathList": [
+    {
+      "key": "onClick"
+    }
+  ],
+  "dynamicTriggerPathList": [
+    {
+      "key": "onClick"
+    }
+  ],
+  "iconName": "plus",
+  "isDisabled": false,
+  "isLoading": false,
+  "isVisible": true,
+  "key": "k35t303bid",
+  "leftColumn": 58,
+  "minWidth": 50,
+  "mobileBottomRow": 7,
+  "mobileLeftColumn": 58,
+  "mobileRightColumn": 62,
+  "mobileTopRow": 3,
+  "needsErrorInfo": false,
+  "onClick": "{{(() => {\n     if (!ItemNameInput.text ) {\n       showAlert(\"Please enter item name\", \"error\");\n       return;\n     }\n     \n     const currentItems = appsmith.store.newOrderItems || [];\n     const newItem = {\n       name: ItemNameInput.text,\n       ski: parseFloat(ItemSkuInput.text),\n       quantity: parseInt(ItemQuantityInput.text) || 1\n     };\n     \n     storeValue('newOrderItems', [...currentItems, newItem]);\n     \n     // Clear inputs\n     ItemNameInput.setValue('');\n     ItemSkuInput.setValue('');\n     ItemQuantityInput.setValue('1');\n     \n     showAlert(\"Item added!\", \"success\");\n   })()}}",
+  "parentColumnSpace": 9.003767013549805,
+  "parentId": "k9ywthklz6",
+  "parentRowSpace": 10,
+  "renderMode": "CANVAS",
+  "responsiveBehavior": "hug",
+  "rightColumn": 62,
+  "topRow": 3,
+  "type": "ICON_BUTTON_WIDGET",
+  "version": 1,
+  "widgetId": "ija87s4f7a",
+  "widgetName": "IconButton6"
+}

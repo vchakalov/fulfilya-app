@@ -1,0 +1,57 @@
+{
+  "allowZoom": true,
+  "animateLoading": true,
+  "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
+  "bottomRow": 49,
+  "boxShadow": "{{appsmith.theme.boxShadow.appBoxShadow}}",
+  "defaultMarkers": "{{(() => {\n     const data = GetOrderTracking.data[0];\n     const markers = [];\n     \n     // Pickup location\n     if (data?.pickup_lat && data?.pickup_lng) {\n       markers.push({\n         lat: parseFloat(data.pickup_lat),\n         long: parseFloat(data.pickup_lng),\n         title: data.pickup_name || \"Pickup Location\",\n         color: \"green\"\n       });\n     }\n     \n     // Dropoff location\n     if (data?.dropoff_lat && data?.dropoff_lng) {\n       markers.push({\n         lat: parseFloat(data.dropoff_lat),\n         long: parseFloat(data.dropoff_lng),\n         title: data.dropoff_name || \"Delivery Location\",\n         color: \"red\"\n       });\n     }\n     \n     // Driver location (if online)\n     if (data?.driver_online && data?.driver_lat) {\n       markers.push({\n         lat: parseFloat(data.driver_lat),\n         long: parseFloat(data.driver_lng),\n         title: \"Driver: \" + (data.driver_name || \"Driver\"),\n         color: \"blue\"\n       });\n     }\n     \n     return markers;\n   })()}}",
+  "dynamicBindingPathList": [
+    {
+      "key": "borderRadius"
+    },
+    {
+      "key": "boxShadow"
+    },
+    {
+      "key": "mapCenter"
+    },
+    {
+      "key": "defaultMarkers"
+    }
+  ],
+  "dynamicPropertyPathList": [
+    {
+      "key": "mapCenter"
+    }
+  ],
+  "dynamicTriggerPathList": [],
+  "enableMapTypeControl": false,
+  "enablePickLocation": false,
+  "enableSearch": false,
+  "flexVerticalAlignment": "start",
+  "isClickedMarkerCentered": false,
+  "isDisabled": false,
+  "isLoading": false,
+  "isVisible": true,
+  "key": "ypoed5oovn",
+  "leftColumn": 1,
+  "mapCenter": "{\n     \"lat\": {{GetOrderTracking.data[0]?.dropoff_lat || 42.6977}},\n     \"long\": {{GetOrderTracking.data[0]?.dropoff_lng || 23.3219}}\n   }",
+  "minWidth": 450,
+  "mobileBottomRow": 52,
+  "mobileLeftColumn": 1,
+  "mobileRightColumn": 25,
+  "mobileTopRow": 12,
+  "needsErrorInfo": false,
+  "parentColumnSpace": 9.95078125,
+  "parentId": "76bbgxx96v",
+  "parentRowSpace": 10,
+  "renderMode": "CANVAS",
+  "responsiveBehavior": "fill",
+  "rightColumn": 31,
+  "topRow": 9,
+  "type": "MAP_WIDGET",
+  "version": 1,
+  "widgetId": "sq4kzrxqe8",
+  "widgetName": "OrderTrackingMap",
+  "zoomLevel": 75
+}

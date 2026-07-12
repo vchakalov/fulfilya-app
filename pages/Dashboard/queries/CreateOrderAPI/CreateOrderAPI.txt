@@ -1,0 +1,98 @@
+{{(() => {
+	// Validate required fields
+	if (!NewPickupAddressInput.text || !NewDropoffAddressInput.text) {
+		
+		throw new Error("Pickup and delivery addresses are required");
+	}
+
+	if (!NewPickupLatHidden.text || !NewPickupLngHidden.text || 
+			!NewDropoffLatHidden.text || !NewDropoffLngHidden.text) {
+		
+		throw new Error("Address geocoding is required - please wait for location validation");
+	}
+	
+    // Get service quote UUID from the creation query result
+ const serviceQuoteUuid = GetCreatedServiceQuote.data[0].service_quote_uuid;
+	
+	if (!serviceQuoteUuid) {
+        throw new Error("Failed to create service quote. Please try again.");
+    }
+	
+  
+	const customer = appsmith.store.customer_uuid;
+
+	return {
+		"order": {
+			"internal_id": OrderSourceIdInput.text || "",
+			"customer_uuid": customer,
+			"service_quote_uuid": serviceQuoteUuid,
+			"order_config_uuid": "80465677-b66d-4423-bc82-b6076dd23e6b",
+			"customer_type": "fleet-ops:contact",
+			"type": "e-commerce-with-cod",
+			"scheduled_at": ScheduledDeliveryPicker.selectedDate,
+			"notes": DeliveryNotesInput.text,
+			"driver_assigned_uuid": "cfeff109-54ab-42d3-aca3-6a54b4b806a4",
+			"payload": {
+				"pickup": {
+					"name": NewPickupAddressInput.text?.split(',')[0] || "Pickup Location",
+					"address": NewPickupAddressInput.text || "",
+					"location": {
+						"type": "Point",
+						"coordinates": [
+							parseFloat(NewPickupLngHidden.text), 
+							parseFloat(NewPickupLatHidden.text)
+						]
+					}
+				},
+				"dropoff": {
+					"name": NewDropoffAddressInput.text?.split(',')[0] || "Delivery Location", 
+					"address": NewDropoffAddressInput.text || "",
+					"location": {
+						"type": "Point",
+						"coordinates": [
+							parseFloat(NewDropoffLngHidden.text), 
+							parseFloat(NewDropoffLatHidden.text)
+						]
+					}
+				},
+				"entities": (appsmith.store.newOrderItems || []).map(item => ({
+					"name": item.name,
+					"price": item.price ? parseFloat(item.price) : 0,
+					"sku": item.sku || ""
+				}))
+			},
+			"custom_field_values": [
+				{
+					"custom_field_uuid": "9f959d52-adad-4adb-96c4-23b0c19dcd97",
+					"value": StoreTypeSelect.selectedOptionValue,
+					"value_type": "text"
+				},
+				{
+					"custom_field_uuid": "1c672697-d260-4b13-a14a-70567f54260d", 
+					"value": OrderSourceIdInput.text || "",
+					"value_type": "text"
+				},
+				{
+					"custom_field_uuid": "edac241c-15b7-4df9-b171-089bbd71e6a1",
+					"value": NewPaymentMethodSelect.selectedOptionValue,
+					"value_type": "text"
+				},
+				{
+					"custom_field_uuid": "61306d56-f3cd-4259-b1a7-3b4605c35442",
+					"value": NewAmountInput.text,
+					"value_type": "text"
+				},
+				
+      {"custom_field_uuid": "918c9f27-dc87-402f-baa5-658bc4028450",
+      "value": (() => {
+          const selectedService = GetAvailableServiceRates.data?.find(
+              r => r.service_rate_uuid === OrderShippingSelect.selectedOptionValue
+          );
+          return selectedService?.service_name?.includes('-express') ? 'Express' : 'Standard';
+      })(),
+      "value_type": "select"
+			}
+			]
+		}
+	};
+})()}}

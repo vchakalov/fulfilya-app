@@ -1,0 +1,48 @@
+{
+  "animateLoading": true,
+  "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
+  "bottomRow": 4,
+  "boxShadow": "none",
+  "buttonColor": "#ef4444",
+  "buttonVariant": "PRIMARY",
+  "dynamicBindingPathList": [
+    {
+      "key": "borderRadius"
+    }
+  ],
+  "dynamicHeight": "FIXED",
+  "dynamicPropertyPathList": [
+    {
+      "key": "onClick"
+    }
+  ],
+  "dynamicTriggerPathList": [
+    {
+      "key": "onClick"
+    }
+  ],
+  "iconName": "trash",
+  "isDisabled": false,
+  "isLoading": false,
+  "isVisible": true,
+  "key": "k35t303bid",
+  "leftColumn": 56,
+  "minWidth": 50,
+  "mobileBottomRow": 4,
+  "mobileLeftColumn": 56,
+  "mobileRightColumn": 60,
+  "mobileTopRow": 0,
+  "needsErrorInfo": false,
+  "onClick": "{{(() => {\n         const items = appsmith.store.newOrderItems || [];\n         items.splice(currentIndex, 1);\n         storeValue('newOrderItems', items);\n       })()}}",
+  "parentColumnSpace": 5.6054840087890625,
+  "parentId": "m6csofwp0m",
+  "parentRowSpace": 10,
+  "renderMode": "CANVAS",
+  "responsiveBehavior": "hug",
+  "rightColumn": 60,
+  "topRow": 0,
+  "type": "ICON_BUTTON_WIDGET",
+  "version": 1,
+  "widgetId": "q8soujvmb4",
+  "widgetName": "IconButton5"
+}

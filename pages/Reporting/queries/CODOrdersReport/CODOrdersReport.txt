@@ -1,0 +1,93 @@
+  -- CODOrdersReport - Cash on Delivery tracking (Fixed)
+  SELECT
+    o.public_id as order_id,
+    DATE_FORMAT(o.created_at, '%Y-%m-%d') as order_date,
+
+    -- Customer Details
+    c.name as customer_name,
+    c.phone as customer_phone,
+
+    -- COD Amount Processing (using subqueries)
+    COALESCE((SELECT cfv.value
+      FROM custom_field_values cfv
+      JOIN custom_fields cf ON cfv.custom_field_uuid = cf.uuid
+      WHERE cfv.subject_uuid = o.uuid
+      AND cf.name = 'cod-amount:'
+      AND cfv.subject_type = 'Fleetbase\\FleetOps\\Models\\Order'
+      LIMIT 1), '$0.00') as cod_amount_display,
+
+    CAST(COALESCE((SELECT REPLACE(REPLACE(cfv.value, '$', ''), ',', '')
+      FROM custom_field_values cfv
+      JOIN custom_fields cf ON cfv.custom_field_uuid = cf.uuid
+      WHERE cfv.subject_uuid = o.uuid
+      AND cf.name = 'cod-amount:'
+      AND cfv.subject_type = 'Fleetbase\\FleetOps\\Models\\Order'
+      LIMIT 1), '0') AS DECIMAL(10,2)) as cod_amount_numeric,
+
+    -- Collection Status
+    CASE
+      WHEN o.status = 'delivered' THEN '✅ Collected'
+      WHEN o.status = 'cancelled' THEN '❌ Cancelled'
+      WHEN o.status IN ('created', 'dispatched', 'in_transit') THEN '⏳ Pending'
+      ELSE '❓ Unknown'
+    END as collection_status,
+
+    -- Collection Date
+    CASE
+      WHEN o.status = 'delivered' THEN DATE_FORMAT(o.updated_at, '%Y-%m-%d %H:%i')
+      ELSE NULL
+    END as collection_date,
+
+    -- Driver Information
+    COALESCE(u.name, 'Unassigned') as collecting_driver,
+    u.phone as driver_phone,
+
+    -- Delivery Location
+    CONCAT(dropoff.name, ', ', COALESCE(dropoff.street1, '')) as delivery_address,
+    dropoff.city as delivery_city,
+
+    -- Store Integration (using subqueries)
+    COALESCE((SELECT cfv.value
+      FROM custom_field_values cfv
+      JOIN custom_fields cf ON cfv.custom_field_uuid = cf.uuid
+      WHERE cfv.subject_uuid = o.uuid
+      AND cf.name = 'store-type'
+      AND cfv.subject_type = 'Fleetbase\\FleetOps\\Models\\Order'
+      LIMIT 1), 'N/A') as store_platform,
+
+    COALESCE((SELECT cfv.value
+      FROM custom_field_values cfv
+      JOIN custom_fields cf ON cfv.custom_field_uuid = cf.uuid
+      WHERE cfv.subject_uuid = o.uuid
+      AND cf.name = 'order-source-id'
+      AND cfv.subject_type = 'Fleetbase\\FleetOps\\Models\\Order'
+      LIMIT 1), 'N/A') as store_order_ref,
+
+    -- Risk Indicators
+    CASE
+      WHEN TIMESTAMPDIFF(DAY, o.created_at, NOW()) > 3 AND o.status NOT IN ('delivered', 'cancelled')
+      THEN '⚠️ Overdue'
+      ELSE ''
+    END as risk_flag
+
+  FROM orders o
+  LEFT JOIN contacts c ON o.customer_uuid = c.uuid
+  LEFT JOIN drivers d ON o.driver_assigned_uuid = d.uuid
+  LEFT JOIN users u ON d.user_uuid = u.uuid
+  LEFT JOIN payloads p ON o.payload_uuid = p.uuid
+  LEFT JOIN places dropoff ON p.dropoff_uuid = dropoff.uuid
+  WHERE o.deleted_at <=> NULL
+    AND DATE(o.created_at) >= DATE('{{StartDatePicker.selectedDate || moment().subtract(30, "days").format("YYYY-MM-DD")}}')
+    AND DATE(o.created_at) <= DATE('{{EndDatePicker.selectedDate || moment().format("YYYY-MM-DD")}}')
+    -- Filter for COD orders only
+    AND EXISTS (
+      SELECT 1
+      FROM custom_field_values cfv
+      JOIN custom_fields cf ON cfv.custom_field_uuid = cf.uuid
+      WHERE cfv.subject_uuid = o.uuid
+      AND cf.name = 'payment-method'
+      AND cfv.value = 'COD'
+      AND cfv.subject_type = 'Fleetbase\\FleetOps\\Models\\Order'
+    ) AND
+		o.customer_uuid = '{{appsmith.store.customer_uuid}}'
+  ORDER BY o.created_at DESC;

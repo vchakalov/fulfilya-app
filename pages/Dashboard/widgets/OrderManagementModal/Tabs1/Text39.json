@@ -1,0 +1,55 @@
+{
+  "animateLoading": true,
+  "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
+  "bottomRow": 5,
+  "dynamicBindingPathList": [
+    {
+      "key": "truncateButtonColor"
+    },
+    {
+      "key": "fontFamily"
+    },
+    {
+      "key": "borderRadius"
+    },
+    {
+      "key": "text"
+    }
+  ],
+  "dynamicHeight": "AUTO_HEIGHT",
+  "dynamicTriggerPathList": [],
+  "fontFamily": "{{appsmith.theme.fontFamily.appFont}}",
+  "fontSize": "1rem",
+  "fontStyle": "BOLD",
+  "isLoading": false,
+  "isVisible": true,
+  "key": "avga66i437",
+  "leftColumn": 23,
+  "maxDynamicHeight": 9000,
+  "minDynamicHeight": 4,
+  "minWidth": 450,
+  "mobileBottomRow": 20,
+  "mobileLeftColumn": 1,
+  "mobileRightColumn": 17,
+  "mobileTopRow": 16,
+  "needsErrorInfo": false,
+  "originalBottomRow": 21,
+  "originalTopRow": 16,
+  "overflow": "NONE",
+  "parentColumnSpace": 9.63828125,
+  "parentId": "9wdjgi2xsh",
+  "parentRowSpace": 10,
+  "renderMode": "CANVAS",
+  "responsiveBehavior": "fill",
+  "rightColumn": 50,
+  "shouldTruncate": false,
+  "text": " {{(() => {\n    const details = GetOrderDetails.data?.[0];\n    if (!details) return '';\n\n    const formatDate = (dateStr) => {\n      if (!dateStr) return 'N/A';\n      return moment(dateStr).format('MMM DD, YYYY HH:mm');\n    };\n\n    let statusInfo = '';\n    if (details.delivered_at) {\n      statusInfo = `Delivered on ${formatDate(details.delivered_at)}`;\n    } else if (details.returned_at) {\n      statusInfo = `Returned on ${formatDate(details.returned_at)}`;\n    } else if (details.cancelled_at) {\n      statusInfo = `Cancelled on ${formatDate(details.cancelled_at)}`;\n    } else if (details.started_at) {\n      statusInfo = `In Transit since ${formatDate(details.started_at)}`;\n    } else if (details.dispatched_at) {\n      statusInfo = `Dispatched on ${formatDate(details.dispatched_at)}`;\n    } else {\n      statusInfo = `Created on ${formatDate(details.created_at)}`;\n    }\n\n    return statusInfo;\n  })()}}",
+  "textAlign": "LEFT",
+  "textColor": "#231F20",
+  "topRow": 1,
+  "truncateButtonColor": "{{appsmith.theme.colors.primaryColor}}",
+  "type": "TEXT_WIDGET",
+  "version": 1,
+  "widgetId": "3dvbkfke5s",
+  "widgetName": "Text39"
+}

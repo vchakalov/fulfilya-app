@@ -1,0 +1,56 @@
+ SELECT
+      o.public_id as order_id,
+      o.internal_id as internal_reference,
+      o.created_at as order_date,
+      o.status,
+      CASE
+          WHEN o.status = 'created' THEN 'Pending'
+          WHEN o.status IN ('dispatched', 'in_transit', 'started') THEN 'In Transit'
+          WHEN o.status IN ('delivered', 'order_delivered')
+               OR (o.status = 'completed' AND NOT EXISTS (
+                   SELECT 1 FROM activity a
+                   WHERE a.subject_id = o.uuid
+                   AND JSON_EXTRACT(a.properties, '$.attributes.status') IN ('order_returned', 'order_cancelled')
+               )) THEN 'Delivered'
+          WHEN o.status IN ('canceled')
+               OR EXISTS (
+                   SELECT 1 FROM activity a
+                   WHERE a.subject_id = o.uuid
+                   AND JSON_EXTRACT(a.properties, '$.attributes.status') IN ('order_returned', 'order_cancelled')
+               ) THEN 'Cancelled'
+          ELSE o.status
+      END as status_display,
+      COALESCE(c.name, 'Unknown') as customer_name,
+      COALESCE(c.email, '') as customer_email,
+      COALESCE(MAX(CASE WHEN cf.name = 'payment-method' THEN cfv.value END), 'Not Specified') as payment_method,
+      COALESCE(MAX(CASE WHEN cf.name = 'amount:' THEN cfv.value END), '0.00') as order_amount_display,
+      COALESCE(pickup.name, 'Unknown') as pickup_location,
+      COALESCE(dropoff.name, 'Unknown') as dropoff_location,
+      COALESCE(d_user.name, 'Unassigned') as driver_name,
+      COALESCE(tn.tracking_number, '') as tracking_number
+  FROM orders o
+  LEFT JOIN contacts c ON o.customer_uuid = c.uuid
+  LEFT JOIN drivers d ON o.driver_assigned_uuid = d.uuid
+  LEFT JOIN users d_user ON d.user_uuid = d_user.uuid
+  LEFT JOIN payloads p ON o.payload_uuid = p.uuid
+  LEFT JOIN places pickup ON p.pickup_uuid = pickup.uuid
+  LEFT JOIN places dropoff ON p.dropoff_uuid = dropoff.uuid
+  LEFT JOIN tracking_numbers tn ON o.tracking_number_uuid = tn.uuid
+  LEFT JOIN custom_field_values cfv ON o.uuid = cfv.subject_uuid AND cfv.subject_type = 'Fleetbase\\FleetOps\\Models\\Order'
+  LEFT JOIN custom_fields cf ON cfv.custom_field_uuid = cf.uuid
+  WHERE o.customer_uuid = '{{appsmith.store.customer_uuid || "21816565-c4a5-40f4-a617-c97119105bc5"}}'
+    AND DATE(o.created_at) >= COALESCE(DATE('{{StartDatePicker.formattedDate}}'), DATE(NOW()) - INTERVAL 30 DAY)
+    AND DATE(o.created_at) <= COALESCE(DATE('{{EndDatePicker.formattedDate}}'), DATE(NOW()))
+  GROUP BY
+      o.uuid,
+      o.public_id,
+      o.internal_id,
+      o.created_at,
+      o.status,
+      c.name,
+      c.email,
+      pickup.name,
+      dropoff.name,
+      d_user.name,
+      tn.tracking_number
+  ORDER BY o.created_at DESC;

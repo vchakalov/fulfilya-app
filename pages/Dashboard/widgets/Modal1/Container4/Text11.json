@@ -1,0 +1,55 @@
+{
+  "animateLoading": true,
+  "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
+  "bottomRow": 4,
+  "dynamicBindingPathList": [
+    {
+      "key": "truncateButtonColor"
+    },
+    {
+      "key": "fontFamily"
+    },
+    {
+      "key": "borderRadius"
+    },
+    {
+      "key": "text"
+    }
+  ],
+  "dynamicHeight": "AUTO_HEIGHT",
+  "dynamicTriggerPathList": [],
+  "fontFamily": "{{appsmith.theme.fontFamily.appFont}}",
+  "fontSize": "1rem",
+  "fontStyle": "BOLD",
+  "isLoading": false,
+  "isVisible": true,
+  "key": "5hotuvo0x5",
+  "leftColumn": 0,
+  "maxDynamicHeight": 9000,
+  "minDynamicHeight": 4,
+  "minWidth": 450,
+  "mobileBottomRow": 9,
+  "mobileLeftColumn": 2,
+  "mobileRightColumn": 18,
+  "mobileTopRow": 5,
+  "needsErrorInfo": false,
+  "originalBottomRow": 14,
+  "originalTopRow": 5,
+  "overflow": "NONE",
+  "parentColumnSpace": 4.5074096679687505,
+  "parentId": "ccudeu205p",
+  "parentRowSpace": 10,
+  "renderMode": "CANVAS",
+  "responsiveBehavior": "fill",
+  "rightColumn": 61,
+  "shouldTruncate": false,
+  "text": "{{(() => {\n     const status = GetOrderTracking.data[0]?.order_status;\n     const statusMap = {\n       'created': '📦 Order Created',\n       'dispatched': '🚚 Order Dispatched',\n       'in_transit': '🚚 In Transit',\n       'delivered': '✅ Delivered',\n\t\t\t        'completed': '✅ Delivered',\n       'cancelled': '❌ Cancelled'\n     };\n     return statusMap[status] || '⏳ Processing';\n   })()}}",
+  "textAlign": "LEFT",
+  "textColor": "#231F20",
+  "topRow": 0,
+  "truncateButtonColor": "{{appsmith.theme.colors.primaryColor}}",
+  "type": "TEXT_WIDGET",
+  "version": 1,
+  "widgetId": "fpud609ebg",
+  "widgetName": "Text11"
+}

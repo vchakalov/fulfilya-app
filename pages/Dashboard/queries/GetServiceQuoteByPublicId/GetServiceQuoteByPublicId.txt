@@ -1,0 +1,11 @@
+SELECT 
+  sq.uuid as service_quote_uuid,
+  sq.public_id,
+  sq.amount,
+  sq.currency,
+  sr.service_name,
+  sr.base_fee
+FROM service_quotes sq
+LEFT JOIN service_rates sr ON sq.service_rate_uuid = sr.uuid
+WHERE sq.public_id = {{appsmith.store.service_quote_public_id || 'quote_hZnugks'}}
+LIMIT 1;

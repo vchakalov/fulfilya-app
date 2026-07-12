@@ -1,0 +1,48 @@
+-- ServiceRatesReport - Shipping fee analysis
+SELECT 
+  sr.public_id as rate_id,
+  sr.service_name,
+  sr.service_type,
+  CONCAT(sr.currency, ' ', sr.base_fee) as base_fee_display,
+  CONCAT(sr.currency, ' ', sr.per_km_fee) as per_km_display,
+  CONCAT(sr.currency, ' ', sr.per_min_fee) as per_min_display,
+  sr.peak_factor,
+  
+  -- Usage Statistics
+  COUNT(DISTINCT o.uuid) as total_orders,
+  COUNT(DISTINCT DATE(o.created_at)) as active_days,
+  
+  -- Revenue Calculations
+  ROUND(SUM(
+    sr.base_fee + 
+    (COALESCE(JSON_UNQUOTE(JSON_EXTRACT(r.details, '$.summary.totalDistance')), 0) / 1000 * sr.per_km_fee) +
+    (COALESCE(JSON_UNQUOTE(JSON_EXTRACT(r.details, '$.summary.totalTime')), 0) / 60 * sr.per_min_fee)
+  ), 2) as gross_revenue,
+  
+  ROUND(AVG(
+    sr.base_fee + 
+    (COALESCE(JSON_UNQUOTE(JSON_EXTRACT(r.details, '$.summary.totalDistance')), 0) / 1000 * sr.per_km_fee) +
+    (COALESCE(JSON_UNQUOTE(JSON_EXTRACT(r.details, '$.summary.totalTime')), 0) / 60 * sr.per_min_fee)
+  ), 2) as avg_order_fee,
+  
+  -- Operational Metrics
+  ROUND(SUM(COALESCE(JSON_UNQUOTE(JSON_EXTRACT(r.details, '$.summary.totalDistance')), 0) / 1000), 1) as total_km,
+  ROUND(AVG(COALESCE(JSON_UNQUOTE(JSON_EXTRACT(r.details, '$.summary.totalDistance')), 0) / 1000), 1) as avg_km_per_order,
+  ROUND(SUM(COALESCE(JSON_UNQUOTE(JSON_EXTRACT(r.details, '$.summary.totalTime')), 0) / 60), 0) as total_minutes,
+  
+  -- Efficiency Score (Revenue per KM)
+  ROUND(
+    SUM(sr.base_fee + (COALESCE(JSON_UNQUOTE(JSON_EXTRACT(r.details, '$.summary.totalDistance')), 0) / 1000 * sr.per_km_fee)) /
+    NULLIF(SUM(COALESCE(JSON_UNQUOTE(JSON_EXTRACT(r.details, '$.summary.totalDistance')), 0) / 1000), 0)
+  , 2) as revenue_per_km
+
+FROM service_rates sr
+LEFT JOIN orders o ON o.service_rate_uuid = sr.uuid
+LEFT JOIN routes r ON r.order_uuid = o.uuid
+WHERE sr.company_uuid = '{{appsmith.store.customer_uuid}}'
+  AND o.created_at >= '{{StartDatePicker.formattedDate || moment().subtract(30, "days").format("YYYY-MM-DD")}}'
+  AND o.created_at <= '{{EndDatePicker.formattedDate || moment().format("YYYY-MM-DD")}}'
+  AND o.deleted_at IS NULL
+  AND sr.deleted_at IS NULL
+GROUP BY sr.uuid
+ORDER BY total_orders DESC;

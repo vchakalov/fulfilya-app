@@ -1,0 +1,55 @@
+{
+  "animateLoading": true,
+  "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
+  "bottomRow": 8,
+  "dynamicBindingPathList": [
+    {
+      "key": "truncateButtonColor"
+    },
+    {
+      "key": "fontFamily"
+    },
+    {
+      "key": "borderRadius"
+    },
+    {
+      "key": "text"
+    }
+  ],
+  "dynamicHeight": "AUTO_HEIGHT",
+  "dynamicTriggerPathList": [],
+  "fontFamily": "{{appsmith.theme.fontFamily.appFont}}",
+  "fontSize": "1rem",
+  "fontStyle": "BOLD",
+  "isLoading": false,
+  "isVisible": true,
+  "key": "osgguplw3e",
+  "leftColumn": 11,
+  "maxDynamicHeight": 9000,
+  "minDynamicHeight": 4,
+  "minWidth": 450,
+  "mobileBottomRow": 4,
+  "mobileLeftColumn": 0,
+  "mobileRightColumn": 16,
+  "mobileTopRow": 0,
+  "needsErrorInfo": false,
+  "originalBottomRow": 11,
+  "originalTopRow": 7,
+  "overflow": "NONE",
+  "parentColumnSpace": 9.265625,
+  "parentId": "0nrx04s7hy",
+  "parentRowSpace": 10,
+  "renderMode": "CANVAS",
+  "responsiveBehavior": "fill",
+  "rightColumn": 50,
+  "shouldTruncate": false,
+  "text": "{{(() => {\n                    const type = ReportTypeSelect.selectedOptionValue;\n                    switch(type) {\n                      case 'all_orders': \n                        const totalOrders = AllOrdersReport.data?.length || 1;\n                        const successfulOrders = AllOrdersReport.data?.filter(o => o.status_display?.includes('Delivered') || o.payment_status?.includes('Already Paid')).length || 0;\n                        return `${(successfulOrders * 100 / totalOrders).toFixed(1)}%`;\n                      case 'daily_cash_flow': \n                        const dailyTotal = DailyCashFlowReport.data?.reduce((sum, row) => sum + row.total_orders, 0) || 1;\n                        const dailyDelivered = DailyCashFlowReport.data?.reduce((sum, row) => sum + row.delivered_orders, 0) || 0;\n                        return `${(dailyDelivered * 100 / dailyTotal).toFixed(1)}%`;\n                      case 'payment_analysis': \n                        const avgSuccessRate = PaymentAnalysisReport.data?.reduce((sum, row) => sum + row.delivery_success_rate, 0) / (PaymentAnalysisReport.data?.length || 1) || 0;\n                        return `${avgSuccessRate.toFixed(1)}%`;\n                      case 'monthly_summary': \n                        const monthlyAvgRate = MonthlyFinancialSummary.data?.reduce((sum, row) => sum + row.delivery_success_rate, 0) / (MonthlyFinancialSummary.data?.length || 1) || 0;\n                        return `${monthlyAvgRate.toFixed(1)}%`;\n                      case 'business_metrics': \n                        return `${BusinessMetricsDashboard.data?.[0]?.overall_delivery_rate || 0}%`;\n                      default: \n                        return \"0%\";\n                    }\n                  })()}}",
+  "textAlign": "CENTER",
+  "textColor": "#1f2937",
+  "topRow": 4,
+  "truncateButtonColor": "{{appsmith.theme.colors.primaryColor}}",
+  "type": "TEXT_WIDGET",
+  "version": 1,
+  "widgetId": "hn462ptgh5",
+  "widgetName": "Text4CopyCopyCopy"
+}

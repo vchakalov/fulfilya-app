@@ -1,0 +1,55 @@
+{
+  "animateLoading": true,
+  "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
+  "bottomRow": 4,
+  "dynamicBindingPathList": [
+    {
+      "key": "truncateButtonColor"
+    },
+    {
+      "key": "fontFamily"
+    },
+    {
+      "key": "borderRadius"
+    },
+    {
+      "key": "text"
+    }
+  ],
+  "dynamicHeight": "AUTO_HEIGHT",
+  "dynamicTriggerPathList": [],
+  "fontFamily": "{{appsmith.theme.fontFamily.appFont}}",
+  "fontSize": "1rem",
+  "fontStyle": "BOLD",
+  "isLoading": false,
+  "isVisible": true,
+  "key": "osgguplw3e",
+  "leftColumn": 0,
+  "maxDynamicHeight": 9000,
+  "minDynamicHeight": 4,
+  "minWidth": 450,
+  "mobileBottomRow": 4,
+  "mobileLeftColumn": 0,
+  "mobileRightColumn": 16,
+  "mobileTopRow": 0,
+  "needsErrorInfo": false,
+  "originalBottomRow": 7,
+  "originalTopRow": 0,
+  "overflow": "NONE",
+  "parentColumnSpace": 9.265625,
+  "parentId": "ns7hpdm4m3",
+  "parentRowSpace": 10,
+  "renderMode": "CANVAS",
+  "responsiveBehavior": "fill",
+  "rightColumn": 64,
+  "shouldTruncate": false,
+  "text": "{{(() => {\n                        const type = ReportTypeSelect.selectedOptionValue;\n                        switch(type) {\n                          case 'all_orders': return \"Total Orders\";\n                          case 'daily_cash_flow': return \"Total Orders\";\n                          case 'payment_analysis': return \"Total Orders\";\n                          case 'monthly_summary': return \"Total Orders\";\n                          case 'business_metrics': return \"Total Orders\";\n                          default: return \"Total Orders\";\n                        }\n                      })()}}",
+  "textAlign": "CENTER",
+  "textColor": "#6b7280",
+  "topRow": 0,
+  "truncateButtonColor": "{{appsmith.theme.colors.primaryColor}}",
+  "type": "TEXT_WIDGET",
+  "version": 1,
+  "widgetId": "qq2rd0asy0",
+  "widgetName": "Text4"
+}

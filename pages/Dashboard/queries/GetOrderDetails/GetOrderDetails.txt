@@ -1,0 +1,119 @@
+  SELECT
+      -- Basic order info
+      o.public_id,
+      o.status,
+      o.created_at,
+      o.scheduled_at,
+      o.notes,
+
+      -- Customer info
+      c.name as customer_name,
+      c.email as customer_email,
+      c.phone as customer_phone,
+
+      -- Location data
+      pickup.name as pickup_name,
+      pickup.street1 as pickup_street,
+      pickup.city as pickup_city,
+      ST_Y(pickup.location) as pickup_lat,
+      ST_X(pickup.location) as pickup_lng,
+
+      dropoff.name as dropoff_name,
+      dropoff.street1 as dropoff_street,
+      dropoff.city as dropoff_city,
+      ST_Y(dropoff.location) as dropoff_lat,
+      ST_X(dropoff.location) as dropoff_lng,
+
+      -- Driver info
+      d.public_id as driver_id,
+      u.name as driver_name,
+      u.phone as driver_phone,
+
+      -- Route info
+      JSON_UNQUOTE(JSON_EXTRACT(r.details, '$.summary.totalDistance')) as total_distance,
+      JSON_UNQUOTE(JSON_EXTRACT(r.details, '$.summary.totalTime')) as total_time,
+
+      -- Tracking
+      tn.tracking_number,
+
+      -- Service Rate info (via purchase_rates → service_quotes → service_rates)
+      sr.uuid as service_rate_uuid,
+      sr.service_name as current_service_name,
+      sr.base_fee as current_service_fee,
+      sr.currency as current_service_currency,
+
+      -- Custom fields using subqueries
+      (SELECT cfv.value FROM custom_field_values cfv
+       JOIN custom_fields cf ON cfv.custom_field_uuid = cf.uuid
+       WHERE cfv.subject_uuid = o.uuid AND cf.name = 'payment-method' LIMIT 1) as payment_method,
+
+      (SELECT cfv.value FROM custom_field_values cfv
+       JOIN custom_fields cf ON cfv.custom_field_uuid = cf.uuid
+       WHERE cfv.subject_uuid = o.uuid AND cf.name = 'amount:' LIMIT 1) as amount,
+
+      (SELECT cfv.value FROM custom_field_values cfv
+       JOIN custom_fields cf ON cfv.custom_field_uuid = cf.uuid
+       WHERE cfv.subject_uuid = o.uuid AND cf.name = 'store-type' LIMIT 1) as store_type,
+
+      (SELECT cfv.value FROM custom_field_values cfv
+       JOIN custom_fields cf ON cfv.custom_field_uuid = cf.uuid
+       WHERE cfv.subject_uuid = o.uuid AND cf.name = 'order-source-id' LIMIT 1) as order_source_id,
+
+      -- Activity Timestamps
+      (SELECT created_at FROM activity
+       WHERE subject_id = o.uuid
+       AND JSON_EXTRACT(properties, '$.attributes.status') = 'order_delivered'
+       ORDER BY created_at DESC LIMIT 1) as delivered_at,
+
+      (SELECT created_at FROM activity
+       WHERE subject_id = o.uuid
+       AND JSON_EXTRACT(properties, '$.attributes.status') = 'order_returned'
+       ORDER BY created_at DESC LIMIT 1) as returned_at,
+
+      (SELECT created_at FROM activity
+       WHERE subject_id = o.uuid
+       AND JSON_EXTRACT(properties, '$.attributes.status') = 'order_cancel'
+       ORDER BY created_at DESC LIMIT 1) as cancelled_at,
+
+      (SELECT created_at FROM activity
+       WHERE subject_id = o.uuid
+       AND JSON_EXTRACT(properties, '$.attributes.status') = 'dispatched'
+       ORDER BY created_at DESC LIMIT 1) as dispatched_at,
+
+      (SELECT created_at FROM activity
+       WHERE subject_id = o.uuid
+       AND JSON_EXTRACT(properties, '$.attributes.status') = 'started'
+       ORDER BY created_at DESC LIMIT 1) as started_at,
+
+      -- Final status determination
+      CASE
+          WHEN o.status = 'order_returned' THEN 'Returned'
+          WHEN o.status = 'order_cancel' THEN 'Cancelled'
+          WHEN o.status = 'created' THEN 'Pending'
+          WHEN o.status = 'dispatched' THEN 'In Transit'
+          WHEN o.status = 'started' THEN 'In Transit'
+          WHEN o.status = 'order_delivered' THEN 'Delivered'
+          WHEN o.status = 'completed' AND EXISTS (
+              SELECT 1 FROM activity a
+              WHERE a.subject_id = o.uuid
+              AND JSON_EXTRACT(a.properties, '$.attributes.status') = 'order_returned'
+          ) THEN 'Returned'
+          WHEN o.status = 'completed' THEN 'Delivered'
+          ELSE o.status
+      END as status_display
+
+  FROM orders o
+  LEFT JOIN contacts c ON o.customer_uuid = c.uuid
+  LEFT JOIN drivers d ON o.driver_assigned_uuid = d.uuid
+  LEFT JOIN users u ON d.user_uuid = u.uuid
+  LEFT JOIN payloads p ON o.payload_uuid = p.uuid
+  LEFT JOIN places pickup ON p.pickup_uuid = pickup.uuid
+  LEFT JOIN places dropoff ON p.dropoff_uuid = dropoff.uuid
+  LEFT JOIN routes r ON r.order_uuid = o.uuid
+  LEFT JOIN tracking_numbers tn ON o.tracking_number_uuid = tn.uuid
+  LEFT JOIN purchase_rates pr ON o.purchase_rate_uuid = pr.uuid
+  LEFT JOIN service_quotes sq ON pr.service_quote_uuid = sq.uuid
+  LEFT JOIN service_rates sr ON sq.service_rate_uuid = sr.uuid
+
+  WHERE o.public_id = '{{OrdersTable.selectedRow.order_id}}'
+  LIMIT 1;

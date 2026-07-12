@@ -1,0 +1,55 @@
+{
+  "animateLoading": true,
+  "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
+  "bottomRow": 4,
+  "dynamicBindingPathList": [
+    {
+      "key": "truncateButtonColor"
+    },
+    {
+      "key": "fontFamily"
+    },
+    {
+      "key": "borderRadius"
+    },
+    {
+      "key": "text"
+    }
+  ],
+  "dynamicHeight": "AUTO_HEIGHT",
+  "dynamicTriggerPathList": [],
+  "fontFamily": "{{appsmith.theme.fontFamily.appFont}}",
+  "fontSize": "1rem",
+  "fontStyle": "",
+  "isLoading": false,
+  "isVisible": true,
+  "key": "yshx6tbcc0",
+  "leftColumn": 31,
+  "maxDynamicHeight": 9000,
+  "minDynamicHeight": 4,
+  "minWidth": 450,
+  "mobileBottomRow": 5,
+  "mobileLeftColumn": 2,
+  "mobileRightColumn": 18,
+  "mobileTopRow": 1,
+  "needsErrorInfo": false,
+  "originalBottomRow": 10,
+  "originalTopRow": 6,
+  "overflow": "NONE",
+  "parentColumnSpace": 7.901562499999999,
+  "parentId": "75s3w3o622",
+  "parentRowSpace": 10,
+  "renderMode": "CANVAS",
+  "responsiveBehavior": "fill",
+  "rightColumn": 55,
+  "shouldTruncate": false,
+  "text": "Total Items: {{(() => {\n              const items = GetOrderItems.data || [];\n              return items.reduce((sum, item) => sum + (item.quantity || 0), 0);\n            })()}}",
+  "textAlign": "LEFT",
+  "textColor": "#4b5563",
+  "topRow": 0,
+  "truncateButtonColor": "{{appsmith.theme.colors.primaryColor}}",
+  "type": "TEXT_WIDGET",
+  "version": 1,
+  "widgetId": "80q3sws20t",
+  "widgetName": "Text28Copy1Copy"
+}
