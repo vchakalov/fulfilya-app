@@ -5,6 +5,6 @@
     SELECT uuid FROM orders WHERE public_id = '{{OrdersTable.selectedRow.order_id}}'
   )
   AND custom_field_uuid = (
-    SELECT uuid FROM custom_fields WHERE uuid = 'edac241c-15b7-4df9-b171-089bbd71e6a1' LIMIT 1
+    SELECT uuid FROM custom_fields WHERE name = 'payment-method' LIMIT 1
   )
   LIMIT 1;

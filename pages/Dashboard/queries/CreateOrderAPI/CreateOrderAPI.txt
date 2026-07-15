@@ -26,12 +26,11 @@
 			"internal_id": OrderSourceIdInput.text || "",
 			"customer_uuid": customer,
 			"service_quote_uuid": serviceQuoteUuid,
-			"order_config_uuid": "80465677-b66d-4423-bc82-b6076dd23e6b",
+			"order_config_uuid": "a0e5f3b9-68e4-4490-95c6-e39ccddbcf32",
 			"customer_type": "fleet-ops:contact",
 			"type": "e-commerce-with-cod",
 			"scheduled_at": ScheduledDeliveryPicker.selectedDate,
 			"notes": DeliveryNotesInput.text,
-			"driver_assigned_uuid": "cfeff109-54ab-42d3-aca3-6a54b4b806a4",
 			"payload": {
 				"pickup": {
 					"name": NewPickupAddressInput.text?.split(',')[0] || "Pickup Location",
@@ -63,27 +62,27 @@
 			},
 			"custom_field_values": [
 				{
-					"custom_field_uuid": "9f959d52-adad-4adb-96c4-23b0c19dcd97",
+					"custom_field_uuid": "080da746-4a5a-4f4d-9afa-78f215fc4971",
 					"value": StoreTypeSelect.selectedOptionValue,
 					"value_type": "text"
 				},
 				{
-					"custom_field_uuid": "1c672697-d260-4b13-a14a-70567f54260d", 
+					"custom_field_uuid": "cc8ba2d8-3e0e-4ba6-8a85-61ed89254f9d",
 					"value": OrderSourceIdInput.text || "",
 					"value_type": "text"
 				},
 				{
-					"custom_field_uuid": "edac241c-15b7-4df9-b171-089bbd71e6a1",
+					"custom_field_uuid": "79707269-ef79-4e2c-b63b-eaf76f4a3f85",
 					"value": NewPaymentMethodSelect.selectedOptionValue,
 					"value_type": "text"
 				},
 				{
-					"custom_field_uuid": "61306d56-f3cd-4259-b1a7-3b4605c35442",
+					"custom_field_uuid": "d0b5b899-6cfc-4eef-a898-ec99a23ef039",
 					"value": NewAmountInput.text,
 					"value_type": "text"
 				},
-				
-      {"custom_field_uuid": "918c9f27-dc87-402f-baa5-658bc4028450",
+
+      {"custom_field_uuid": "8e9a772d-2694-4750-8c8c-f8e9e6996ac2",
       "value": (() => {
           const selectedService = GetAvailableServiceRates.data?.find(
               r => r.service_rate_uuid === OrderShippingSelect.selectedOptionValue
