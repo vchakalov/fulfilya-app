@@ -43,7 +43,7 @@
   "responsiveBehavior": "fill",
   "rightColumn": 32,
   "shouldTruncate": false,
-  "text": "Welcome, {{appsmith.user.name || appsmith.user.email}}",
+  "text": "Welcome, {{appsmith.store.customer_name || appsmith.store.customer_email}}",
   "textAlign": "LEFT",
   "textColor": "#1f2937",
   "topRow": 2,

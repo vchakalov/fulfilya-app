@@ -22,9 +22,8 @@ SELECT
     ELSE CONCAT('Delivery in ', sr.estimated_days, ' day(s)')
   END as description
 FROM service_rates sr
-JOIN orders o ON o.public_id = '{{OrdersTable.selectedRow.order_id}}'
-JOIN contacts c ON o.customer_uuid = c.uuid
-WHERE sr.company_uuid = o.company_uuid
+JOIN contacts c ON c.uuid = '{{appsmith.store.customer_uuid}}'
+WHERE sr.company_uuid = c.company_uuid
   AND sr.deleted_at IS NULL
   AND sr.service_type = 'e-commerce-with-cod'
   -- Filter by customer email pattern
