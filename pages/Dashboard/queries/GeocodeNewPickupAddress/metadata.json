@@ -12,7 +12,12 @@
       "formData": {
         "apiContentType": "none"
       },
-      "headers": [],
+      "headers": [
+        {
+          "key": "User-Agent",
+          "value": "FulfilyaCourier/1.0 (fulfilya@gmail.com)"
+        }
+      ],
       "httpMethod": "GET",
       "httpVersion": "HTTP11",
       "paginationType": "NONE",

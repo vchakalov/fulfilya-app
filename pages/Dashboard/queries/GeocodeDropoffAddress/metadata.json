@@ -14,24 +14,8 @@
       },
       "headers": [
         {
-          "key": "q",
-          "value": "{{DropoffAddressInput.text}}"
-        },
-        {
-          "key": "format",
-          "value": "json"
-        },
-        {
-          "key": "limit",
-          "value": "1"
-        },
-        {
-          "key": "countrycodes",
-          "value": "bg"
-        },
-        {
-          "key": "addressdetails",
-          "value": "1"
+          "key": "User-Agent",
+          "value": "FulfilyaCourier/1.0 (fulfilya@gmail.com)"
         }
       ],
       "httpMethod": "GET",
@@ -77,9 +61,6 @@
       "pluginId": "restapi-plugin"
     },
     "dynamicBindingPathList": [
-      {
-        "key": "headers[0].value"
-      },
       {
         "key": "queryParameters[0].value"
       }
