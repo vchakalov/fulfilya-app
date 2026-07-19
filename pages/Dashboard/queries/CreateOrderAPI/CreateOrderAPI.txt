@@ -91,7 +91,11 @@
       })(),
       "value_type": "select"
 			}
-			]
+			// FleetBase's custom_field_values.value column is NOT NULL, and it nulls out
+			// empty strings before insert - so any optional field left blank (e.g. External
+			// Order ID) crashed order creation with a SQL integrity violation. Drop empty
+			// values instead of sending them.
+			].filter(cfv => cfv.value !== "" && cfv.value !== null && cfv.value !== undefined)
 		}
 	};
 })()}}
