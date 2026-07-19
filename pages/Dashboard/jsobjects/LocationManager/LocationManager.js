@@ -1,4 +1,13 @@
 export default {
+    // Nominatim's parser fails to match many Bulgarian streets when the query
+    // includes the "ул./бул./пл./ж.к." type prefix (e.g. "ул. Солунска 2, София"
+    // returns zero results, but "Солунска 2, София" resolves correctly).
+    // Stripping it before geocoding fixes those false "address not found" cases.
+    stripStreetPrefix: (text) => {
+      if (!text) return text;
+      return text.replace(/^\s*(ул\.?|бул\.?|пл\.?|ж\.?\s?к\.?)\s+/i, '');
+    },
+
     // Validate coordinates are within Bulgaria bounds
     validateCoordinates: (lat, lng) => {
       const latNum = parseFloat(lat);

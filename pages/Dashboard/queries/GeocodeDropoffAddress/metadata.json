@@ -30,7 +30,7 @@
       "queryParameters": [
         {
           "key": "q",
-          "value": "{{DropoffAddressInput.text}}"
+          "value": "{{LocationManager.stripStreetPrefix(DropoffAddressInput.text)}}"
         },
         {
           "key": "format",
