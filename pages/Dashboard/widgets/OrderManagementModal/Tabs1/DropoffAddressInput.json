@@ -50,7 +50,7 @@
   "mobileRightColumn": 23,
   "mobileTopRow": 2,
   "needsErrorInfo": false,
-  "onTextChanged": "{{\n    (() => {\n      // Clear existing timeout\n      clearInterval(appsmith.store.dropoffGeoTimeout);\n\n      if (DropoffAddressInput.text && DropoffAddressInput.text.length > 3) {\n        // Create new timeout\n        const timeoutId = setInterval(() => {\n          GeocodeDropoffAddress.run().then(() => {\n            if (GeocodeDropoffAddress.data?.length > 0) {\n              LocationManager.updateDropoffFromGeocode();\n            }\n          });\n          // Clear after running once\n          clearInterval(appsmith.store.dropoffGeoTimeout);\n        }, 1500);\n\n        // Store timeout ID\n        storeValue('dropoffGeoTimeout', timeoutId);\n      }\n    })()\n  }}",
+  "onTextChanged": "{{\n    (() => {\n      // Clear existing timeout\n      clearInterval(appsmith.store.dropoffGeoTimeout);\n\n      if (DropoffAddressInput.text && DropoffAddressInput.text.length > 3) {\n        // Create new timeout\n        const timeoutId = setInterval(() => {\n          GeocodeDropoffAddress.run().then(() => {\n            if (GeocodeDropoffAddress.data?.results?.length > 0) {\n              LocationManager.updateDropoffFromGeocode();\n            }\n          });\n          // Clear after running once\n          clearInterval(appsmith.store.dropoffGeoTimeout);\n        }, 1500);\n\n        // Store timeout ID\n        storeValue('dropoffGeoTimeout', timeoutId);\n      }\n    })()\n  }}",
   "originalBottomRow": 14,
   "originalTopRow": 7,
   "parentColumnSpace": 9.63828125,

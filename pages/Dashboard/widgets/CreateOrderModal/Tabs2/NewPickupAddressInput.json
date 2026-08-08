@@ -47,7 +47,7 @@
   "mobileRightColumn": 21,
   "mobileTopRow": 5,
   "needsErrorInfo": false,
-  "onTextChanged": "{{(() => {\n     // Clear existing timeout\n     clearInterval(appsmith.store.newPickupGeoTimeout);\n\n     if (NewPickupAddressInput.text && NewPickupAddressInput.text.length > 2) {\n       // Create new timeout\n       const timeoutId = setInterval(() => {\n         GeocodeNewPickupAddress.run().then(() => {\n           if (GeocodeNewPickupAddress.data?.length > 0) {\n             LocationManager.updateNewPickupFromGeocode();\n           }\n         });\n         // Clear after running once\n         clearInterval(appsmith.store.newPickupGeoTimeout);\n       }, 1500);\n\n       // Store timeout ID\n       storeValue('newPickupGeoTimeout', timeoutId);\n     }\n   })()}}",
+  "onTextChanged": "{{(() => {\n     // Clear existing timeout\n     clearInterval(appsmith.store.newPickupGeoTimeout);\n\n     if (NewPickupAddressInput.text && NewPickupAddressInput.text.length > 2) {\n       // Create new timeout\n       const timeoutId = setInterval(() => {\n         GeocodeNewPickupAddress.run().then(() => {\n           if (GeocodeNewPickupAddress.data?.results?.length > 0) {\n             LocationManager.updateNewPickupFromGeocode();\n           }\n         });\n         // Clear after running once\n         clearInterval(appsmith.store.newPickupGeoTimeout);\n       }, 1500);\n\n       // Store timeout ID\n       storeValue('newPickupGeoTimeout', timeoutId);\n     }\n   })()}}",
   "originalBottomRow": 13,
   "originalTopRow": 6,
   "parentColumnSpace": 16.1146240234375,
