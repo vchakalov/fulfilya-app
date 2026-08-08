@@ -1,13 +1,4 @@
 export default {
-    // Nominatim's parser fails to match many Bulgarian streets when the query
-    // includes the "ул./бул./пл./ж.к." type prefix (e.g. "ул. Солунска 2, София"
-    // returns zero results, but "Солунска 2, София" resolves correctly).
-    // Stripping it before geocoding fixes those false "address not found" cases.
-    stripStreetPrefix: (text) => {
-      if (!text) return text;
-      return text.replace(/^\s*(ул\.?|бул\.?|пл\.?|ж\.?\s?к\.?)\s+/i, '');
-    },
-
     // Validate coordinates are within Bulgaria bounds
     validateCoordinates: (lat, lng) => {
       const latNum = parseFloat(lat);
@@ -18,34 +9,38 @@ export default {
              lngNum >= 22.4 && lngNum <= 28.6;
     },
 
-    // Extract resolved address from Nominatim response
+    // Extract resolved address from a Google Geocoding API result
     getResolvedAddress: (geoResult) => {
-      // Nominatim returns 'display_name' with full resolved address
-      const fullAddress = geoResult.display_name || '';
+      const fullAddress = geoResult.formatted_address || '';
 
-      // Also build structured address from components if available
-      const addr = geoResult.address || {};
+      const components = geoResult.address_components || [];
+      const getComponent = (type) => {
+        const match = components.find(c => c.types.includes(type));
+        return match ? match.long_name : null;
+      };
+
       const structured = [
-        addr.house_number,
-        addr.road || addr.street,
-        addr.suburb || addr.neighbourhood,
-        addr.city || addr.town || addr.village,
-        addr.state || addr.county,
-        addr.postcode,
-        addr.country
+        getComponent('street_number'),
+        getComponent('route'),
+        getComponent('neighborhood') || getComponent('sublocality'),
+        getComponent('locality'),
+        getComponent('administrative_area_level_1'),
+        getComponent('postal_code'),
+        getComponent('country')
       ].filter(Boolean).join(', ');
 
       return {
         fullAddress: fullAddress,
         structured: structured,
-        shortName: addr.road || addr.suburb || fullAddress.split(',')[0]
+        shortName: getComponent('route') || getComponent('neighborhood') || fullAddress.split(',')[0]
       };
     },
   updatePickupFromGeocode: () => {
-      const geoResult = GeocodePickupAddress.data?.[0];
-      if (geoResult && geoResult.lat && geoResult.lon) {
+      const geoResult = GeocodePickupAddress.data?.results?.[0];
+      const loc = geoResult?.geometry?.location;
+      if (loc && loc.lat && loc.lng) {
         // Validate coordinates are in Bulgaria
-        if (!LocationManager.validateCoordinates(geoResult.lat, geoResult.lon)) {
+        if (!LocationManager.validateCoordinates(loc.lat, loc.lng)) {
           showAlert("Location found outside Bulgaria - keeping current location", "warning");
           return;
         }
@@ -57,8 +52,8 @@ export default {
         PickupAddressInput.setValue(resolvedAddress.fullAddress);
 
         // Update hidden coordinate fields
-        PickupLatHidden.setValue(geoResult.lat);
-        PickupLngHidden.setValue(geoResult.lon);
+        PickupLatHidden.setValue(loc.lat);
+        PickupLngHidden.setValue(loc.lng);
 
         // Save to database
         UpdatePickupLocationWithCoords.run().then(() => {
@@ -73,27 +68,25 @@ export default {
       }
     },
   updateDropoffFromGeocode: () => {
-    console.log("updateDropoffFromGeocode called");
-    const geoResult = GeocodeDropoffAddress.data?.[0];
-    console.log("Geo result:", geoResult);
+    const geoResult = GeocodeDropoffAddress.data?.results?.[0];
+    const loc = geoResult?.geometry?.location;
 
-    if (geoResult && geoResult.lat && geoResult.lon) {
+    if (loc && loc.lat && loc.lng) {
       // Validate coordinates are in Bulgaria
-      if (!LocationManager.validateCoordinates(geoResult.lat, geoResult.lon)) {
+      if (!LocationManager.validateCoordinates(loc.lat, loc.lng)) {
         showAlert("Location found outside Bulgaria - keeping current location", "warning");
         return;
       }
 
       // Get fully resolved address from API response
       const resolvedAddress = LocationManager.getResolvedAddress(geoResult);
-      console.log("Resolved address:", resolvedAddress);
 
       // Update address input with resolved address
       DropoffAddressInput.setValue(resolvedAddress.fullAddress);
 
       // Update hidden coordinate fields
-      DropoffLatHidden.setValue(geoResult.lat);
-      DropoffLngHidden.setValue(geoResult.lon);
+      DropoffLatHidden.setValue(loc.lat);
+      DropoffLngHidden.setValue(loc.lng);
 
       // Save to database
       UpdateDropoffLocationWithCoord.run().then(() => {
@@ -106,10 +99,11 @@ export default {
     }
   },
 	updateNewPickupFromGeocode: () => {
-  const geoResult = GeocodeNewPickupAddress.data?.[0];
-  if (geoResult && geoResult.lat && geoResult.lon) {
+  const geoResult = GeocodeNewPickupAddress.data?.results?.[0];
+  const loc = geoResult?.geometry?.location;
+  if (loc && loc.lat && loc.lng) {
     // Validate coordinates are in Bulgaria
-    if (!LocationManager.validateCoordinates(geoResult.lat, geoResult.lon)) {
+    if (!LocationManager.validateCoordinates(loc.lat, loc.lng)) {
       showAlert("Location found outside Bulgaria - please enter a Bulgarian address", "warning");
       return;
     }
@@ -121,8 +115,8 @@ export default {
     NewPickupAddressInput.setValue(resolvedAddress.fullAddress);
 
     // Update hidden coordinate fields
-    NewPickupLatHidden.setValue(geoResult.lat);
-    NewPickupLngHidden.setValue(geoResult.lon);
+    NewPickupLatHidden.setValue(loc.lat);
+    NewPickupLngHidden.setValue(loc.lng);
 
     showAlert(`Pickup location found: ${resolvedAddress.shortName}`, "success");
   } else {
@@ -131,10 +125,11 @@ export default {
 },
 
 updateNewDropoffFromGeocode: () => {
-  const geoResult = GeocodeNewDropoffAddress.data?.[0];
-  if (geoResult && geoResult.lat && geoResult.lon) {
+  const geoResult = GeocodeNewDropoffAddress.data?.results?.[0];
+  const loc = geoResult?.geometry?.location;
+  if (loc && loc.lat && loc.lng) {
     // Validate coordinates are in Bulgaria
-    if (!LocationManager.validateCoordinates(geoResult.lat, geoResult.lon)) {
+    if (!LocationManager.validateCoordinates(loc.lat, loc.lng)) {
       showAlert("Location found outside Bulgaria - please enter a Bulgarian address", "warning");
       return;
     }
@@ -146,55 +141,55 @@ updateNewDropoffFromGeocode: () => {
     NewDropoffAddressInput.setValue(resolvedAddress.fullAddress);
 
     // Update hidden coordinate fields
-    NewDropoffLatHidden.setValue(geoResult.lat);
-    NewDropoffLngHidden.setValue(geoResult.lon);
+    NewDropoffLatHidden.setValue(loc.lat);
+    NewDropoffLngHidden.setValue(loc.lng);
 
     showAlert(`Delivery location found: ${resolvedAddress.shortName}`, "success");
   } else {
     showAlert("Address not found - please check spelling", "warning");
   }
 },
-	
+
   validateOrderForm: () => {
     const errors = [];
-    
+
     // Check required fields
     if (!NewPickupAddressInput.text) {
       errors.push("Pickup address is required");
     }
-    
+
     if (!NewDropoffAddressInput.text) {
       errors.push("Delivery address is required");
     }
-    
+
     if (!ScheduledDeliveryPicker.selectedDate) {
       errors.push("Scheduled delivery time is required");
     }
-    
+
     // Check geocoding with Bulgaria validation
     if (!NewPickupLatHidden.text || !NewPickupLngHidden.text) {
       errors.push("Pickup address must be geocoded - please wait or check spelling");
     } else if (!LocationManager.validateCoordinates(NewPickupLatHidden.text, NewPickupLngHidden.text)) {
       errors.push("Pickup address must be in Bulgaria");
     }
-    
+
     if (!NewDropoffLatHidden.text || !NewDropoffLngHidden.text) {
       errors.push("Delivery address must be geocoded - please wait or check spelling");
     } else if (!LocationManager.validateCoordinates(NewDropoffLatHidden.text, NewDropoffLngHidden.text)) {
       errors.push("Delivery address must be in Bulgaria");
     }
-    
+
     return {
       isValid: errors.length === 0,
       errors: errors
     };
   },
-  
+
   resetOrderForm: () => {
     // Clear geocoding timeouts
     clearInterval(appsmith.store.newPickupGeoTimeout);
     clearInterval(appsmith.store.newDropoffGeoTimeout);
-    
+
     // Reset all form inputs
     NewPickupAddressInput.setValue('');
     NewDropoffAddressInput.setValue('');
@@ -209,7 +204,7 @@ updateNewDropoffFromGeocode: () => {
     OrderSourceIdInput.setValue('');
     NewAmountInput.setValue('');
     storeValue('newOrderItems', []);
-    
+
     // Reset selects to defaults
     StoreTypeSelect.setSelectedOption('Shopify');
     NewPaymentMethodSelect.setSelectedOption('COD');
