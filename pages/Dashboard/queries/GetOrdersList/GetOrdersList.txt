@@ -12,6 +12,8 @@ SELECT
     -- Location information (from places table via payloads)
     COALESCE(pickup.name, 'Unknown Pickup') as pickup_location,
     COALESCE(dropoff.name, 'Unknown Dropoff') as delivery_address,
+    TRIM(BOTH ', ' FROM CONCAT_WS(', ', dropoff.street1, dropoff.city)) as delivery_full_address,
+    COALESCE(dropoff.phone, 'No Phone') as recipient_phone,
 
     -- Driver information (from users table via drivers)
     COALESCE(d_user.name, 'Unassigned') as driver_name,
@@ -68,6 +70,6 @@ SELECT
 	o.deleted_at is null
 
   GROUP BY o.uuid, o.public_id, o.internal_id, o.status, o.created_at, c.name, c.email, c.phone, pickup.name, dropoff.name,
-  d_user.name, tn.tracking_number
+  dropoff.street1, dropoff.city, dropoff.phone, d_user.name, tn.tracking_number
   ORDER BY o.created_at DESC
   LIMIT 100;

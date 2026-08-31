@@ -21,6 +21,9 @@
       dropoff.name as dropoff_name,
       dropoff.street1 as dropoff_street,
       dropoff.city as dropoff_city,
+      dropoff.postal_code as dropoff_postal_code,
+      dropoff.country as dropoff_country,
+      dropoff.phone as dropoff_phone,
       ST_Y(dropoff.location) as dropoff_lat,
       ST_X(dropoff.location) as dropoff_lng,
 
