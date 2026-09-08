@@ -23,6 +23,14 @@
       COALESCE(c.name, 'Unknown') as customer_name,
       COALESCE(c.email, '') as customer_email,
       COALESCE(MAX(CASE WHEN cf.name = 'payment-method' THEN cfv.value END), 'Not Specified') as payment_method,
+      -- How a cash-on-delivery order was actually settled at the door. The driver app
+      -- writes the `cod-with-card` custom field (uuid below) when the customer paid by
+      -- card on the POS terminal; unset means cash. Non-COD orders were paid online.
+      CASE
+          WHEN COALESCE(MAX(CASE WHEN cf.name = 'payment-method' THEN cfv.value END), '') <> 'COD' THEN 'Prepaid'
+          WHEN MAX(CASE WHEN cfv.custom_field_uuid = '38c677ff-5bd4-4087-bb0e-2f4c031153c7' THEN cfv.value END) = 'TRUE' THEN 'Card'
+          ELSE 'Cash'
+      END as paid_with,
       COALESCE(MAX(CASE WHEN cf.name = 'amount:' THEN cfv.value END), '0.00') as order_amount_display,
       COALESCE(pickup.name, 'Unknown') as pickup_location,
       COALESCE(dropoff.name, 'Unknown') as dropoff_location,

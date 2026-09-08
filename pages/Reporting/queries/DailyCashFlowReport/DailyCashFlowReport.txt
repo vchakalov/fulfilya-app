@@ -1,12 +1,53 @@
+  -- Daily cash flow: orders per day, and how much cash-on-delivery money was actually
+  -- settled, split by how the customer paid at the door.
+  --
+  -- Three things this deployment gets wrong if copied carelessly:
+  --   * the delivered state is `completed` - 'delivered' / 'in_transit' never appear
+  --   * the COD amount lives in the custom field literally named `amount:`
+  --   * `cod-with-card` (uuid below) is written by the driver app when the customer
+  --     paid by card on the POS terminal; absent or FALSE means cash
   SELECT
     DATE(o.created_at) as report_date,
     DAYNAME(DATE(o.created_at)) as day_of_week,
     COUNT(*) as total_orders,
-    COUNT(CASE WHEN o.status = 'delivered' THEN 1 END) as delivered_orders,
-    COUNT(CASE WHEN o.status = 'canceled' THEN 1 END) as cancelled_orders,
-    ROUND(COUNT(CASE WHEN o.status = 'delivered' THEN 1 END) * 100.0 / COUNT(*), 1) as delivery_rate_percent
+    COUNT(CASE WHEN o.status = 'completed' THEN 1 END) as delivered_orders,
+    COUNT(CASE WHEN o.status IN ('canceled', 'cancelled', 'order_cancel') THEN 1 END) as cancelled_orders,
+    ROUND(COUNT(CASE WHEN o.status = 'completed' THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0), 1) as delivery_rate_percent,
+
+    -- Money the driver owes the office in notes
+    ROUND(SUM(CASE
+      WHEN o.status = 'completed' AND cfd.payment_method = 'COD' AND COALESCE(cfd.paid_with_card, 'FALSE') <> 'TRUE'
+      THEN cfd.amount ELSE 0 END), 2) as cash_collected,
+
+    -- Money that arrived through the card terminal instead
+    ROUND(SUM(CASE
+      WHEN o.status = 'completed' AND cfd.payment_method = 'COD' AND cfd.paid_with_card = 'TRUE'
+      THEN cfd.amount ELSE 0 END), 2) as card_collected,
+
+    ROUND(SUM(CASE
+      WHEN o.status = 'completed' AND cfd.payment_method = 'COD'
+      THEN cfd.amount ELSE 0 END), 2) as total_collected,
+
+    -- COD still out on the road (not delivered, not cancelled)
+    ROUND(SUM(CASE
+      WHEN o.status NOT IN ('completed', 'canceled', 'cancelled', 'order_cancel') AND cfd.payment_method = 'COD'
+      THEN cfd.amount ELSE 0 END), 2) as cod_outstanding
 
   FROM orders o
+  LEFT JOIN (
+    SELECT
+      cfv.subject_uuid,
+      MAX(CASE WHEN cf.name = 'payment-method' THEN cfv.value END) as payment_method,
+      MAX(CASE WHEN cfv.custom_field_uuid = '38c677ff-5bd4-4087-bb0e-2f4c031153c7' THEN cfv.value END) as paid_with_card,
+      CAST(COALESCE(MAX(CASE WHEN cf.name = 'amount:'
+        THEN REPLACE(REPLACE(REPLACE(cfv.value, '$', ''), '€', ''), ',', '') END), '0') AS DECIMAL(10,2)) as amount
+    FROM custom_field_values cfv
+    LEFT JOIN custom_fields cf ON cfv.custom_field_uuid = cf.uuid
+    WHERE cfv.subject_type = 'Fleetbase\\FleetOps\\Models\\Order'
+      AND cfv.deleted_at IS NULL
+    GROUP BY cfv.subject_uuid
+  ) cfd ON cfd.subject_uuid = o.uuid
+
   WHERE o.customer_uuid = '{{appsmith.store.customer_uuid || "21816565-c4a5-40f4-a617-c97119105bc5"}}'
     AND o.created_at >= '{{StartDatePicker.selectedDate || "2025-06-01"}}'
     AND o.created_at <= '{{EndDatePicker.selectedDate || "2025-07-31"}} 23:59:59'
