@@ -6,6 +6,7 @@
           WHEN status_label = 'In Transit' THEN '#3b82f6'
           WHEN status_label = 'Delivered' THEN '#10b981'
           WHEN status_label = 'Cancelled' THEN '#ef4444'
+          WHEN status_label IN ('Delivery attempted', 'Returning to you') THEN '#f97316'
           ELSE '#6b7280'
       END as color
   FROM (
@@ -13,7 +14,9 @@
           o.uuid,
           CASE
               WHEN o.status = 'created' THEN 'Pending'
-              WHEN o.status IN ('dispatched', 'in_transit', 'started') THEN 'In Transit'
+              WHEN o.status IN ('dispatched', 'in_transit', 'started', 'enroute') THEN 'In Transit'
+              WHEN o.status = 'delivery_attempted' THEN 'Delivery attempted'
+              WHEN o.status = 'returning' THEN 'Returning to you'
               WHEN o.status IN ('delivered', 'order_delivered')
                    OR (o.status = 'completed' AND NOT EXISTS (
                        SELECT 1 FROM activity a

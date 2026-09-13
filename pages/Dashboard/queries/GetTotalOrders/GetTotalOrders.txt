@@ -10,7 +10,7 @@
                           AND JSON_EXTRACT(a.properties, '$.attributes.status') IN ('order_returned', 'order_cancel')
                       ))) THEN 1 END) as delivered_orders,
       COUNT(CASE WHEN created_at >= DATE_FORMAT(NOW(), '%Y-%m-01')
-                 AND status IN ('dispatched', 'in_transit', 'started') THEN 1 END) as in_transit_orders,
+                 AND status IN ('dispatched', 'in_transit', 'started', 'enroute', 'delivery_attempted', 'returning') THEN 1 END) as in_transit_orders,
       COUNT(CASE WHEN created_at >= DATE_FORMAT(NOW(), '%Y-%m-01')
                  AND status = 'created' THEN 1 END) as pending_orders,
       COUNT(CASE WHEN created_at >= DATE_FORMAT(NOW(), '%Y-%m-01')

@@ -36,6 +36,10 @@ SELECT
       WHEN o.status = 'created' THEN 'Pending'
       WHEN o.status = 'dispatched' THEN 'In Transit'
       WHEN o.status = 'started' THEN 'In Transit'
+      WHEN o.status = 'enroute' THEN 'In Transit'
+      -- our own statuses for a failed delivery (see DeliveryAttemptController): still in the van
+      WHEN o.status = 'delivery_attempted' THEN 'Delivery attempted'
+      WHEN o.status = 'returning' THEN 'Returning to you'
       WHEN o.status = 'order_delivered' THEN 'Delivered'
       WHEN o.status = 'completed' AND EXISTS (
 				SELECT 1 FROM activity a

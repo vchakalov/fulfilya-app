@@ -7,7 +7,7 @@
   "closeOnSelection": true,
   "dateFormat": "YYYY-MM-DD",
   "datePickerType": "DATE_PICKER",
-  "defaultDate": "{{moment().tz('Europe/Sofia').format()}}",
+  "defaultDate": "{{moment().tz('Europe/Sofia').subtract(30, 'days').format()}}",
   "dynamicBindingPathList": [
     {
       "key": "accentColor"

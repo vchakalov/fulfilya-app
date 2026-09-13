@@ -5,7 +5,11 @@
       o.status,
       CASE
           WHEN o.status = 'created' THEN 'Pending'
-          WHEN o.status IN ('dispatched', 'in_transit', 'started') THEN 'In Transit'
+          WHEN o.status IN ('dispatched', 'in_transit', 'started', 'enroute') THEN 'In Transit'
+          -- our own statuses for a failed delivery: still in the van, not yet an outcome
+          WHEN o.status = 'delivery_attempted' THEN 'Delivery attempted'
+          WHEN o.status = 'returning' THEN 'Returning to you'
+          WHEN o.status = 'order_returned' THEN 'Returned'
           WHEN o.status IN ('delivered', 'order_delivered')
                OR (o.status = 'completed' AND NOT EXISTS (
                    SELECT 1 FROM activity a

@@ -43,6 +43,8 @@
         WHERE a.subject_id = o.uuid
         AND JSON_EXTRACT(a.properties, '$.attributes.status') = 'order_cancelled'
       ) THEN 'Cancelled'
+      WHEN o.status = 'delivery_attempted' THEN 'Delivery attempted'
+      WHEN o.status = 'returning' THEN 'Returning to you'
       ELSE o.status
     END as actual_status,
 
