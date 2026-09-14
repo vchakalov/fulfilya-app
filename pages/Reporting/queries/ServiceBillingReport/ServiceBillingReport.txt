@@ -7,7 +7,11 @@
     COALESCE(sr.service_name, 'No Service Rate') as service_rate_name,
     ROUND(COALESCE(o.distance, 0) / 1000.0, 2) as distance_km,
 
-    -- ACTUAL QUOTED PRICE (from service_quotes.amount via purchase_rate)
+    -- What Fulfilya earned on the order: delivery + the наложен платеж fee, both of
+    -- which the shopper paid at checkout. It is NOT a charge to the merchant - nothing
+    -- is invoiced to them - it is what is held back out of the cash the driver collected
+    -- before the rest is paid over. (`order_fee_usd` is a legacy column name: the
+    -- currency is EUR and always has been.)
     CASE
       WHEN (o.status = 'completed' AND NOT EXISTS (
         SELECT 1 FROM activity a
@@ -74,9 +78,10 @@
     COALESCE(MAX(CASE WHEN cf.name = 'payment-method' THEN cfv.value END), 'Not Specified') as payment_method
 
   FROM orders o
-  -- Use purchase_rate to get the actual service quote amount
-  JOIN purchase_rates pr ON o.purchase_rate_uuid = pr.uuid
-  JOIN service_quotes sq ON pr.service_quote_uuid = sq.uuid
+  -- The quote is reached through the order's PAYLOAD, not through purchase_rates.
+  -- purchase_rates has never had a row in this deployment, and these were INNER joins,
+  -- so this report returned nothing at all for every merchant since it was written.
+  LEFT JOIN service_quotes sq ON sq.payload_uuid = o.payload_uuid AND sq.deleted_at IS NULL
   LEFT JOIN service_rates sr ON sq.service_rate_uuid = sr.uuid
   LEFT JOIN custom_field_values cfv ON o.uuid = cfv.subject_uuid AND cfv.subject_type = 'Fleetbase\\FleetOps\\Models\\Order'
   LEFT JOIN custom_fields cf ON cfv.custom_field_uuid = cf.uuid

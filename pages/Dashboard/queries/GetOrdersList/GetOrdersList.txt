@@ -29,6 +29,28 @@ SELECT
     COALESCE(MAX(CASE WHEN cf.name = 'store-type' THEN cfv.value END), 'Unknown') as store_type,
     COALESCE(MAX(CASE WHEN cf.name = 'order-source-id' THEN cfv.value END), '') as external_order_id,
 
+    -- The merchant's own order number, as it reads in their shop. internal_id is
+    -- "woo:59" / "shopify:1234"; the merchant knows it as 59, so the prefix is dropped.
+    -- Empty for orders created in the console or the portal, which have no shop order.
+    COALESCE(SUBSTRING_INDEX(o.internal_id, ':', -1), '') as shop_order_id,
+
+    -- What the recipient asked for at checkout. Shown in the list, not only on the
+    -- order, because "leave it with the neighbour" is no use discovered afterwards.
+    COALESCE(o.notes, '') as recipient_notes,
+
+    -- How the order settles. All four come from the service quote written when the
+    -- order was created, in cents, and they always add up:
+    --
+    --     cod_amount = goods_amount + delivery_amount + cod_fee
+    --
+    -- cod_amount is what the driver collects at the door, goods_amount is what the
+    -- merchant is paid, and the other two are Fulfilya's. MAX() because the GROUP BY
+    -- below collapses the custom-field rows; there is one quote per order.
+    ROUND(MAX(CAST(JSON_UNQUOTE(JSON_EXTRACT(sq.meta, '$.cod_amount')) AS DECIMAL(12,2))) / 100, 2)     as cod_amount,
+    ROUND(MAX(CAST(JSON_UNQUOTE(JSON_EXTRACT(sq.meta, '$.goods_amount')) AS DECIMAL(12,2))) / 100, 2)  as goods_amount,
+    ROUND(MAX(CAST(JSON_UNQUOTE(JSON_EXTRACT(sq.meta, '$.delivery_amount')) AS DECIMAL(12,2))) / 100, 2) as delivery_amount,
+    ROUND(MAX(CAST(JSON_UNQUOTE(JSON_EXTRACT(sq.meta, '$.cod_commission')) AS DECIMAL(12,2))) / 100, 2) as cod_fee,
+
     -- Status display
   CASE
       WHEN o.status = 'order_returned' THEN 'Returned'
@@ -66,6 +88,12 @@ SELECT
   -- Tracking information
   LEFT JOIN tracking_numbers tn ON o.tracking_number_uuid = tn.uuid
 
+  -- The service quote carries the money split. It joins on the PAYLOAD, not through
+  -- purchase_rates: that table has never had a row in this deployment, so every query
+  -- that went orders -> purchase_rates -> service_quotes returned NULL for the delivery
+  -- price. orders.payload_uuid -> service_quotes.payload_uuid is the link that exists.
+  LEFT JOIN service_quotes sq ON sq.payload_uuid = o.payload_uuid AND sq.deleted_at IS NULL
+
   -- Custom field values (payment method, COD amount, etc.)
   LEFT JOIN custom_field_values cfv ON o.uuid = cfv.subject_uuid AND cfv.subject_type = 'Fleetbase\\FleetOps\\Models\\Order'
   LEFT JOIN custom_fields cf ON cfv.custom_field_uuid = cf.uuid
@@ -73,7 +101,7 @@ SELECT
   WHERE o.customer_uuid = '{{appsmith.store.customer_uuid}}' and
 	o.deleted_at is null
 
-  GROUP BY o.uuid, o.public_id, o.internal_id, o.status, o.created_at, c.name, c.email, c.phone, pickup.name, dropoff.name,
+  GROUP BY o.uuid, o.public_id, o.internal_id, o.status, o.created_at, o.notes, c.name, c.email, c.phone, pickup.name, dropoff.name,
   dropoff.street1, dropoff.city, dropoff.phone, d_user.name, tn.tracking_number
   ORDER BY o.created_at DESC
   LIMIT 100;

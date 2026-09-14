@@ -39,11 +39,23 @@
       -- Tracking
       tn.tracking_number,
 
-      -- Service Rate info (via purchase_rates → service_quotes → service_rates)
+      -- Service Rate info (via the order's payload → service_quotes → service_rates)
       sr.uuid as service_rate_uuid,
       sr.service_name as current_service_name,
       sr.base_fee as current_service_fee,
       sr.currency as current_service_currency,
+
+      -- How this order settles, in euros. From the quote, in cents, and they add up:
+      -- cod_amount = goods_amount + delivery_amount + cod_fee. The merchant is paid
+      -- goods_amount; delivery and the fee were paid by the shopper and are Fulfilya's.
+      ROUND(CAST(JSON_UNQUOTE(JSON_EXTRACT(sq.meta, '$.cod_amount')) AS DECIMAL(12,2)) / 100, 2)      as cod_amount,
+      ROUND(CAST(JSON_UNQUOTE(JSON_EXTRACT(sq.meta, '$.goods_amount')) AS DECIMAL(12,2)) / 100, 2)   as goods_amount,
+      ROUND(CAST(JSON_UNQUOTE(JSON_EXTRACT(sq.meta, '$.delivery_amount')) AS DECIMAL(12,2)) / 100, 2) as delivery_amount,
+      ROUND(CAST(JSON_UNQUOTE(JSON_EXTRACT(sq.meta, '$.cod_commission')) AS DECIMAL(12,2)) / 100, 2) as cod_fee,
+      CAST(JSON_UNQUOTE(JSON_EXTRACT(sq.meta, '$.cod_pct')) AS DECIMAL(5,2))                         as cod_pct,
+
+      -- The merchant's own order number, without the "woo:" / "shopify:" prefix.
+      COALESCE(SUBSTRING_INDEX(o.internal_id, ':', -1), '') as shop_order_id,
 
       -- Custom fields using subqueries
       (SELECT cfv.value FROM custom_field_values cfv
@@ -118,8 +130,10 @@
   LEFT JOIN places dropoff ON p.dropoff_uuid = dropoff.uuid
   LEFT JOIN routes r ON r.order_uuid = o.uuid
   LEFT JOIN tracking_numbers tn ON o.tracking_number_uuid = tn.uuid
-  LEFT JOIN purchase_rates pr ON o.purchase_rate_uuid = pr.uuid
-  LEFT JOIN service_quotes sq ON pr.service_quote_uuid = sq.uuid
+  -- Not through purchase_rates: that table has never had a row in this deployment, so
+  -- this join produced NULL for every order and the delivery price has always shown
+  -- blank on the order screen. The quote is linked to the order's payload instead.
+  LEFT JOIN service_quotes sq ON sq.payload_uuid = o.payload_uuid AND sq.deleted_at IS NULL
   LEFT JOIN service_rates sr ON sq.service_rate_uuid = sr.uuid
 
   WHERE o.public_id = '{{OrdersTable.selectedRow.order_id}}'

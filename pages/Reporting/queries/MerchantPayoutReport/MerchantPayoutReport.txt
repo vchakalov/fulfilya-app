@@ -1,0 +1,90 @@
+  -- MerchantPayoutReport - what Fulfilya owes the merchant.
+  --
+  -- The merchant is never invoiced. Their shoppers pay cash on delivery, the driver
+  -- collects the whole sum at the door, and Fulfilya therefore holds the money. This
+  -- report is the other direction: how much of that cash is the merchant's.
+  --
+  --     collected = goods + delivery + наложен платеж fee
+  --     owed to the merchant = goods
+  --
+  -- Delivery and the fee were paid by the shopper on top of the goods, so the merchant
+  -- receives the full price of what they sold - nothing is deducted from it.
+  --
+  -- Only orders whose money has actually been collected are listed. An order still in
+  -- the van is not a payable; a returned or cancelled one never produced any cash.
+  SELECT
+    o.public_id as order_id,
+
+    -- The merchant's own order number, the one they see in WooCommerce. internal_id is
+    -- "woo:59"; they know it as 59.
+    COALESCE(SUBSTRING_INDEX(o.internal_id, ':', -1), '') as shop_order_id,
+
+    DATE_FORMAT(o.created_at, '%Y-%m-%d') as order_date,
+    DATE_FORMAT(COALESCE((
+      SELECT a.created_at FROM activity a
+      WHERE a.subject_id = o.uuid
+        AND JSON_EXTRACT(a.properties, '$.attributes.status') IN ('completed', 'order_delivered')
+      ORDER BY a.created_at DESC LIMIT 1
+    ), o.updated_at), '%Y-%m-%d') as delivered_date,
+
+    -- Who it went to
+    COALESCE(dropoff.name, '') as recipient_name,
+    COALESCE(dropoff.phone, '') as recipient_phone,
+    TRIM(BOTH ', ' FROM CONCAT_WS(', ', dropoff.street1, dropoff.city)) as recipient_address,
+
+    -- The split, in euros. All four come from the service quote written when the order
+    -- was created (and re-split by the API if the amount was corrected afterwards), so
+    -- they are what was actually settled and not a recalculation at today's prices.
+    ROUND(CAST(JSON_UNQUOTE(JSON_EXTRACT(sq.meta, '$.cod_amount')) AS DECIMAL(12,2)) / 100, 2)       as collected,
+    ROUND(CAST(JSON_UNQUOTE(JSON_EXTRACT(sq.meta, '$.delivery_amount')) AS DECIMAL(12,2)) / 100, 2)  as delivery,
+    ROUND(CAST(JSON_UNQUOTE(JSON_EXTRACT(sq.meta, '$.cod_commission')) AS DECIMAL(12,2)) / 100, 2)   as cod_fee,
+    ROUND(CAST(JSON_UNQUOTE(JSON_EXTRACT(sq.meta, '$.goods_amount')) AS DECIMAL(12,2)) / 100, 2)     as owed_to_you,
+
+    COALESCE(sq.currency, 'EUR') as currency,
+    CAST(JSON_UNQUOTE(JSON_EXTRACT(sq.meta, '$.cod_pct')) AS DECIMAL(5,2)) as cod_pct
+
+  FROM orders o
+  LEFT JOIN payloads p ON o.payload_uuid = p.uuid
+  LEFT JOIN places dropoff ON p.dropoff_uuid = dropoff.uuid
+  -- Through the payload: purchase_rates is empty in this deployment, so the join every
+  -- other billing query uses returns nothing.
+  JOIN service_quotes sq ON sq.payload_uuid = o.payload_uuid AND sq.deleted_at IS NULL
+
+  WHERE o.customer_uuid = '{{appsmith.store.customer_uuid}}'
+    AND o.deleted_at IS NULL
+    AND DATE(o.created_at) >= COALESCE(
+      NULLIF('{{StartDatePicker.formattedDate}}', ''),
+      DATE(NOW()) - INTERVAL 7 DAY
+    )
+    AND DATE(o.created_at) <= COALESCE(
+      NULLIF('{{EndDatePicker.formattedDate}}', ''),
+      DATE(NOW())
+    )
+
+    -- Delivered, and not a return dressed as one. Fleetbase writes `completed` for both
+    -- a delivery and a parcel handed back at the shop, and the two are only told apart
+    -- by the activity trail - the same test every other query here uses.
+    AND o.status IN ('completed', 'order_delivered')
+    AND NOT EXISTS (
+      SELECT 1 FROM activity a
+      WHERE a.subject_id = o.uuid
+        AND JSON_EXTRACT(a.properties, '$.attributes.status') IN ('order_returned', 'order_cancel', 'order_cancelled')
+    )
+
+    -- Cash on delivery only. A card order was paid to the merchant's own processor and
+    -- never passed through Fulfilya's hands, so there is nothing to pay over.
+    AND EXISTS (
+      SELECT 1
+      FROM custom_field_values cfv
+      JOIN custom_fields cf ON cfv.custom_field_uuid = cf.uuid
+      WHERE cfv.subject_uuid = o.uuid
+        AND cf.name = 'payment-method'
+        AND cfv.value = 'COD'
+        AND cfv.subject_type = 'Fleetbase\\FleetOps\\Models\\Order'
+    )
+
+    -- Orders created before the split was recorded have no goods figure and would show
+    -- a blank payable, which is worse than being absent from the list.
+    AND JSON_EXTRACT(sq.meta, '$.goods_amount') IS NOT NULL
+
+  ORDER BY o.created_at DESC;

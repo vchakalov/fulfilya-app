@@ -1,16 +1,38 @@
   SELECT
     COALESCE(e.sku, CONCAT('ITEM-', ROW_NUMBER() OVER ())) as item_id,
-    e.name,
+    -- The name the driver reads carries the count ("Camembert x 2") because Fleetbase's
+    -- Entity has no quantity column. The merchant already has a quantity column here, so
+    -- the suffix is stripped and the product name shown on its own.
+    REGEXP_REPLACE(e.name, ' x [0-9]+$', '') as name,
     e.description,
     e.price,
     e.sale_price,
-    COUNT(*) as quantity,
+    -- One entity row IS one line item, however many the shopper bought: Fleetbase's
+    -- Entity has no quantity column, so OrderWebhookService records the count twice -
+    -- in entities.meta (a real json column, verified against the fleetops schema) and
+    -- in the name the driver reads ("Camembert x 2"). COUNT(*) therefore returned 1 for
+    -- every line, and a merchant checking what went out saw "1" against an order of three.
+    --
+    -- meta first because it is the number itself rather than a parsed label; the name is
+    -- the fallback for anything written before meta was set. The name pattern is anchored
+    -- on the whole " x N" suffix, not on a trailing number, or a product legitimately
+    -- called "Camembert 250" would be read as 250 of them. SUM because the GROUP BY below
+    -- folds duplicate lines together.
+    SUM(COALESCE(
+      JSON_EXTRACT(e.meta, '$.quantity'),
+      CASE WHEN e.name REGEXP ' x [0-9]+$' THEN CAST(REGEXP_SUBSTR(e.name, '[0-9]+$') AS UNSIGNED) END,
+      1
+    )) as quantity,
     MIN(e.weight) as weight,
     e.dimensions_unit,
     e.weight_unit,
     e.sku,
     GROUP_CONCAT(DISTINCT tn.tracking_number SEPARATOR ', ') as tracking_numbers,
-    (e.price * COUNT(*)) as line_total
+    ROUND(e.price * SUM(COALESCE(
+      JSON_EXTRACT(e.meta, '$.quantity'),
+      CASE WHEN e.name REGEXP ' x [0-9]+$' THEN CAST(REGEXP_SUBSTR(e.name, '[0-9]+$') AS UNSIGNED) END,
+      1
+    )), 2) as line_total
   FROM entities e
   JOIN payloads p ON e.payload_uuid = p.uuid
   JOIN orders o ON o.payload_uuid = p.uuid

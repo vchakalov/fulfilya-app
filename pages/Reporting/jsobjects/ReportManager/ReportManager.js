@@ -57,6 +57,17 @@ export default {
               showAlert('Failed to load Service Billing report', 'error');
             });
           break;
+        // What Fulfilya owes the merchant. Nothing is invoiced to them: their shoppers
+        // pay cash on delivery, so Fulfilya is holding the money and this is the list
+        // of what has to be paid over.
+        case 'merchant_payout':
+          MerchantPayoutReport.run()
+            .then(() => storeValue('reportLoading', false))
+            .catch(() => {
+              storeValue('reportLoading', false);
+              showAlert('Failed to load the payout report', 'error');
+            });
+          break;
         default:
           storeValue('reportLoading', false);
           showAlert('Unknown report type selected', 'warning');
@@ -198,6 +209,18 @@ export default {
   data.length).toFixed(1) : 0,
             codOrders: data.find(p => p.payment_method === 'COD')?.total_orders || 0,
             paidOrders: data.find(p => p.payment_method === 'Paid')?.total_orders || 0
+          };
+
+        case 'merchant_payout':
+          return {
+            orders: data.length,
+            // The three lines of the settlement, summed. collected is what the drivers
+            // took at the door; owed is the merchant's share of it; the rest is
+            // Fulfilya's delivery and наложен платеж fee, both paid by the shopper.
+            collected: data.reduce((sum, o) => sum + (Number(o.collected) || 0), 0).toFixed(2),
+            delivery: data.reduce((sum, o) => sum + (Number(o.delivery) || 0), 0).toFixed(2),
+            codFees: data.reduce((sum, o) => sum + (Number(o.cod_fee) || 0), 0).toFixed(2),
+            owedToYou: data.reduce((sum, o) => sum + (Number(o.owed_to_you) || 0), 0).toFixed(2)
           };
 
         case 'service_billing':
