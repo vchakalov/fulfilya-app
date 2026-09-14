@@ -21,7 +21,9 @@ SELECT
   d.latitude as driver_lat,
   d.longitude as driver_lng,
   d.online as driver_online,
-  d.current_status as driver_status,
+  -- `status`, not `current_status`: the drivers table has no such column and this
+  -- query has therefore failed outright every time the tracking map opened.
+  d.status as driver_status,
 
   -- Place names (coordinates are in routes table)
   pickup.name as pickup_name,

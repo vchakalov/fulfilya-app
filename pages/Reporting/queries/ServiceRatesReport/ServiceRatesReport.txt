@@ -1,48 +1,72 @@
--- ServiceRatesReport - Shipping fee analysis
-SELECT 
-  sr.public_id as rate_id,
-  sr.service_name,
-  sr.service_type,
-  CONCAT(sr.currency, ' ', sr.base_fee) as base_fee_display,
-  CONCAT(sr.currency, ' ', sr.per_km_fee) as per_km_display,
-  CONCAT(sr.currency, ' ', sr.per_min_fee) as per_min_display,
-  sr.peak_factor,
-  
-  -- Usage Statistics
-  COUNT(DISTINCT o.uuid) as total_orders,
-  COUNT(DISTINCT DATE(o.created_at)) as active_days,
-  
-  -- Revenue Calculations
-  ROUND(SUM(
-    sr.base_fee + 
-    (COALESCE(JSON_UNQUOTE(JSON_EXTRACT(r.details, '$.summary.totalDistance')), 0) / 1000 * sr.per_km_fee) +
-    (COALESCE(JSON_UNQUOTE(JSON_EXTRACT(r.details, '$.summary.totalTime')), 0) / 60 * sr.per_min_fee)
-  ), 2) as gross_revenue,
-  
-  ROUND(AVG(
-    sr.base_fee + 
-    (COALESCE(JSON_UNQUOTE(JSON_EXTRACT(r.details, '$.summary.totalDistance')), 0) / 1000 * sr.per_km_fee) +
-    (COALESCE(JSON_UNQUOTE(JSON_EXTRACT(r.details, '$.summary.totalTime')), 0) / 60 * sr.per_min_fee)
-  ), 2) as avg_order_fee,
-  
-  -- Operational Metrics
-  ROUND(SUM(COALESCE(JSON_UNQUOTE(JSON_EXTRACT(r.details, '$.summary.totalDistance')), 0) / 1000), 1) as total_km,
-  ROUND(AVG(COALESCE(JSON_UNQUOTE(JSON_EXTRACT(r.details, '$.summary.totalDistance')), 0) / 1000), 1) as avg_km_per_order,
-  ROUND(SUM(COALESCE(JSON_UNQUOTE(JSON_EXTRACT(r.details, '$.summary.totalTime')), 0) / 60), 0) as total_minutes,
-  
-  -- Efficiency Score (Revenue per KM)
-  ROUND(
-    SUM(sr.base_fee + (COALESCE(JSON_UNQUOTE(JSON_EXTRACT(r.details, '$.summary.totalDistance')), 0) / 1000 * sr.per_km_fee)) /
-    NULLIF(SUM(COALESCE(JSON_UNQUOTE(JSON_EXTRACT(r.details, '$.summary.totalDistance')), 0) / 1000), 0)
-  , 2) as revenue_per_km
+  -- ServiceRatesReport - the merchant's service rates, and what each one actually carried.
+  --
+  -- NOTE: prepared statements are turned OFF for this query (its settings tab) and must
+  -- stay off while these comments exist - Appsmith refuses to run a prepared statement
+  -- whose text contains the word "is" anywhere, including inside a comment.
+  --
+  -- Rewritten 2026-09-15. The previous version could not run at all, and its premise no
+  -- longer matched the business even if it had:
+  --
+  --   * it priced orders as base + distance x per_km_fee + time x per_min_fee, with a
+  --     peak_factor on top. None of `per_km_fee`, `per_min_fee` or `peak_factor` exist
+  --     as columns - service_rates has `base_fee` and `per_meter_flat_rate_fee`.
+  --   * Fulfilya does not price by distance or by time. Delivery is a flat standard or
+  --     express price per merchant (Ico, 2026-09-14: "NO WEIGHT - we have standart and
+  --     express thats it"), so a revenue-per-km figure describes nothing real.
+  --   * it joined `orders.service_rate_uuid`, which does not exist either. An order
+  --     reaches its rate through its payload: orders -> service_quotes -> service_rates.
+  --   * it scoped on `sr.company_uuid = <the merchant's CONTACT uuid>`. Those are
+  --     different identifiers, so the filter matched nothing.
+  --
+  -- What it shows now: each rate the merchant has, what it charges, how many orders were
+  -- quoted on it in the period, and what those orders came to - delivery and the наложен
+  -- платеж fee separately, because they are two different things Fulfilya keeps.
+  SELECT
+    sr.public_id AS rate_id,
+    sr.service_name,
+    sr.service_type,
+    sr.currency,
+    ROUND(sr.base_fee / 100, 2) AS rate_price,
 
-FROM service_rates sr
-LEFT JOIN orders o ON o.service_rate_uuid = sr.uuid
-LEFT JOIN routes r ON r.order_uuid = o.uuid
-WHERE sr.company_uuid = '{{appsmith.store.customer_uuid}}'
-  AND o.created_at >= '{{StartDatePicker.formattedDate || moment().subtract(30, "days").format("YYYY-MM-DD")}}'
-  AND o.created_at <= '{{EndDatePicker.formattedDate || moment().format("YYYY-MM-DD")}}'
-  AND o.deleted_at IS NULL
-  AND sr.deleted_at IS NULL
-GROUP BY sr.uuid
-ORDER BY total_orders DESC;
+    COUNT(DISTINCT o.uuid) AS total_orders,
+    COUNT(DISTINCT DATE(o.created_at)) AS active_days,
+
+    SUM(CASE WHEN o.status IN ('completed', 'order_delivered') THEN 1 ELSE 0 END) AS delivered_orders,
+
+    -- What Fulfilya earned on those orders. Both lines were paid by the shopper at
+    -- checkout, on top of the goods - neither one gets billed to the merchant.
+    ROUND(COALESCE(SUM(CAST(JSON_UNQUOTE(JSON_EXTRACT(sq.meta, '$.delivery_amount')) AS DECIMAL(12,2))), 0) / 100, 2) AS delivery_total,
+    ROUND(COALESCE(SUM(CAST(JSON_UNQUOTE(JSON_EXTRACT(sq.meta, '$.cod_commission')) AS DECIMAL(12,2))), 0) / 100, 2) AS cod_fee_total,
+    -- A rate nobody used in the period reads 0.00, not NULL - an empty cell in a money
+    -- column looks like a fault rather than like nothing having happened.
+    ROUND(COALESCE(SUM(sq.amount), 0) / 100, 2) AS fulfilya_total,
+
+    -- The distance the orders actually covered, kept as a fact about the work rather
+    -- than as an input to the price.
+    ROUND(SUM(COALESCE(o.distance, 0)) / 1000.0, 1) AS total_km,
+    ROUND(AVG(COALESCE(o.distance, 0)) / 1000.0, 1) AS avg_km_per_order
+
+  FROM service_rates sr
+  JOIN contacts c ON c.company_uuid = sr.company_uuid
+  LEFT JOIN service_quotes sq ON sq.service_rate_uuid = sr.uuid AND sq.deleted_at <=> NULL
+  LEFT JOIN orders o
+    ON o.payload_uuid = sq.payload_uuid
+   AND o.customer_uuid = c.uuid
+   AND o.deleted_at <=> NULL
+   AND DATE(o.created_at) >= COALESCE(
+     NULLIF('{{StartDatePicker.formattedDate}}', ''),
+     DATE(NOW()) - INTERVAL 30 DAY
+   )
+   AND DATE(o.created_at) <= COALESCE(
+     NULLIF('{{EndDatePicker.formattedDate}}', ''),
+     DATE(NOW())
+   )
+
+  WHERE c.uuid = '{{appsmith.store.customer_uuid}}'
+    AND sr.deleted_at <=> NULL
+    -- Rates are provisioned per merchant and named after their email, which keeps one
+    -- merchant from seeing another's prices on a shared company.
+    AND sr.service_name LIKE CONCAT(c.email, '-%')
+
+  GROUP BY sr.uuid, sr.public_id, sr.service_name, sr.service_type, sr.currency, sr.base_fee
+  ORDER BY total_orders DESC, sr.service_name;
