@@ -1,3 +1,9 @@
+  -- NOTE: prepared statements are turned OFF for this query (its settings tab), and
+  -- must stay off while these comments exist. Appsmith refuses to run a prepared
+  -- statement whose text contains the word "is" ANYWHERE - including inside a comment,
+  -- as ordinary English rather than the SQL keyword. The error names the IS keyword and
+  -- points at the SQL, which sends you looking in the wrong place: the executable SQL
+  -- here has no IS in it at all. Found the hard way on 2026-09-15.
   -- MerchantPayoutReport - what Fulfilya owes the merchant.
   --
   -- The merchant is never invoiced. Their shoppers pay cash on delivery, the driver
