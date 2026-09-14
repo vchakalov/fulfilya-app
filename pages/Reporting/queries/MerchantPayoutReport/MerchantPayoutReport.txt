@@ -59,10 +59,13 @@
   LEFT JOIN places dropoff ON p.dropoff_uuid = dropoff.uuid
   -- Through the payload: purchase_rates is empty in this deployment, so the join every
   -- other billing query uses returns nothing.
-  JOIN service_quotes sq ON sq.payload_uuid = o.payload_uuid AND sq.deleted_at IS NULL
+  -- `<=> NULL` rather than `IS NULL`: Appsmith refuses the IS keyword outright when a
+  -- query runs as a prepared statement, which this one does. The null-safe equality
+  -- operator means the same thing to MySQL and is what GetOrderItems already uses.
+  JOIN service_quotes sq ON sq.payload_uuid = o.payload_uuid AND sq.deleted_at <=> NULL
 
   WHERE o.customer_uuid = '{{appsmith.store.customer_uuid}}'
-    AND o.deleted_at IS NULL
+    AND o.deleted_at <=> NULL
     AND DATE(o.created_at) >= COALESCE(
       NULLIF('{{StartDatePicker.formattedDate}}', ''),
       DATE(NOW()) - INTERVAL 90 DAY
@@ -96,6 +99,6 @@
 
     -- Orders created before the split was recorded have no goods figure and would show
     -- a blank payable, which is worse than being absent from the list.
-    AND JSON_EXTRACT(sq.meta, '$.goods_amount') IS NOT NULL
+    AND NOT (JSON_EXTRACT(sq.meta, '$.goods_amount') <=> NULL)
 
   ORDER BY o.created_at DESC;
