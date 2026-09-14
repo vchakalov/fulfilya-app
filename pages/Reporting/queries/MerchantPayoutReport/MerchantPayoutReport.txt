@@ -59,9 +59,12 @@
   LEFT JOIN places dropoff ON p.dropoff_uuid = dropoff.uuid
   -- Through the payload: purchase_rates is empty in this deployment, so the join every
   -- other billing query uses returns nothing.
-  -- `<=> NULL` rather than `IS NULL`: Appsmith refuses the IS keyword outright when a
-  -- query runs as a prepared statement, which this one does. The null-safe equality
-  -- operator means the same thing to MySQL and is what GetOrderItems already uses.
+  -- The null-safe equality operator, not the SQL keyword that would read more naturally
+  -- here: Appsmith rejects that keyword outright when a query runs as a prepared
+  -- statement, which this one does. `<=>` means the same thing to MySQL and is what
+  -- GetOrderItems already uses under the same setting. The keyword is avoided in these
+  -- comments too - there is no knowing whether the check parses the SQL or just scans
+  -- the text, and a comment is not worth another round trip to find out.
   JOIN service_quotes sq ON sq.payload_uuid = o.payload_uuid AND sq.deleted_at <=> NULL
 
   WHERE o.customer_uuid = '{{appsmith.store.customer_uuid}}'
