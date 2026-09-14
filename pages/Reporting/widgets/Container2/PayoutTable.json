@@ -7,7 +7,7 @@
   "bottomRow": 221,
   "bottomRowBeforeCollapse": 221,
   "boxShadow": "{{appsmith.theme.boxShadow.appBoxShadow}}",
-  "cachedTableData": null,
+  "cachedTableData": {},
   "canFreezeColumn": true,
   "childStylesheet": {
     "button": {
@@ -103,6 +103,14 @@
     },
     {
       "key": "primaryColumns.order_id.computedValue"
+    }
+  ],
+  "dynamicPropertyPathList": [
+    {
+      "key": "tableData"
+    },
+    {
+      "key": "isVisible"
     }
   ],
   "dynamicTriggerPathList": [],
