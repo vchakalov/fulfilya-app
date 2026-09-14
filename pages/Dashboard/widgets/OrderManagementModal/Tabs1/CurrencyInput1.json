@@ -7,7 +7,7 @@
   "bottomRow": 14,
   "boxShadow": "none",
   "decimals": 2,
-  "defaultCurrencyCode": "BGN",
+  "defaultCurrencyCode": "EUR",
   "defaultText": "{{GetOrderDetails.data[0]?.amount?.replace('$', '')}}",
   "dynamicBindingPathList": [
     {

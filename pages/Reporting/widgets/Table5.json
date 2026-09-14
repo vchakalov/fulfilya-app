@@ -320,7 +320,7 @@
       "allowSameOptionsInNewRow": true,
       "cellBackground": "",
       "columnType": "number",
-      "computedValue": "{{(() => { const tableData = Table5.processedTableData || []; return tableData.length > 0 ? tableData.map((currentRow, currentIndex) => (currentRow[\"order_fee_usd\"] + ' BGN')) : currentRow[\"order_fee_usd\"] + ' BGN' })()}}",
+      "computedValue": "{{(() => { const tableData = Table5.processedTableData || []; return tableData.length > 0 ? tableData.map((currentRow, currentIndex) => (currentRow[\"order_fee_usd\"] + ' EUR')) : currentRow[\"order_fee_usd\"] + ' EUR' })()}}",
       "currencyCode": "USD",
       "decimals": 0,
       "enableFilter": true,
