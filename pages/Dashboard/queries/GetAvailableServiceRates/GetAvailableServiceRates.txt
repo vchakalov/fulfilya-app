@@ -25,8 +25,10 @@ FROM service_rates sr
 JOIN contacts c ON c.uuid = '{{appsmith.store.customer_uuid}}'
 WHERE sr.company_uuid = c.company_uuid
   AND sr.deleted_at IS NULL
-  AND sr.service_type = 'e-commerce-with-cod'
-  -- Filter by customer email pattern
+  -- No service_type filter. The rates are matched by NAME, which carries the merchant's
+  -- email - the same rule the backend uses (OrderWebhookService::findServiceRate). The old
+  -- condition service_type = 'e-commerce-with-cod' emptied this dropdown for every merchant
+  -- once the rates were recreated as 'parcel' on 2026-09-14 (found 2026-09-16).
   AND (
     sr.service_name = CONCAT(c.email, '-standard')
     OR sr.service_name = CONCAT(c.email, '-express')
