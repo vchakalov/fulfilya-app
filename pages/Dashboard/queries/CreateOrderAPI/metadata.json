@@ -21,6 +21,10 @@
         {
           "key": "Authorization",
           "value": "Bearer {{appsmith.store.authToken}}"
+        },
+        {
+          "key": "Accept",
+          "value": "application/json"
         }
       ],
       "httpMethod": "POST",
