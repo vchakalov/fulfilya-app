@@ -1,101 +1,44 @@
 {{(() => {
-	// Validate required fields
-	if (!NewPickupAddressInput.text || !NewDropoffAddressInput.text) {
-		
-		throw new Error("Pickup and delivery addresses are required");
+	// Everything about WHO this order belongs to is resolved on the server from the
+	// merchant's own login token, so this body carries only what the merchant typed.
+	// It can no longer name another merchant, pick another merchant's price, or point
+	// at a different order config - those used to travel from the browser, signed with
+	// an admin token belonging to the company owner.
+	//
+	// The delivery quote and the наложен платеж commission are worked out server-side
+	// too, which is why CreateServiceQuoteForOrder and GetCreatedServiceQuote are no
+	// longer run before this: their SQL reused one quote row for a whole day of orders
+	// and never linked it to the order, so nothing the merchant is paid out on could
+	// be traced back to a price.
+
+	if (!NewDropoffAddressInput.text) {
+		throw new Error("A delivery address is required");
 	}
 
-	if (!NewPickupLatHidden.text || !NewPickupLngHidden.text || 
-			!NewDropoffLatHidden.text || !NewDropoffLngHidden.text) {
-		
-		throw new Error("Address geocoding is required - please wait for location validation");
+	if (!OrderShippingSelect.selectedOptionValue) {
+		throw new Error("Please choose Standard or Express");
 	}
-	
-    // Get service quote UUID from the creation query result
- const serviceQuoteUuid = GetCreatedServiceQuote.data[0].service_quote_uuid;
-	
-	if (!serviceQuoteUuid) {
-        throw new Error("Failed to create service quote. Please try again.");
-    }
-	
-  
-	const customer = appsmith.store.customer_uuid;
 
 	return {
-		"order": {
-			"internal_id": OrderSourceIdInput.text || "",
-			"customer_uuid": customer,
-			"service_quote_uuid": serviceQuoteUuid,
-			"order_config_uuid": "a0e5f3b9-68e4-4490-95c6-e39ccddbcf32",
-			"customer_type": "fleet-ops:contact",
-			"type": "e-commerce-with-cod",
-			"scheduled_at": ScheduledDeliveryPicker.selectedDate,
-			"notes": DeliveryNotesInput.text,
-			"payload": {
-				"pickup": {
-					"name": NewPickupAddressInput.text?.split(',')[0] || "Pickup Location",
-					"address": NewPickupAddressInput.text || "",
-					"location": {
-						"type": "Point",
-						"coordinates": [
-							parseFloat(NewPickupLngHidden.text), 
-							parseFloat(NewPickupLatHidden.text)
-						]
-					}
-				},
-				"dropoff": {
-					"name": NewDropoffAddressInput.text?.split(',')[0] || "Delivery Location", 
-					"address": NewDropoffAddressInput.text || "",
-					"location": {
-						"type": "Point",
-						"coordinates": [
-							parseFloat(NewDropoffLngHidden.text), 
-							parseFloat(NewDropoffLatHidden.text)
-						]
-					}
-				},
-				"entities": (appsmith.store.newOrderItems || []).map(item => ({
-					"name": item.name,
-					"price": item.price ? parseFloat(item.price) : 0,
-					"sku": item.sku || ""
-				}))
-			},
-			"custom_field_values": [
-				{
-					"custom_field_uuid": "080da746-4a5a-4f4d-9afa-78f215fc4971",
-					"value": StoreTypeSelect.selectedOptionValue,
-					"value_type": "text"
-				},
-				{
-					"custom_field_uuid": "cc8ba2d8-3e0e-4ba6-8a85-61ed89254f9d",
-					"value": OrderSourceIdInput.text || "",
-					"value_type": "text"
-				},
-				{
-					"custom_field_uuid": "79707269-ef79-4e2c-b63b-eaf76f4a3f85",
-					"value": NewPaymentMethodSelect.selectedOptionValue,
-					"value_type": "text"
-				},
-				{
-					"custom_field_uuid": "d0b5b899-6cfc-4eef-a898-ec99a23ef039",
-					"value": NewAmountInput.text,
-					"value_type": "text"
-				},
-
-      {"custom_field_uuid": "8e9a772d-2694-4750-8c8c-f8e9e6996ac2",
-      "value": (() => {
-          const selectedService = GetAvailableServiceRates.data?.find(
-              r => r.service_rate_uuid === OrderShippingSelect.selectedOptionValue
-          );
-          return selectedService?.service_name?.includes('-express') ? 'Express' : 'Standard';
-      })(),
-      "value_type": "select"
-			}
-			// FleetBase's custom_field_values.value column is NOT NULL, and it nulls out
-			// empty strings before insert - so any optional field left blank (e.g. External
-			// Order ID) crashed order creation with a SQL integrity violation. Drop empty
-			// values instead of sending them.
-			].filter(cfv => cfv.value !== "" && cfv.value !== null && cfv.value !== undefined)
-		}
+		// A single line the server geocodes against Bulgaria, which is what gives the
+		// driver a real street, city and postcode. The old call sent coordinates and a
+		// formatted string that Fleetbase silently dropped.
+		"dropoff": {
+			"address": NewDropoffAddressInput.text
+		},
+		"service_rate_uuid": OrderShippingSelect.selectedOptionValue,
+		"payment_method": NewPaymentMethodSelect.selectedOptionValue,
+		"amount": NewAmountInput.text,
+		"store_type": StoreTypeSelect.selectedOptionValue,
+		"order_source_id": OrderSourceIdInput.text || "",
+		"scheduled_at": ScheduledDeliveryPicker.selectedDate,
+		"notes": DeliveryNotesInput.text || "",
+		"items": (appsmith.store.newOrderItems || []).map(item => ({
+			"name": item.name,
+			// `ski` is the key the Add-item button has always written; read both so a
+			// fixed button and an unfixed one both work.
+			"sku": item.sku || item.ski || "",
+			"quantity": item.quantity || 1
+		}))
 	};
 })()}}
