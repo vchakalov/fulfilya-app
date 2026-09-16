@@ -1,7 +1,7 @@
 {
   "animateLoading": true,
   "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
-  "bottomRow": 27,
+  "bottomRow": 29,
   "dynamicBindingPathList": [
     {
       "key": "truncateButtonColor"
@@ -40,7 +40,7 @@
   "responsiveBehavior": "fill",
   "rightColumn": 64,
   "shouldTruncate": false,
-  "text": "{{(() => {\n  const r = GetCodReport.data;\n  if (!r || !r.totals) return 'Изберете период.';\n  const t = r.totals;\n  const who = MerchantSelect.selectedOptionValue && MerchantSelect.selectedOptionValue !== 'all' ? (MerchantSelect.selectedOptionLabel || '') : 'всички търговци';\n  const e = (n) => (Number(n) || 0).toFixed(2) + ' €';\n  return `Период ${r.period.label} · ${who} · ${t.orders} поръчки · НП ${e(t.total)} (в брой ${e(t.cash)}, с карта ${e(t.card)}) · Приходи на Фулфилия ООД ${e(t.revenue)} (доставки ${e(t.delivery)} + комисионна ${e(t.fee)}) · За търговците ${e(t.owed)}`;\n})()}}",
+  "text": "{{(() => {\n  const r = GetCodReport.data;\n  if (!r || !r.totals) return 'Изберете период.';\n  const t = r.totals;\n  const who = MerchantSelect.selectedOptionValue && MerchantSelect.selectedOptionValue !== 'all' ? (MerchantSelect.selectedOptionLabel || '') : 'всички клиенти';\n  const e = (n) => (Number(n) || 0).toFixed(2) + ' €';\n  return `Период ${r.period.label} · ${who} · ${t.orders} поръчки\\nГрупа А — Наложен платеж: ${e(t.total)} (в брой ${e(t.cash)}, с карта ${e(t.card)})\\nГрупа Б — Приходи: ${e(t.revenue)} (в брой ${e(t.revenue_cash)}, с карта ${e(t.revenue_card)}) — доставки ${e(t.delivery)} + такса НП ${e(t.fee)}`;\n})()}}",
   "textAlign": "RIGHT",
   "textColor": "#6b7280",
   "topRow": 21,
