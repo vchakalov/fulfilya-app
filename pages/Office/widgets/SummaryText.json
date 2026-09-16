@@ -11,6 +11,9 @@
     },
     {
       "key": "borderRadius"
+    },
+    {
+      "key": "text"
     }
   ],
   "dynamicHeight": "AUTO_HEIGHT",
@@ -48,5 +51,10 @@
   "type": "TEXT_WIDGET",
   "version": 1,
   "widgetId": "q80losaa16",
-  "widgetName": "SummaryText"
+  "widgetName": "SummaryText",
+  "dynamicPropertyPathList": [
+    {
+      "key": "text"
+    }
+  ]
 }
