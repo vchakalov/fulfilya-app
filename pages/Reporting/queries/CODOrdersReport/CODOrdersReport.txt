@@ -14,7 +14,7 @@
       WHERE cfv.subject_uuid = o.uuid
       AND cf.name = 'cod-amount:'
       AND cfv.subject_type = 'Fleetbase\\FleetOps\\Models\\Order'
-      LIMIT 1), '$0.00') as cod_amount_display,
+      LIMIT 1), '0.00') as cod_amount_display,
 
     CAST(COALESCE((SELECT REPLACE(REPLACE(cfv.value, '$', ''), ',', '')
       FROM custom_field_values cfv

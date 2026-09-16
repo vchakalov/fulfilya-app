@@ -51,7 +51,7 @@
   "responsiveBehavior": "fill",
   "rightColumn": 64,
   "shouldTruncate": false,
-  "text": "{{(() => {\n     const method = NewPaymentMethodSelect.selectedOptionValue;\n     const amount = NewAmountInput.text || '0';\n     if (method === 'COD') {\n       return `💰 Customer will pay $${amount} on delivery`;\n     } else {\n       return `✅ Order is pre-paid`;\n     }\n   })()}}",
+  "text": "{{(() => {\n     const method = NewPaymentMethodSelect.selectedOptionValue;\n     const amount = NewAmountInput.text || '0';\n     if (method === 'COD') {\n       return `💰 Customer will pay ${amount} EUR on delivery`;\n     } else {\n       return `✅ Order is pre-paid`;\n     }\n   })()}}",
   "textAlign": "LEFT",
   "textColor": "{{NewPaymentMethodSelect.selectedOptionValue === 'COD' ? '#F59E0B' : '#10B981'}}",
   "topRow": 4,

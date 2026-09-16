@@ -23,7 +23,7 @@ SELECT
 
     -- Payment information (from custom_field_values)
     COALESCE(MAX(CASE WHEN cf.name = 'payment-method' THEN cfv.value END), 'Not Specified') as payment_method,
-    COALESCE(MAX(CASE WHEN cf.name = 'amount:' THEN cfv.value END), '$0.00') as total_amount,
+    COALESCE(MAX(CASE WHEN cf.name = 'amount:' THEN cfv.value END), '0.00') as total_amount,
 
     -- Store information
     COALESCE(MAX(CASE WHEN cf.name = 'store-type' THEN cfv.value END), 'Unknown') as store_type,

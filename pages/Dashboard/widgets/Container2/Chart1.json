@@ -38,7 +38,7 @@
         "xAxisName": "Product Line",
         "xAxisNameFontColor": "#716e6e",
         "xAxisNameFontSize": "14",
-        "yAxisName": "Revenue($)",
+        "yAxisName": "Revenue (EUR)",
         "yAxisNameFontColor": "#716e6e",
         "yAxisNameFontSize": "14",
         "yAxisValueFontColor": "#716e6e",
