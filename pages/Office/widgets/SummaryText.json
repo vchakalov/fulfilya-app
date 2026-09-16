@@ -40,7 +40,7 @@
   "responsiveBehavior": "fill",
   "rightColumn": 64,
   "shouldTruncate": false,
-  "text": "{{(() => {\n  const r = GetCodReport.data;\n  if (!r || !r.totals) return 'Изберете период.';\n  const t = r.totals;\n  const who = MerchantSelect.selectedOptionValue && MerchantSelect.selectedOptionValue !== 'all' ? (MerchantSelect.selectedOptionLabel || '') : 'всички търговци';\n  return `Период ${r.period.label} · ${who} · ${t.orders} поръчки · Общо НП ${t.total.toFixed(2)} € · В брой ${t.cash.toFixed(2)} € · С карта ${t.card.toFixed(2)} €`;\n})()}}",
+  "text": "{{(() => {\n  const r = GetCodReport.data;\n  if (!r || !r.totals) return 'Изберете период.';\n  const t = r.totals;\n  const who = MerchantSelect.selectedOptionValue && MerchantSelect.selectedOptionValue !== 'all' ? (MerchantSelect.selectedOptionLabel || '') : 'всички търговци';\n  const e = (n) => (Number(n) || 0).toFixed(2) + ' €';\n  return `Период ${r.period.label} · ${who} · ${t.orders} поръчки · НП ${e(t.total)} (в брой ${e(t.cash)}, с карта ${e(t.card)}) · Приходи на Фулфилия ООД ${e(t.revenue)} (доставки ${e(t.delivery)} + комисионна ${e(t.fee)}) · За търговците ${e(t.owed)}`;\n})()}}",
   "textAlign": "RIGHT",
   "textColor": "#6b7280",
   "topRow": 21,
