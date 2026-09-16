@@ -11,7 +11,7 @@
           "value": "application/json"
         }
       ],
-      "body": "{{(() => {\n\t// Validate required fields\n\tif (!NewPickupAddressInput.text || !NewDropoffAddressInput.text) {\n\t\t\n\t\tthrow new Error(\"Pickup and delivery addresses are required\");\n\t}\n\n\tif (!NewPickupLatHidden.text || !NewPickupLngHidden.text || \n\t\t\t!NewDropoffLatHidden.text || !NewDropoffLngHidden.text) {\n\t\t\n\t\tthrow new Error(\"Address geocoding is required - please wait for location validation\");\n\t}\n\t\n    // Get service quote UUID from the creation query result\n const serviceQuoteUuid = GetCreatedServiceQuote.data[0].service_quote_uuid;\n\t\n\tif (!serviceQuoteUuid) {\n        throw new Error(\"Failed to create service quote. Please try again.\");\n    }\n\t\n  \n\tconst customer = appsmith.store.customer_uuid;\n\n\treturn {\n\t\t\"order\": {\n\t\t\t\"internal_id\": OrderSourceIdInput.text || \"\",\n\t\t\t\"customer_uuid\": customer,\n\t\t\t\"service_quote_uuid\": serviceQuoteUuid,\n\t\t\t\"order_config_uuid\": \"a0e5f3b9-68e4-4490-95c6-e39ccddbcf32\",\n\t\t\t\"customer_type\": \"fleet-ops:contact\",\n\t\t\t\"type\": \"e-commerce-with-cod\",\n\t\t\t\"scheduled_at\": ScheduledDeliveryPicker.selectedDate,\n\t\t\t\"notes\": DeliveryNotesInput.text,\n\t\t\t\"payload\": {\n\t\t\t\t\"pickup\": {\n\t\t\t\t\t\"name\": NewPickupAddressInput.text?.split(',')[0] || \"Pickup Location\",\n\t\t\t\t\t\"address\": NewPickupAddressInput.text || \"\",\n\t\t\t\t\t\"location\": {\n\t\t\t\t\t\t\"type\": \"Point\",\n\t\t\t\t\t\t\"coordinates\": [\n\t\t\t\t\t\t\tparseFloat(NewPickupLngHidden.text), \n\t\t\t\t\t\t\tparseFloat(NewPickupLatHidden.text)\n\t\t\t\t\t\t]\n\t\t\t\t\t}\n\t\t\t\t},\n\t\t\t\t\"dropoff\": {\n\t\t\t\t\t\"name\": NewDropoffAddressInput.text?.split(',')[0] || \"Delivery Location\", \n\t\t\t\t\t\"address\": NewDropoffAddressInput.text || \"\",\n\t\t\t\t\t\"location\": {\n\t\t\t\t\t\t\"type\": \"Point\",\n\t\t\t\t\t\t\"coordinates\": [\n\t\t\t\t\t\t\tparseFloat(NewDropoffLngHidden.text), \n\t\t\t\t\t\t\tparseFloat(NewDropoffLatHidden.text)\n\t\t\t\t\t\t]\n\t\t\t\t\t}\n\t\t\t\t},\n\t\t\t\t\"entities\": (appsmith.store.newOrderItems || []).map(item => ({\n\t\t\t\t\t\"name\": item.name,\n\t\t\t\t\t\"price\": item.price ? parseFloat(item.price) : 0,\n\t\t\t\t\t\"sku\": item.sku || \"\"\n\t\t\t\t}))\n\t\t\t},\n\t\t\t\"custom_field_values\": [\n\t\t\t\t{\n\t\t\t\t\t\"custom_field_uuid\": \"080da746-4a5a-4f4d-9afa-78f215fc4971\",\n\t\t\t\t\t\"value\": StoreTypeSelect.selectedOptionValue,\n\t\t\t\t\t\"value_type\": \"text\"\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"custom_field_uuid\": \"cc8ba2d8-3e0e-4ba6-8a85-61ed89254f9d\",\n\t\t\t\t\t\"value\": OrderSourceIdInput.text || \"\",\n\t\t\t\t\t\"value_type\": \"text\"\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"custom_field_uuid\": \"79707269-ef79-4e2c-b63b-eaf76f4a3f85\",\n\t\t\t\t\t\"value\": NewPaymentMethodSelect.selectedOptionValue,\n\t\t\t\t\t\"value_type\": \"text\"\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"custom_field_uuid\": \"d0b5b899-6cfc-4eef-a898-ec99a23ef039\",\n\t\t\t\t\t\"value\": NewAmountInput.text,\n\t\t\t\t\t\"value_type\": \"text\"\n\t\t\t\t},\n\n      {\"custom_field_uuid\": \"8e9a772d-2694-4750-8c8c-f8e9e6996ac2\",\n      \"value\": (() => {\n          const selectedService = GetAvailableServiceRates.data?.find(\n              r => r.service_rate_uuid === OrderShippingSelect.selectedOptionValue\n          );\n          return selectedService?.service_name?.includes('-express') ? 'Express' : 'Standard';\n      })(),\n      \"value_type\": \"select\"\n\t\t\t}\n\t\t\t// FleetBase's custom_field_values.value column is NOT NULL, and it nulls out\n\t\t\t// empty strings before insert - so any optional field left blank (e.g. External\n\t\t\t// Order ID) crashed order creation with a SQL integrity violation. Drop empty\n\t\t\t// values instead of sending them.\n\t\t\t].filter(cfv => cfv.value !== \"\" && cfv.value !== null && cfv.value !== undefined)\n\t\t}\n\t};\n})()}}",
+      "body": "{{(() => {\n\t// Everything about WHO this order belongs to is resolved on the server from the\n\t// merchant's own login token, so this body carries only what the merchant typed.\n\t// It can no longer name another merchant, pick another merchant's price, or point\n\t// at a different order config - those used to travel from the browser, signed with\n\t// an admin token belonging to the company owner.\n\t//\n\t// The delivery quote and the наложен платеж commission are worked out server-side\n\t// too, which is why CreateServiceQuoteForOrder and GetCreatedServiceQuote are no\n\t// longer run before this: their SQL reused one quote row for a whole day of orders\n\t// and never linked it to the order, so nothing the merchant is paid out on could\n\t// be traced back to a price.\n\n\tif (!NewDropoffAddressInput.text) {\n\t\tthrow new Error(\"A delivery address is required\");\n\t}\n\n\tif (!OrderShippingSelect.selectedOptionValue) {\n\t\tthrow new Error(\"Please choose Standard or Express\");\n\t}\n\n\treturn {\n\t\t// A single line the server geocodes against Bulgaria, which is what gives the\n\t\t// driver a real street, city and postcode. The old call sent coordinates and a\n\t\t// formatted string that Fleetbase silently dropped.\n\t\t\"dropoff\": {\n\t\t\t\"address\": NewDropoffAddressInput.text\n\t\t},\n\t\t\"service_rate_uuid\": OrderShippingSelect.selectedOptionValue,\n\t\t\"payment_method\": NewPaymentMethodSelect.selectedOptionValue,\n\t\t\"amount\": NewAmountInput.text,\n\t\t\"store_type\": StoreTypeSelect.selectedOptionValue,\n\t\t\"order_source_id\": OrderSourceIdInput.text || \"\",\n\t\t\"scheduled_at\": ScheduledDeliveryPicker.selectedDate,\n\t\t\"notes\": DeliveryNotesInput.text || \"\",\n\t\t\"items\": (appsmith.store.newOrderItems || []).map(item => ({\n\t\t\t\"name\": item.name,\n\t\t\t// `ski` is the key the Add-item button has always written; read both so a\n\t\t\t// fixed button and an unfixed one both work.\n\t\t\t\"sku\": item.sku || item.ski || \"\",\n\t\t\t\"quantity\": item.quantity || 1\n\t\t}))\n\t};\n})()}}",
       "bodyFormData": [],
       "encodeParamsToggle": true,
       "formData": {
@@ -20,13 +20,13 @@
       "headers": [
         {
           "key": "Authorization",
-          "value": "Bearer 23|0lMD5Itvl2G7eU22bNbRYWoKBnUEp19qatMxdhv4"
+          "value": "Bearer {{appsmith.store.authToken}}"
         }
       ],
       "httpMethod": "POST",
       "httpVersion": "HTTP11",
       "paginationType": "NONE",
-      "path": "/int/v1/orders",
+      "path": "/int/v1/portal/orders",
       "pluginSpecifiedTemplates": [
         {
           "value": true
@@ -47,6 +47,9 @@
     "dynamicBindingPathList": [
       {
         "key": "body"
+      },
+      {
+        "key": "headers[0].value"
       }
     ],
     "name": "CreateOrderAPI",
