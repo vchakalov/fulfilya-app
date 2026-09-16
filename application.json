@@ -40,6 +40,10 @@
     {
       "id": "Reporting",
       "isDefault": false
+    },
+    {
+      "id": "Office",
+      "isDefault": false
     }
   ],
   "unpublishedAppLayout": {

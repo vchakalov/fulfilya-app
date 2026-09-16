@@ -1,0 +1,5 @@
+SELECT c.uuid, c.name
+FROM contacts c
+WHERE c.type = 'customer'
+  AND c.deleted_at <=> NULL
+ORDER BY c.name

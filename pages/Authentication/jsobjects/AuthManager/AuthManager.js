@@ -16,7 +16,18 @@ export default {
       if (FleetbaseAuth.data?.token) {
         // Store auth token
         storeValue('authToken', FleetbaseAuth.data.token);
-        
+
+        // A Fulfilya admin has no merchant (contacts) row and is not here to see a
+        // merchant's orders - they get the office page. The API says who is who: the
+        // login answer carries the user's type ('admin' for the office account).
+        if (FleetbaseAuth.data?.type === 'admin') {
+          storeValue('is_admin', true);
+          storeValue('customer_name', 'Fulfilya');
+          navigateTo('Office');
+          return;
+        }
+        storeValue('is_admin', false);
+
         // Get customer data
         await GetCustomerByEmail.run();
         
