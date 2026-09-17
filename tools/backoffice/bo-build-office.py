@@ -13,11 +13,11 @@ def w(path, content):
     p = os.path.join(OUT, path); os.makedirs(os.path.dirname(p), exist_ok=True)
     with open(p, 'w', encoding='utf-8') as f:
         f.write(content if isinstance(content, str) else json.dumps(content, ensure_ascii=False, indent=2) + '\n')
-LOGOUT = "{{(async () => { const m = BoHeader.model || {}; if (m.action === 'theme' && m.theme) { return storeValue('bo_theme', m.theme); } if (m.action !== 'logout') { return; } await removeValue('authToken'); await removeValue('is_admin'); await removeValue('customer_name'); await removeValue('customer_uuid'); navigateTo('Authentication'); })()}}"
+LOGOUT = "{{(async () => { const m = BoHeader.model || {}; if (m.action !== 'logout') { return; } await removeValue('authToken'); await removeValue('is_admin'); await removeValue('customer_name'); await removeValue('customer_uuid'); navigateTo('Authentication'); })()}}"
 d = {
     "animateLoading": True, "backgroundColor": "transparent", "borderColor": "transparent", "borderRadius": "0px", "borderWidth": "0",
     "boxShadow": "none", "bottomRow": 8,
-    "defaultModel": "{{ { page: 'office', admin: true, theme: appsmith.store.bo_theme || 'dark', merchant: 'Fulfilya · офис', logo: '' } }}",
+    "defaultModel": "{{ { page: 'office', admin: true, merchant: 'Fulfilya · офис', logo: '' } }}",
     "dynamicBindingPathList": [{"key": "theme"}, {"key": "defaultModel"}], "dynamicHeight": "FIXED",
     "dynamicTriggerPathList": [{"key": "onAction"}], "events": ["onAction"], "onAction": LOGOUT,
     "isLoading": False, "isVisible": True, "key": "hdr0ff1ce9", "leftColumn": 0, "maxDynamicHeight": 9000, "minDynamicHeight": 4, "minWidth": 450,

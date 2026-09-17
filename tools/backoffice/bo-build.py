@@ -170,11 +170,6 @@ a,a:visited,a:hover{color:inherit;text-decoration:none}
 html,body{color:var(--ink)!important}
 button{font:inherit;color:inherit}
 .num{font-variant-numeric:tabular-nums}
-:root[data-theme="dark"]{--bg:#000000;--card:#121212;--ground:#0A0A0A;--ink:#F5F5F7;--muted:#A1A1A6;--faint:#6E6E73;--line:#262626;--line-strong:#333336;
---accent:#FEC700;--accent-hover:#FFD43B;--accent-soft:#2A2200;--accent-ink:#FFD84D;--ok:#5BD08A;--ok-soft:#0F2A1B;--warn:#F0B35A;--warn-soft:#2A1E08;--bad:#F08A80;--bad-soft:#2B1512;--info-soft:#1A1F26;
---c1:#B98700;--c2:#4C86E0;--c3:#22A468;--c4:#8F73D9;--c5:#E8663F;--shadow:0 1px 2px rgba(0,0,0,.6),0 12px 32px -12px rgba(0,0,0,.8)}
-:root[data-theme="dark"] .chip.on{background:var(--accent);color:#1D1D1F;border-color:var(--accent)}
-:root[data-theme="dark"] .merchant .avatar{color:#1D1D1F}
 """
 
 # --- header
@@ -217,8 +212,8 @@ function render() {
   const m = appsmith.model || {};
   const current = m.page || 'tablo';
   const logo = m.logo ? `<img class="logo" src="${esc(m.logo)}" alt="" onerror="this.remove()">` : `<span class="avatar">${esc(initials(m.merchant))}</span>`;
-  document.documentElement.dataset.theme = m.theme === 'dark' ? 'dark' : 'light';
-  const INK = m.theme === 'dark' ? '#F5F5F7' : '#1D1D1F', GOLD = m.theme === 'dark' ? '#FFD84D' : '#8A6500';
+  document.documentElement.dataset.theme = 'light';
+  const INK = '#1D1D1F', GOLD = '#8A6500';
   document.body.style.color = INK;
   const tabs = m.admin ? '' : `<nav class="tabs">${TABS.map((t) => `<button class="tab${t.id === current ? ' on' : ''}" data-act="${t.page ? 'nav' : 'new'}" data-page="${t.page || ''}" data-tab="${t.id}">${t.label}</button>`).join('')}</nav>`;
   document.getElementById('bo-header').innerHTML =
@@ -227,14 +222,12 @@ function render() {
     tabs +
     `<span class="grow"></span>` +
     `<span class="merchant">${logo}<span class="name">${esc(m.merchant || '')}</span></span>` +
-    `<button class="btn" data-act="theme" title="${m.theme === 'dark' ? 'Светла тема' : 'Тъмна тема'}">${m.theme === 'dark' ? '☀' : '☾'}</button>` +
     `<button class="btn" data-act="logout">Изход</button>` +
     `</div>`;
   document.querySelectorAll('[data-act]').forEach((el) => el.addEventListener('click', (e) => {
     e.preventDefault();
     const act = el.dataset.act;
     if (act === 'nav' && el.dataset.tab === current) return;
-    if (act === 'theme') { appsmith.updateModel({ action: 'theme', theme: m.theme === 'dark' ? 'light' : 'dark' }); appsmith.triggerEvent('onAction'); return; }
     appsmith.updateModel({ action: act, page: el.dataset.page || '' , tab: el.dataset.tab || '' });
     appsmith.triggerEvent('onAction');
   }));
@@ -344,9 +337,9 @@ function bars(labels, values, label) {
 
 function render() {
   const m = appsmith.model || {};
-  document.documentElement.dataset.theme = m.theme === 'dark' ? 'dark' : 'light';
-  C = m.theme === 'dark' ? PAL.dark : PAL.light;
-  const INK = m.theme === 'dark' ? '#F5F5F7' : '#1D1D1F';
+  document.documentElement.dataset.theme = 'light';
+  C = PAL.light;
+  const INK = '#1D1D1F';
   document.body.style.color = INK;
   const period = m.period || 'week';
   const st = (Array.isArray(m.stats) ? m.stats[0] : m.stats) || {};
@@ -400,7 +393,7 @@ appsmith.onReady(render);
 appsmith.onModelChange(render);
 """
 
-HEADER_ON = "{{(async () => { const m = BoHeader.model || {}; if (m.action === 'theme' && m.theme) { return storeValue('bo_theme', m.theme); } if (m.action === 'logout') { return AuthManager.logout(); } if (m.action === 'new') { return showModal('CreateOrderModal'); } if (m.action === 'nav') { if (m.tab === 'orders') { return navigateTo('Dashboard', { tab: 'orders' }); } if (m.tab === 'tablo') { return navigateTo('Dashboard'); } if (m.page) { return navigateTo(m.page); } } })()}}"
+HEADER_ON = "{{(async () => { const m = BoHeader.model || {}; if (m.action === 'logout') { return AuthManager.logout(); } if (m.action === 'new') { return showModal('CreateOrderModal'); } if (m.action === 'nav') { if (m.tab === 'orders') { return navigateTo('Dashboard', { tab: 'orders' }); } if (m.tab === 'tablo') { return navigateTo('Dashboard'); } if (m.page) { return navigateTo(m.page); } } })()}}"
 TABLO_ON = "{{(async () => { const m = BoTablo.model || {}; if (m.action === 'period' && m.period) { await storeValue('bo_period', m.period); await Promise.all([BoStats.run(), BoPayment.run(), BoStatus.run()]); return; } if (m.action === 'new') { return showModal('CreateOrderModal'); } if (m.action === 'nav' && m.page) { return navigateTo(m.page); } })()}}"
 
 def custom(name, top, bottom, html, css, js, model, height, key_seed, visible=None, events=True):
@@ -429,18 +422,18 @@ def custom(name, top, bottom, html, css, js, model, height, key_seed, visible=No
     w(f'Dashboard/widgets/{name}.json', d)
 
 custom('BoHeader', 0, 8, HEADER_HTML, HEADER_CSS, HEADER_JS,
-       "{{ { page: (appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders') ? 'orders' : 'tablo', theme: appsmith.store.bo_theme || 'dark', merchant: appsmith.store.customer_name || '', logo: appsmith.store.customer_logo || '' } }}",
+       "{{ { page: (appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders') ? 'orders' : 'tablo', merchant: appsmith.store.customer_name || '', logo: appsmith.store.customer_logo || '' } }}",
        "FIXED", "hdrq1w2e3r")
 custom('BoTablo', 9, 58, TABLO_HTML, TABLO_CSS, TABLO_JS,
-       "{{ { period: appsmith.store.bo_period || 'week', theme: appsmith.store.bo_theme || 'dark', merchant: appsmith.store.customer_name || '', stats: BoStats.data, payment: BoPayment.data, status: BoStatus.data, days: BoDays.data } }}",
+       "{{ { period: appsmith.store.bo_period || 'week', merchant: appsmith.store.customer_name || '', stats: BoStats.data, payment: BoPayment.data, status: BoStatus.data, days: BoDays.data } }}",
        "FIXED", "tblz9x8c7v", visible="{{!(appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders')}}")
 
 TITLE_HTML = FONT_LINK + '<div id="bo-title"></div>'
 TITLE_CSS = TOKENS + '.t{display:flex;align-items:center;height:40px}.t h2{font-size:22px;font-weight:800}'
-TITLE_JS = r"""function render(){ const m = appsmith.model || {}; document.documentElement.dataset.theme = m.theme === 'dark' ? 'dark' : 'light'; const INK = m.theme === 'dark' ? '#F5F5F7' : '#1D1D1F'; document.body.style.color = INK; document.getElementById('bo-title').innerHTML = '<div class="t"><h2 style="color:' + INK + '">' + String(m.title || '').replace(/[&<>]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[c]) + '</h2></div>'; }
+TITLE_JS = r"""function render(){ const m = appsmith.model || {}; document.documentElement.dataset.theme = 'light'; const INK = '#1D1D1F'; document.body.style.color = INK; document.getElementById('bo-title').innerHTML = '<div class="t"><h2 style="color:' + INK + '">' + String(m.title || '').replace(/[&<>]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[c]) + '</h2></div>'; }
 appsmith.onReady(render); appsmith.onModelChange(render);"""
 custom('BoTitle', 60, 64, TITLE_HTML, TITLE_CSS, TITLE_JS,
-       "{{ { theme: appsmith.store.bo_theme || 'dark', title: (appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders') ? 'Поръчки' : 'Последни поръчки' } }}",
+       "{{ { title: (appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders') ? 'Поръчки' : 'Последни поръчки' } }}",
        "FIXED", "ttl5r6t7y8", events=False)
 
 # ---------------------------------------------------------------- existing widgets, restyled
@@ -487,22 +480,19 @@ for i, k in enumerate(tb['columnOrder']):
 import time
 tb['columnUpdatedAt'] = int(time.time() * 1000)
 # the table follows the light/dark toggle
-tb['cellBackground'] = "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#121212' : '#FFFFFF'}}"
-tb['textColor'] = "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#F5F5F7' : '#1D1D1F'}}"
-tb['borderColor'] = "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#262626' : '#E5E5EA'}}"
+tb['cellBackground'] = ''; tb['textColor'] = ''; tb['borderColor'] = '#E5E5EA'
 tb.setdefault('dynamicPropertyPathList', [])
 for k in ('cellBackground', 'textColor', 'borderColor'):
     for lst in (tb['dynamicBindingPathList'], tb['dynamicPropertyPathList']):
-        if not any(x.get('key') == k for x in lst): lst.append({"key": k})
+        lst[:] = [x for x in lst if x.get('key') != k]
 # Table V2 paints each cell from the COLUMN's colours, not the widget's, so every column
 # carries the same two bindings (found 2026-09-17: the widget-level ones changed nothing).
 for cid, c in cols.items():
-    c['cellBackground'] = "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#121212' : '#FFFFFF'}}"
-    c['textColor'] = "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#F5F5F7' : '#1D1D1F'}}"
+    c['cellBackground'] = ''; c['textColor'] = ''
     for prop in ('cellBackground', 'textColor'):
         key = f'primaryColumns.{cid}.{prop}'
         for lst in (tb['dynamicBindingPathList'], tb['dynamicPropertyPathList']):
-            if not any(x.get('key') == key for x in lst): lst.append({"key": key})
+            lst[:] = [x for x in lst if x.get('key') != key]
 cols['customColumn1']['buttonLabel'] = 'Детайли'; cols['customColumn1']['buttonColor'] = '#FFC400'
 PILL = r"""(() => {
       const s = currentRow.status_display;

@@ -1,14 +1,14 @@
 {
   "accentColor": "#FFC400",
   "animateLoading": true,
-  "borderColor": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#262626' : '#E5E5EA'}}",
+  "borderColor": "#E5E5EA",
   "borderRadius": "18px",
   "borderWidth": "1",
   "bottomRow": 116,
   "boxShadow": "0 1px 2px rgba(0,0,0,.04), 0 12px 32px -12px rgba(29,29,31,.14)",
   "cachedTableData": {},
   "canFreezeColumn": true,
-  "cellBackground": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#121212' : '#FFFFFF'}}",
+  "cellBackground": "",
   "childStylesheet": {
     "button": {
       "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
@@ -61,7 +61,7 @@
     "recipient_notes",
     "shop_order_id"
   ],
-  "columnUpdatedAt": 1789671732818,
+  "columnUpdatedAt": 1789672958563,
   "columnWidthMap": {
     "customColumn3": 198,
     "external_order_id": 203
@@ -170,181 +170,16 @@
       "key": "primaryColumns.delivery_full_address.computedValue"
     },
     {
-      "key": "cellBackground"
-    },
-    {
-      "key": "textColor"
-    },
-    {
-      "key": "borderColor"
-    },
-    {
       "key": "primaryColumns.recipient_phone.computedValue"
     },
     {
       "key": "primaryColumns.delivery_full_address.computedValue"
     },
     {
-      "key": "primaryColumns.cod_amount.cellBackground"
+      "key": "primaryColumns.recipient_phone.computedValue"
     },
     {
-      "key": "primaryColumns.cod_amount.textColor"
-    },
-    {
-      "key": "primaryColumns.cod_fee.cellBackground"
-    },
-    {
-      "key": "primaryColumns.cod_fee.textColor"
-    },
-    {
-      "key": "primaryColumns.created_date.cellBackground"
-    },
-    {
-      "key": "primaryColumns.created_date.textColor"
-    },
-    {
-      "key": "primaryColumns.customColumn1.cellBackground"
-    },
-    {
-      "key": "primaryColumns.customColumn1.textColor"
-    },
-    {
-      "key": "primaryColumns.customColumn2.cellBackground"
-    },
-    {
-      "key": "primaryColumns.customColumn2.textColor"
-    },
-    {
-      "key": "primaryColumns.customColumn4.cellBackground"
-    },
-    {
-      "key": "primaryColumns.customColumn4.textColor"
-    },
-    {
-      "key": "primaryColumns.customer_email.cellBackground"
-    },
-    {
-      "key": "primaryColumns.customer_email.textColor"
-    },
-    {
-      "key": "primaryColumns.customer_name.cellBackground"
-    },
-    {
-      "key": "primaryColumns.customer_name.textColor"
-    },
-    {
-      "key": "primaryColumns.customer_phone.cellBackground"
-    },
-    {
-      "key": "primaryColumns.customer_phone.textColor"
-    },
-    {
-      "key": "primaryColumns.delivery_address.cellBackground"
-    },
-    {
-      "key": "primaryColumns.delivery_address.textColor"
-    },
-    {
-      "key": "primaryColumns.delivery_amount.cellBackground"
-    },
-    {
-      "key": "primaryColumns.delivery_amount.textColor"
-    },
-    {
-      "key": "primaryColumns.delivery_full_address.cellBackground"
-    },
-    {
-      "key": "primaryColumns.delivery_full_address.textColor"
-    },
-    {
-      "key": "primaryColumns.driver_name.cellBackground"
-    },
-    {
-      "key": "primaryColumns.driver_name.textColor"
-    },
-    {
-      "key": "primaryColumns.external_order_id.cellBackground"
-    },
-    {
-      "key": "primaryColumns.external_order_id.textColor"
-    },
-    {
-      "key": "primaryColumns.goods_amount.cellBackground"
-    },
-    {
-      "key": "primaryColumns.goods_amount.textColor"
-    },
-    {
-      "key": "primaryColumns.internal_reference.cellBackground"
-    },
-    {
-      "key": "primaryColumns.internal_reference.textColor"
-    },
-    {
-      "key": "primaryColumns.order_id.cellBackground"
-    },
-    {
-      "key": "primaryColumns.order_id.textColor"
-    },
-    {
-      "key": "primaryColumns.payment_method.cellBackground"
-    },
-    {
-      "key": "primaryColumns.payment_method.textColor"
-    },
-    {
-      "key": "primaryColumns.pickup_location.cellBackground"
-    },
-    {
-      "key": "primaryColumns.pickup_location.textColor"
-    },
-    {
-      "key": "primaryColumns.recipient_notes.cellBackground"
-    },
-    {
-      "key": "primaryColumns.recipient_notes.textColor"
-    },
-    {
-      "key": "primaryColumns.recipient_phone.cellBackground"
-    },
-    {
-      "key": "primaryColumns.recipient_phone.textColor"
-    },
-    {
-      "key": "primaryColumns.shop_order_id.cellBackground"
-    },
-    {
-      "key": "primaryColumns.shop_order_id.textColor"
-    },
-    {
-      "key": "primaryColumns.status.cellBackground"
-    },
-    {
-      "key": "primaryColumns.status.textColor"
-    },
-    {
-      "key": "primaryColumns.status_display.cellBackground"
-    },
-    {
-      "key": "primaryColumns.status_display.textColor"
-    },
-    {
-      "key": "primaryColumns.store_type.cellBackground"
-    },
-    {
-      "key": "primaryColumns.store_type.textColor"
-    },
-    {
-      "key": "primaryColumns.total_amount.cellBackground"
-    },
-    {
-      "key": "primaryColumns.total_amount.textColor"
-    },
-    {
-      "key": "primaryColumns.tracking_number.cellBackground"
-    },
-    {
-      "key": "primaryColumns.tracking_number.textColor"
+      "key": "primaryColumns.delivery_full_address.computedValue"
     },
     {
       "key": "primaryColumns.recipient_phone.computedValue"
@@ -376,12 +211,6 @@
       "key": "tableData"
     },
     {
-      "key": "primaryColumns.status.cellBackground"
-    },
-    {
-      "key": "primaryColumns.status.textColor"
-    },
-    {
       "key": "primaryColumns.customColumn1.onClick"
     },
     {
@@ -389,171 +218,6 @@
     },
     {
       "key": "primaryColumns.customColumn1.isCellVisible"
-    },
-    {
-      "key": "cellBackground"
-    },
-    {
-      "key": "textColor"
-    },
-    {
-      "key": "borderColor"
-    },
-    {
-      "key": "primaryColumns.cod_amount.cellBackground"
-    },
-    {
-      "key": "primaryColumns.cod_amount.textColor"
-    },
-    {
-      "key": "primaryColumns.cod_fee.cellBackground"
-    },
-    {
-      "key": "primaryColumns.cod_fee.textColor"
-    },
-    {
-      "key": "primaryColumns.created_date.cellBackground"
-    },
-    {
-      "key": "primaryColumns.created_date.textColor"
-    },
-    {
-      "key": "primaryColumns.customColumn1.cellBackground"
-    },
-    {
-      "key": "primaryColumns.customColumn1.textColor"
-    },
-    {
-      "key": "primaryColumns.customColumn2.cellBackground"
-    },
-    {
-      "key": "primaryColumns.customColumn2.textColor"
-    },
-    {
-      "key": "primaryColumns.customColumn4.cellBackground"
-    },
-    {
-      "key": "primaryColumns.customColumn4.textColor"
-    },
-    {
-      "key": "primaryColumns.customer_email.cellBackground"
-    },
-    {
-      "key": "primaryColumns.customer_email.textColor"
-    },
-    {
-      "key": "primaryColumns.customer_name.cellBackground"
-    },
-    {
-      "key": "primaryColumns.customer_name.textColor"
-    },
-    {
-      "key": "primaryColumns.customer_phone.cellBackground"
-    },
-    {
-      "key": "primaryColumns.customer_phone.textColor"
-    },
-    {
-      "key": "primaryColumns.delivery_address.cellBackground"
-    },
-    {
-      "key": "primaryColumns.delivery_address.textColor"
-    },
-    {
-      "key": "primaryColumns.delivery_amount.cellBackground"
-    },
-    {
-      "key": "primaryColumns.delivery_amount.textColor"
-    },
-    {
-      "key": "primaryColumns.delivery_full_address.cellBackground"
-    },
-    {
-      "key": "primaryColumns.delivery_full_address.textColor"
-    },
-    {
-      "key": "primaryColumns.driver_name.cellBackground"
-    },
-    {
-      "key": "primaryColumns.driver_name.textColor"
-    },
-    {
-      "key": "primaryColumns.external_order_id.cellBackground"
-    },
-    {
-      "key": "primaryColumns.external_order_id.textColor"
-    },
-    {
-      "key": "primaryColumns.goods_amount.cellBackground"
-    },
-    {
-      "key": "primaryColumns.goods_amount.textColor"
-    },
-    {
-      "key": "primaryColumns.internal_reference.cellBackground"
-    },
-    {
-      "key": "primaryColumns.internal_reference.textColor"
-    },
-    {
-      "key": "primaryColumns.order_id.cellBackground"
-    },
-    {
-      "key": "primaryColumns.order_id.textColor"
-    },
-    {
-      "key": "primaryColumns.payment_method.cellBackground"
-    },
-    {
-      "key": "primaryColumns.payment_method.textColor"
-    },
-    {
-      "key": "primaryColumns.pickup_location.cellBackground"
-    },
-    {
-      "key": "primaryColumns.pickup_location.textColor"
-    },
-    {
-      "key": "primaryColumns.recipient_notes.cellBackground"
-    },
-    {
-      "key": "primaryColumns.recipient_notes.textColor"
-    },
-    {
-      "key": "primaryColumns.recipient_phone.cellBackground"
-    },
-    {
-      "key": "primaryColumns.recipient_phone.textColor"
-    },
-    {
-      "key": "primaryColumns.shop_order_id.cellBackground"
-    },
-    {
-      "key": "primaryColumns.shop_order_id.textColor"
-    },
-    {
-      "key": "primaryColumns.status_display.cellBackground"
-    },
-    {
-      "key": "primaryColumns.status_display.textColor"
-    },
-    {
-      "key": "primaryColumns.store_type.cellBackground"
-    },
-    {
-      "key": "primaryColumns.store_type.textColor"
-    },
-    {
-      "key": "primaryColumns.total_amount.cellBackground"
-    },
-    {
-      "key": "primaryColumns.total_amount.textColor"
-    },
-    {
-      "key": "primaryColumns.tracking_number.cellBackground"
-    },
-    {
-      "key": "primaryColumns.tracking_number.textColor"
     }
   ],
   "dynamicTriggerPathList": [
@@ -592,7 +256,7 @@
       "alias": "cod_amount",
       "allowCellWrapping": false,
       "allowSameOptionsInNewRow": true,
-      "cellBackground": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#121212' : '#FFFFFF'}}",
+      "cellBackground": "",
       "columnType": "number",
       "computedValue": "{{(() => { const tableData = OrdersTable.processedTableData || []; return tableData.length > 0 ? tableData.map((currentRow, currentIndex) => (currentRow[\"cod_amount\"])) : cod_amount })()}}",
       "currencyCode": "USD",
@@ -615,7 +279,7 @@
       "notation": "standard",
       "originalId": "cod_amount",
       "sticky": "",
-      "textColor": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
+      "textColor": "",
       "textSize": "1rem",
       "thousandSeparator": true,
       "validation": {},
@@ -626,7 +290,7 @@
       "alias": "cod_fee",
       "allowCellWrapping": false,
       "allowSameOptionsInNewRow": true,
-      "cellBackground": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#121212' : '#FFFFFF'}}",
+      "cellBackground": "",
       "columnType": "number",
       "computedValue": "{{(() => { const tableData = OrdersTable.processedTableData || []; return tableData.length > 0 ? tableData.map((currentRow, currentIndex) => (currentRow[\"cod_fee\"])) : cod_fee })()}}",
       "currencyCode": "USD",
@@ -649,7 +313,7 @@
       "notation": "standard",
       "originalId": "cod_fee",
       "sticky": "",
-      "textColor": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
+      "textColor": "",
       "textSize": "1rem",
       "thousandSeparator": true,
       "validation": {},
@@ -660,7 +324,7 @@
       "alias": "created_date",
       "allowCellWrapping": false,
       "allowSameOptionsInNewRow": true,
-      "cellBackground": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#121212' : '#FFFFFF'}}",
+      "cellBackground": "",
       "columnType": "date",
       "computedValue": "{{(() => { const tableData = OrdersTable.processedTableData || []; return tableData.length > 0 ? tableData.map((currentRow, currentIndex) => (currentRow[\"created_date\"])) : created_date })()}}",
       "currencyCode": "USD",
@@ -682,7 +346,7 @@
       "notation": "standard",
       "originalId": "created_date",
       "sticky": "",
-      "textColor": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
+      "textColor": "",
       "textSize": "1rem",
       "thousandSeparator": true,
       "validation": {},
@@ -698,7 +362,7 @@
       "buttonColor": "#FFC400",
       "buttonLabel": "Детайли",
       "buttonStyle": "rgb(3, 179, 101)",
-      "cellBackground": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#121212' : '#FFFFFF'}}",
+      "cellBackground": "",
       "columnType": "button",
       "computedValue": "",
       "currencyCode": "USD",
@@ -723,7 +387,7 @@
       "onClick": "{{\n      OrdersTable.setSelectedRowIndex(\n        OrdersTable.tableData.findIndex(row => row.order_id === currentRow.order_id)\n      );\n      setTimeout(() => {\n        GetOrderDetails.run();\n        GetOrderItems.run();\n        showModal('OrderManagementModal');\n      }, 100);\n    }}\n  }",
       "originalId": "customColumn1",
       "sticky": "",
-      "textColor": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
+      "textColor": "",
       "textSize": "1rem",
       "thousandSeparator": true,
       "validation": {},
@@ -735,7 +399,7 @@
       "allowCellWrapping": false,
       "allowSameOptionsInNewRow": true,
       "buttonStyle": "rgb(3, 179, 101)",
-      "cellBackground": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#121212' : '#FFFFFF'}}",
+      "cellBackground": "",
       "columnType": "text",
       "computedValue": "{{(() => { const tableData = OrdersTable.processedTableData || []; return tableData.length > 0 ? tableData.map((currentRow, currentIndex) => ((() => {\n    const created = moment(currentRow.created_date);\n    const now = moment();\n    const hours = now.diff(created, 'hours');\n\n    if (hours < 1) return `${now.diff(created, 'minutes')} min ago`;\n    if (hours < 24) return `${hours} hours ago`;\n    if (hours < 48) return 'Yesterday';\n    return created.format('MMM DD');\n  })())) : (() => {\n    const created = moment(currentRow.created_date);\n    const now = moment();\n    const hours = now.diff(created, 'hours');\n\n    if (hours < 1) return `${now.diff(created, 'minutes')} min ago`;\n    if (hours < 24) return `${hours} hours ago`;\n    if (hours < 48) return 'Yesterday';\n    return created.format('MMM DD');\n  })() })()}}",
       "currencyCode": "USD",
@@ -758,7 +422,7 @@
       "notation": "standard",
       "originalId": "customColumn2",
       "sticky": "",
-      "textColor": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
+      "textColor": "",
       "textSize": "1rem",
       "thousandSeparator": true,
       "validation": {},
@@ -770,7 +434,7 @@
       "allowCellWrapping": false,
       "allowSameOptionsInNewRow": true,
       "buttonStyle": "rgb(3, 179, 101)",
-      "cellBackground": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#121212' : '#FFFFFF'}}",
+      "cellBackground": "",
       "columnType": "text",
       "computedValue": "{{(() => { const tableData = OrdersTable.processedTableData || []; return tableData.length > 0 ? tableData.map((currentRow, currentIndex) => ((() => {\n      const method = String(currentRow.payment_method || '').toUpperCase();\n      if (method === 'COD') return 'Наложен платеж';\n      if (method === 'CARD' || method === 'PAID') return 'Платена онлайн';\n      return '—';\n    })())) : (() => {\n      const method = String(currentRow.payment_method || '').toUpperCase();\n      if (method === 'COD') return 'Наложен платеж';\n      if (method === 'CARD' || method === 'PAID') return 'Платена онлайн';\n      return '—';\n    })() })()}}",
       "currencyCode": "USD",
@@ -793,7 +457,7 @@
       "notation": "standard",
       "originalId": "customColumn4",
       "sticky": "",
-      "textColor": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
+      "textColor": "",
       "textSize": "1rem",
       "thousandSeparator": true,
       "validation": {},
@@ -804,7 +468,7 @@
       "alias": "customer_email",
       "allowCellWrapping": false,
       "allowSameOptionsInNewRow": true,
-      "cellBackground": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#121212' : '#FFFFFF'}}",
+      "cellBackground": "",
       "columnType": "text",
       "computedValue": "{{(() => { const tableData = OrdersTable.processedTableData || []; return tableData.length > 0 ? tableData.map((currentRow, currentIndex) => (currentRow[\"customer_email\"])) : customer_email })()}}",
       "currencyCode": "USD",
@@ -827,7 +491,7 @@
       "notation": "standard",
       "originalId": "customer_email",
       "sticky": "",
-      "textColor": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
+      "textColor": "",
       "textSize": "1rem",
       "thousandSeparator": true,
       "validation": {},
@@ -838,7 +502,7 @@
       "alias": "customer_name",
       "allowCellWrapping": false,
       "allowSameOptionsInNewRow": true,
-      "cellBackground": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#121212' : '#FFFFFF'}}",
+      "cellBackground": "",
       "columnType": "text",
       "computedValue": "{{(() => { const tableData = OrdersTable.processedTableData || []; return tableData.length > 0 ? tableData.map((currentRow, currentIndex) => (currentRow[\"customer_name\"])) : customer_name })()}}",
       "currencyCode": "USD",
@@ -861,7 +525,7 @@
       "notation": "standard",
       "originalId": "customer_name",
       "sticky": "",
-      "textColor": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
+      "textColor": "",
       "textSize": "1rem",
       "thousandSeparator": true,
       "validation": {},
@@ -872,7 +536,7 @@
       "alias": "customer_phone",
       "allowCellWrapping": false,
       "allowSameOptionsInNewRow": true,
-      "cellBackground": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#121212' : '#FFFFFF'}}",
+      "cellBackground": "",
       "columnType": "text",
       "computedValue": "{{(() => { const tableData = OrdersTable.processedTableData || []; return tableData.length > 0 ? tableData.map((currentRow, currentIndex) => (currentRow[\"customer_phone\"])) : customer_phone })()}}",
       "currencyCode": "USD",
@@ -895,7 +559,7 @@
       "notation": "standard",
       "originalId": "customer_phone",
       "sticky": "",
-      "textColor": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
+      "textColor": "",
       "textSize": "1rem",
       "thousandSeparator": true,
       "validation": {},
@@ -906,7 +570,7 @@
       "alias": "delivery_address",
       "allowCellWrapping": false,
       "allowSameOptionsInNewRow": true,
-      "cellBackground": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#121212' : '#FFFFFF'}}",
+      "cellBackground": "",
       "columnType": "text",
       "computedValue": "{{(() => { const tableData = OrdersTable.processedTableData || []; return tableData.length > 0 ? tableData.map((currentRow, currentIndex) => (currentRow[\"delivery_address\"])) : delivery_address })()}}",
       "currencyCode": "USD",
@@ -928,7 +592,7 @@
       "notation": "standard",
       "originalId": "delivery_address",
       "sticky": "",
-      "textColor": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
+      "textColor": "",
       "textSize": "1rem",
       "thousandSeparator": true,
       "validation": {},
@@ -939,7 +603,7 @@
       "alias": "delivery_amount",
       "allowCellWrapping": false,
       "allowSameOptionsInNewRow": true,
-      "cellBackground": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#121212' : '#FFFFFF'}}",
+      "cellBackground": "",
       "columnType": "number",
       "computedValue": "{{(() => { const tableData = OrdersTable.processedTableData || []; return tableData.length > 0 ? tableData.map((currentRow, currentIndex) => (currentRow[\"delivery_amount\"])) : delivery_amount })()}}",
       "currencyCode": "USD",
@@ -962,7 +626,7 @@
       "notation": "standard",
       "originalId": "delivery_amount",
       "sticky": "",
-      "textColor": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
+      "textColor": "",
       "textSize": "1rem",
       "thousandSeparator": true,
       "validation": {},
@@ -973,7 +637,7 @@
       "alias": "delivery_full_address",
       "allowCellWrapping": false,
       "allowSameOptionsInNewRow": true,
-      "cellBackground": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#121212' : '#FFFFFF'}}",
+      "cellBackground": "",
       "columnType": "text",
       "computedValue": "{{(() => { const tableData = OrdersTable.processedTableData || []; return tableData.length > 0 ? tableData.map((currentRow, currentIndex) => (currentRow[\"delivery_full_address\"])) : delivery_full_address })()}}",
       "currencyCode": "USD",
@@ -995,7 +659,7 @@
       "notation": "standard",
       "originalId": "delivery_full_address",
       "sticky": "",
-      "textColor": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
+      "textColor": "",
       "textSize": "1rem",
       "thousandSeparator": true,
       "validation": {},
@@ -1006,7 +670,7 @@
       "alias": "driver_name",
       "allowCellWrapping": false,
       "allowSameOptionsInNewRow": true,
-      "cellBackground": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#121212' : '#FFFFFF'}}",
+      "cellBackground": "",
       "columnType": "text",
       "computedValue": "{{(() => { const tableData = OrdersTable.processedTableData || []; return tableData.length > 0 ? tableData.map((currentRow, currentIndex) => (currentRow[\"driver_name\"])) : driver_name })()}}",
       "currencyCode": "USD",
@@ -1029,7 +693,7 @@
       "notation": "standard",
       "originalId": "driver_name",
       "sticky": "",
-      "textColor": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
+      "textColor": "",
       "textSize": "1rem",
       "thousandSeparator": true,
       "validation": {},
@@ -1040,7 +704,7 @@
       "alias": "external_order_id",
       "allowCellWrapping": false,
       "allowSameOptionsInNewRow": true,
-      "cellBackground": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#121212' : '#FFFFFF'}}",
+      "cellBackground": "",
       "columnType": "text",
       "computedValue": "{{(() => { const tableData = OrdersTable.processedTableData || []; return tableData.length > 0 ? tableData.map((currentRow, currentIndex) => (currentRow[\"external_order_id\"])) : external_order_id })()}}",
       "currencyCode": "USD",
@@ -1063,7 +727,7 @@
       "notation": "standard",
       "originalId": "external_order_id",
       "sticky": "",
-      "textColor": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
+      "textColor": "",
       "textSize": "1rem",
       "thousandSeparator": true,
       "validation": {},
@@ -1074,7 +738,7 @@
       "alias": "goods_amount",
       "allowCellWrapping": false,
       "allowSameOptionsInNewRow": true,
-      "cellBackground": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#121212' : '#FFFFFF'}}",
+      "cellBackground": "",
       "columnType": "number",
       "computedValue": "{{(() => { const tableData = OrdersTable.processedTableData || []; return tableData.length > 0 ? tableData.map((currentRow, currentIndex) => (currentRow[\"goods_amount\"])) : goods_amount })()}}",
       "currencyCode": "USD",
@@ -1097,7 +761,7 @@
       "notation": "standard",
       "originalId": "goods_amount",
       "sticky": "",
-      "textColor": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
+      "textColor": "",
       "textSize": "1rem",
       "thousandSeparator": true,
       "validation": {},
@@ -1108,7 +772,7 @@
       "alias": "internal_reference",
       "allowCellWrapping": false,
       "allowSameOptionsInNewRow": true,
-      "cellBackground": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#121212' : '#FFFFFF'}}",
+      "cellBackground": "",
       "columnType": "text",
       "computedValue": "{{(() => { const tableData = OrdersTable.processedTableData || []; return tableData.length > 0 ? tableData.map((currentRow, currentIndex) => (currentRow[\"internal_reference\"])) : internal_reference })()}}",
       "currencyCode": "USD",
@@ -1131,7 +795,7 @@
       "notation": "standard",
       "originalId": "internal_reference",
       "sticky": "",
-      "textColor": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
+      "textColor": "",
       "textSize": "1rem",
       "thousandSeparator": true,
       "validation": {},
@@ -1142,7 +806,7 @@
       "alias": "order_id",
       "allowCellWrapping": false,
       "allowSameOptionsInNewRow": true,
-      "cellBackground": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#121212' : '#FFFFFF'}}",
+      "cellBackground": "",
       "columnType": "text",
       "computedValue": "{{(() => { const tableData = OrdersTable.processedTableData || []; return tableData.length > 0 ? tableData.map((currentRow, currentIndex) => (currentRow[\"order_id\"])) : currentRow[\"order_id\"] })()}}",
       "currencyCode": "USD",
@@ -1164,7 +828,7 @@
       "notation": "standard",
       "originalId": "order_id",
       "sticky": "",
-      "textColor": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
+      "textColor": "",
       "textSize": "1rem",
       "thousandSeparator": true,
       "validation": {},
@@ -1175,7 +839,7 @@
       "alias": "payment_method",
       "allowCellWrapping": false,
       "allowSameOptionsInNewRow": true,
-      "cellBackground": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#121212' : '#FFFFFF'}}",
+      "cellBackground": "",
       "columnType": "text",
       "computedValue": "{{(() => { const tableData = OrdersTable.processedTableData || []; return tableData.length > 0 ? tableData.map((currentRow, currentIndex) => (currentRow[\"payment_method\"])) : payment_method })()}}",
       "currencyCode": "USD",
@@ -1198,7 +862,7 @@
       "notation": "standard",
       "originalId": "payment_method",
       "sticky": "",
-      "textColor": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
+      "textColor": "",
       "textSize": "1rem",
       "thousandSeparator": true,
       "validation": {},
@@ -1209,7 +873,7 @@
       "alias": "pickup_location",
       "allowCellWrapping": false,
       "allowSameOptionsInNewRow": true,
-      "cellBackground": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#121212' : '#FFFFFF'}}",
+      "cellBackground": "",
       "columnType": "text",
       "computedValue": "{{(() => { const tableData = OrdersTable.processedTableData || []; return tableData.length > 0 ? tableData.map((currentRow, currentIndex) => (currentRow[\"pickup_location\"])) : pickup_location })()}}",
       "currencyCode": "USD",
@@ -1232,7 +896,7 @@
       "notation": "standard",
       "originalId": "pickup_location",
       "sticky": "",
-      "textColor": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
+      "textColor": "",
       "textSize": "1rem",
       "thousandSeparator": true,
       "validation": {},
@@ -1243,7 +907,7 @@
       "alias": "recipient_notes",
       "allowCellWrapping": false,
       "allowSameOptionsInNewRow": true,
-      "cellBackground": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#121212' : '#FFFFFF'}}",
+      "cellBackground": "",
       "columnType": "text",
       "computedValue": "{{(() => { const tableData = OrdersTable.processedTableData || []; return tableData.length > 0 ? tableData.map((currentRow, currentIndex) => (currentRow[\"recipient_notes\"])) : recipient_notes })()}}",
       "currencyCode": "USD",
@@ -1266,7 +930,7 @@
       "notation": "standard",
       "originalId": "recipient_notes",
       "sticky": "",
-      "textColor": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
+      "textColor": "",
       "textSize": "1rem",
       "thousandSeparator": true,
       "validation": {},
@@ -1277,7 +941,7 @@
       "alias": "recipient_phone",
       "allowCellWrapping": false,
       "allowSameOptionsInNewRow": true,
-      "cellBackground": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#121212' : '#FFFFFF'}}",
+      "cellBackground": "",
       "columnType": "text",
       "computedValue": "{{(() => { const tableData = OrdersTable.processedTableData || []; return tableData.length > 0 ? tableData.map((currentRow, currentIndex) => (currentRow[\"recipient_phone\"])) : recipient_phone })()}}",
       "currencyCode": "USD",
@@ -1299,7 +963,7 @@
       "notation": "standard",
       "originalId": "recipient_phone",
       "sticky": "",
-      "textColor": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
+      "textColor": "",
       "textSize": "1rem",
       "thousandSeparator": true,
       "validation": {},
@@ -1310,7 +974,7 @@
       "alias": "shop_order_id",
       "allowCellWrapping": false,
       "allowSameOptionsInNewRow": true,
-      "cellBackground": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#121212' : '#FFFFFF'}}",
+      "cellBackground": "",
       "columnType": "text",
       "computedValue": "{{(() => { const tableData = OrdersTable.processedTableData || []; return tableData.length > 0 ? tableData.map((currentRow, currentIndex) => (currentRow[\"shop_order_id\"])) : shop_order_id })()}}",
       "currencyCode": "USD",
@@ -1333,7 +997,7 @@
       "notation": "standard",
       "originalId": "shop_order_id",
       "sticky": "",
-      "textColor": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
+      "textColor": "",
       "textSize": "1rem",
       "thousandSeparator": true,
       "validation": {},
@@ -1344,7 +1008,7 @@
       "alias": "status",
       "allowCellWrapping": false,
       "allowSameOptionsInNewRow": true,
-      "cellBackground": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#121212' : '#FFFFFF'}}",
+      "cellBackground": "",
       "columnType": "html",
       "computedValue": "{{(() => { const tableData = OrdersTable.processedTableData || []; return tableData.length > 0 ? tableData.map((currentRow, currentIndex) => ((() => {\n      const s = currentRow.status_display;\n      const map = {\n        'Pending': ['Чака куриер', '#6E6E73', '#EEF2F7'],\n        'In Transit': ['В път', '#8A6500', '#FFF6D6'],\n        'Delivered': ['Доставена', '#1E7A46', '#E3F3E9'],\n        'Delivery attempted': ['2-ри опит', '#9A5B00', '#FFF1D6'],\n        'Returning to you': ['Връща се', '#B42318', '#FBE9E7'],\n        'Returned': ['Върната', '#B42318', '#FBE9E7'],\n        'Cancelled': ['Отказана', '#B42318', '#FBE9E7'],\n        'cancelled': ['Отказана', '#B42318', '#FBE9E7']\n      };\n      const c = map[s] || [s, '#6E6E73', '#EEF2F7'];\n      return `<span style=\"display:inline-flex;align-items:center;gap:6px;background:${c[2]};color:${c[1]};padding:3px 10px;border-radius:999px;font-weight:600;font-size:12px;white-space:nowrap\"><span style=\"width:6px;height:6px;border-radius:50%;background:${c[1]}\"></span>${c[0]}</span>`;\n    })())) : (() => {\n      const s = currentRow.status_display;\n      const map = {\n        'Pending': ['Чака куриер', '#6E6E73', '#EEF2F7'],\n        'In Transit': ['В път', '#8A6500', '#FFF6D6'],\n        'Delivered': ['Доставена', '#1E7A46', '#E3F3E9'],\n        'Delivery attempted': ['2-ри опит', '#9A5B00', '#FFF1D6'],\n        'Returning to you': ['Връща се', '#B42318', '#FBE9E7'],\n        'Returned': ['Върната', '#B42318', '#FBE9E7'],\n        'Cancelled': ['Отказана', '#B42318', '#FBE9E7'],\n        'cancelled': ['Отказана', '#B42318', '#FBE9E7']\n      };\n      const c = map[s] || [s, '#6E6E73', '#EEF2F7'];\n      return `<span style=\"display:inline-flex;align-items:center;gap:6px;background:${c[2]};color:${c[1]};padding:3px 10px;border-radius:999px;font-weight:600;font-size:12px;white-space:nowrap\"><span style=\"width:6px;height:6px;border-radius:50%;background:${c[1]}\"></span>${c[0]}</span>`;\n    })() })()}}",
       "currencyCode": "USD",
@@ -1366,7 +1030,7 @@
       "notation": "standard",
       "originalId": "status",
       "sticky": "",
-      "textColor": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
+      "textColor": "",
       "textSize": "1rem",
       "thousandSeparator": true,
       "validation": {},
@@ -1377,7 +1041,7 @@
       "alias": "status_display",
       "allowCellWrapping": false,
       "allowSameOptionsInNewRow": true,
-      "cellBackground": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#121212' : '#FFFFFF'}}",
+      "cellBackground": "",
       "columnType": "text",
       "computedValue": "{{(() => { const tableData = OrdersTable.processedTableData || []; return tableData.length > 0 ? tableData.map((currentRow, currentIndex) => (currentRow[\"status_display\"])) : status_display })()}}",
       "currencyCode": "USD",
@@ -1399,7 +1063,7 @@
       "notation": "standard",
       "originalId": "status_display",
       "sticky": "",
-      "textColor": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
+      "textColor": "",
       "textSize": "1rem",
       "thousandSeparator": true,
       "validation": {},
@@ -1410,7 +1074,7 @@
       "alias": "store_type",
       "allowCellWrapping": false,
       "allowSameOptionsInNewRow": true,
-      "cellBackground": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#121212' : '#FFFFFF'}}",
+      "cellBackground": "",
       "columnType": "text",
       "computedValue": "{{(() => { const tableData = OrdersTable.processedTableData || []; return tableData.length > 0 ? tableData.map((currentRow, currentIndex) => (currentRow[\"store_type\"])) : store_type })()}}",
       "currencyCode": "USD",
@@ -1433,7 +1097,7 @@
       "notation": "standard",
       "originalId": "store_type",
       "sticky": "",
-      "textColor": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
+      "textColor": "",
       "textSize": "1rem",
       "thousandSeparator": true,
       "validation": {},
@@ -1444,7 +1108,7 @@
       "alias": "total_amount",
       "allowCellWrapping": false,
       "allowSameOptionsInNewRow": true,
-      "cellBackground": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#121212' : '#FFFFFF'}}",
+      "cellBackground": "",
       "columnType": "text",
       "computedValue": "{{(() => { const tableData = OrdersTable.processedTableData || []; return tableData.length > 0 ? tableData.map((currentRow, currentIndex) => ((() => { const a = String(currentRow.total_amount || '0').replace(/[\\\"$]/g, ''); const n = Number(a); return (isFinite(n) ? n.toLocaleString('bg-BG', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : a) + ' €'; })())) : (() => { const a = String(currentRow.total_amount || '0').replace(/[\\\"$]/g, ''); const n = Number(a); return (isFinite(n) ? n.toLocaleString('bg-BG', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : a) + ' €'; })() })()}}",
       "currencyCode": "USD",
@@ -1466,7 +1130,7 @@
       "notation": "standard",
       "originalId": "total_amount",
       "sticky": "",
-      "textColor": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
+      "textColor": "",
       "textSize": "1rem",
       "thousandSeparator": true,
       "validation": {},
@@ -1477,7 +1141,7 @@
       "alias": "tracking_number",
       "allowCellWrapping": false,
       "allowSameOptionsInNewRow": true,
-      "cellBackground": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#121212' : '#FFFFFF'}}",
+      "cellBackground": "",
       "columnType": "text",
       "computedValue": "{{(() => { const tableData = OrdersTable.processedTableData || []; return tableData.length > 0 ? tableData.map((currentRow, currentIndex) => (currentRow[\"tracking_number\"])) : tracking_number })()}}",
       "currencyCode": "USD",
@@ -1500,7 +1164,7 @@
       "notation": "standard",
       "originalId": "tracking_number",
       "sticky": "",
-      "textColor": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
+      "textColor": "",
       "textSize": "1rem",
       "thousandSeparator": true,
       "validation": {},
@@ -1513,7 +1177,7 @@
   "rightColumn": 64,
   "searchKey": "",
   "tableData": "{{GetOrdersList.data}}",
-  "textColor": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
+  "textColor": "",
   "textSize": "1rem",
   "topRow": 66,
   "totalRecordsCount": 0,

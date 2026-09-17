@@ -5,16 +5,12 @@
     "layouts": [
       {
         "dsl": {
-          "backgroundColor": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#000000' : '#FFFFFF'}}",
+          "backgroundColor": "none",
           "bottomRow": 700,
           "canExtend": true,
           "containerStyle": "none",
           "detachFromLayout": true,
-          "dynamicBindingPathList": [
-            {
-              "key": "backgroundColor"
-            }
-          ],
+          "dynamicBindingPathList": [],
           "leftColumn": 0,
           "minHeight": 560,
           "parentColumnSpace": 1,
