@@ -4,7 +4,7 @@
   "borderColor": "transparent",
   "borderRadius": "0px",
   "borderWidth": "0",
-  "bottomRow": 107,
+  "bottomRow": 124,
   "boxShadow": "none",
   "defaultModel": "{{ { period: appsmith.store.bo_period || 'week', merchant: appsmith.store.customer_name || '', stats: BoStats.data, payment: BoPayment.data, status: BoStatus.data, days: BoDays.data } }}",
   "dynamicBindingPathList": [
@@ -37,7 +37,7 @@
   "mobileTopRow": 9,
   "needsErrorInfo": false,
   "onAction": "{{(async () => { const m = BoTablo.model || {}; if (m.action === 'period' && m.period) { await storeValue('bo_period', m.period); await Promise.all([BoStats.run(), BoPayment.run(), BoStatus.run()]); return; } if (m.action === 'new') { return showModal('CreateOrderModal'); } if (m.action === 'nav' && m.page) { return navigateTo(m.page); } })()}}",
-  "originalBottomRow": 72,
+  "originalBottomRow": 107,
   "originalTopRow": 9,
   "parentColumnSpace": 10.484375,
   "parentId": "0",
