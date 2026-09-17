@@ -27,7 +27,7 @@
   "events": [
     "onAction"
   ],
-  "onAction": "{{BoNav.onTablo()}}",
+  "onAction": "{{(async () => { const m = BoTablo.model || {}; if (m.action === 'period' && m.period) { await storeValue('bo_period', m.period); await Promise.all([BoStats.run(), BoPayment.run(), BoStatus.run()]); return; } if (m.action === 'new') { return showModal('CreateOrderModal'); } if (m.action === 'nav' && m.page) { return navigateTo(m.page); } })()}}",
   "isLoading": false,
   "isVisible": "{{!(appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders')}}",
   "key": "tblz9x8c7v",

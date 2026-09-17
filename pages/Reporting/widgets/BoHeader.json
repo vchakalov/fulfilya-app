@@ -24,7 +24,7 @@
   "events": [
     "onAction"
   ],
-  "onAction": "{{RpNav.onHeader()}}",
+  "onAction": "{{(async () => { const m = BoHeader.model || {}; if (m.action === 'logout') { return AuthManager.logout(); } if (m.action === 'new') { return navigateTo('Dashboard', { new: '1' }); } if (m.action === 'nav') { if (m.tab === 'orders') { return navigateTo('Dashboard', { tab: 'orders' }); } if (m.page) { return navigateTo(m.page); } } })()}}",
   "isLoading": false,
   "isVisible": true,
   "key": "hdrrep0rt1",
