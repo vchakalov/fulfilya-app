@@ -3,7 +3,18 @@ export default {
   isAuthenticated: () => {
     return !!(appsmith.store.customer_uuid && appsmith.store.authToken);
   },
-  
+
+  // Log out: forget the session and go to the login page. The login page is hidden from
+  // the navigation (2026-09-17), so this button is the only way back to it.
+  logout: async () => {
+    await removeValue('authToken');
+    await removeValue('customer_uuid');
+    await removeValue('customer_name');
+    await removeValue('customer_email');
+    await removeValue('is_admin');
+    navigateTo('Authentication');
+  },
+
   // Handle login
   login: async () => {
     try {

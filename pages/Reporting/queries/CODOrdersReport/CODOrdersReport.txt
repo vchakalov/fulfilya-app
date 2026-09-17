@@ -12,7 +12,7 @@
       FROM custom_field_values cfv
       JOIN custom_fields cf ON cfv.custom_field_uuid = cf.uuid
       WHERE cfv.subject_uuid = o.uuid
-      AND cf.name = 'cod-amount:'
+      AND cf.name = 'amount:'
       AND cfv.subject_type = 'Fleetbase\\FleetOps\\Models\\Order'
       LIMIT 1), '0.00') as cod_amount_display,
 
@@ -20,7 +20,7 @@
       FROM custom_field_values cfv
       JOIN custom_fields cf ON cfv.custom_field_uuid = cf.uuid
       WHERE cfv.subject_uuid = o.uuid
-      AND cf.name = 'cod-amount:'
+      AND cf.name = 'amount:'
       AND cfv.subject_type = 'Fleetbase\\FleetOps\\Models\\Order'
       LIMIT 1), '0') AS DECIMAL(10,2)) as cod_amount_numeric,
 
