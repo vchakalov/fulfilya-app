@@ -131,6 +131,13 @@ for n, s in (('BoStats', SQL_STATS), ('BoPayment', SQL_PAYMENT), ('BoStatus', SQ
 BONAV = r"""export default {
   // Sofia time, whatever the browser is set to. The SQL shifts created_at by this many
   // hours before taking the date, so "today" and "this week" are Sofia days.
+  //
+  // Pure on purpose: nothing here may name a widget or a query, not even in a comment
+  // worth reading twice. The Табло widget's model depends on the stats query, the stats
+  // query depends on these dates - a function in here that read the widget's model or
+  // ran the query closed a dependency loop, and Appsmith then evaluated none of it and
+  // ran no query on page load (found on the first deploy, 2026-09-17). The clicks are
+  // handled in the widgets' own onAction bindings.
   tz: () => moment().tz('Europe/Sofia').utcOffset() / 60,
   today: () => moment().tz('Europe/Sofia').format('YYYY-MM-DD'),
   period: () => appsmith.store.bo_period || 'week',
@@ -141,33 +148,7 @@ BONAV = r"""export default {
     if (p === 'month') return now.startOf('month').format('YYYY-MM-DD');
     return now.subtract(6, 'days').format('YYYY-MM-DD');
   },
-  daysSince: () => moment().tz('Europe/Sofia').subtract(13, 'days').format('YYYY-MM-DD'),
-
-  setPeriod: async (p) => {
-    await storeValue('bo_period', p);
-    await Promise.all([BoStats.run(), BoPayment.run(), BoStatus.run()]);
-  },
-
-  // The header and the Табло block are custom widgets: they write what happened into
-  // their model and raise one event, and this reads it back.
-  onHeader: async () => {
-    const m = BoHeader.model || {};
-    if (m.action === 'logout') return AuthManager.logout();
-    if (m.action === 'new') return showModal('CreateOrderModal');
-    if (m.action === 'nav') {
-      // Табло and Поръчки are two views of this page: ?tab=orders hides the Табло block
-      // so the order list sits right under the header, with its own search and filters.
-      if (m.tab === 'orders') return navigateTo('Dashboard', { tab: 'orders' });
-      if (m.tab === 'tablo') return navigateTo('Dashboard');
-      if (m.page) return navigateTo(m.page);
-    }
-  },
-  onTablo: async () => {
-    const m = BoTablo.model || {};
-    if (m.action === 'period' && m.period) return BoNav.setPeriod(m.period);
-    if (m.action === 'new') return showModal('CreateOrderModal');
-    if (m.action === 'nav' && m.page) return navigateTo(m.page);
-  }
+  daysSince: () => moment().tz('Europe/Sofia').subtract(13, 'days').format('YYYY-MM-DD')
 }
 """
 w('Dashboard/jsobjects/BoNav/BoNav.js', BONAV)
@@ -187,6 +168,11 @@ body{color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.45;-w
 h1,h2,h3{font-family:var(--display);margin:0;letter-spacing:-.01em}
 button{font:inherit;color:inherit}
 .num{font-variant-numeric:tabular-nums}
+:root[data-theme="dark"]{--bg:#000000;--card:#121212;--ground:#0A0A0A;--ink:#F5F5F7;--muted:#A1A1A6;--faint:#6E6E73;--line:#262626;--line-strong:#333336;
+--accent:#FEC700;--accent-hover:#FFD43B;--accent-soft:#2A2200;--accent-ink:#FFD84D;--ok:#5BD08A;--ok-soft:#0F2A1B;--warn:#F0B35A;--warn-soft:#2A1E08;--bad:#F08A80;--bad-soft:#2B1512;--info-soft:#1A1F26;
+--c1:#B98700;--c2:#4C86E0;--c3:#22A468;--c4:#8F73D9;--c5:#E8663F;--shadow:0 1px 2px rgba(0,0,0,.6),0 12px 32px -12px rgba(0,0,0,.8)}
+:root[data-theme="dark"] .chip.on{background:var(--accent);color:#1D1D1F;border-color:var(--accent)}
+:root[data-theme="dark"] .merchant .avatar{color:#1D1D1F}
 """
 
 # --- header
@@ -227,6 +213,7 @@ function render() {
   const m = appsmith.model || {};
   const current = m.page || 'tablo';
   const logo = m.logo ? `<img class="logo" src="${esc(m.logo)}" alt="" onerror="this.remove()">` : `<span class="avatar">${esc(initials(m.merchant))}</span>`;
+  document.documentElement.dataset.theme = m.theme === 'dark' ? 'dark' : 'light';
   const tabs = m.admin ? '' : `<nav class="tabs">${TABS.map((t) => `<button class="tab${t.id === current ? ' on' : ''}" data-act="${t.page ? 'nav' : 'new'}" data-page="${t.page || ''}" data-tab="${t.id}">${t.label}</button>`).join('')}</nav>`;
   document.getElementById('bo-header').innerHTML =
     `<div class="topbar">` +
@@ -234,12 +221,14 @@ function render() {
     tabs +
     `<span class="grow"></span>` +
     `<span class="merchant">${logo}<span class="name">${esc(m.merchant || '')}</span></span>` +
+    `<button class="btn" data-act="theme" title="${m.theme === 'dark' ? 'Светла тема' : 'Тъмна тема'}">${m.theme === 'dark' ? '☀' : '☾'}</button>` +
     `<button class="btn" data-act="logout">Изход</button>` +
     `</div>`;
   document.querySelectorAll('[data-act]').forEach((el) => el.addEventListener('click', (e) => {
     e.preventDefault();
     const act = el.dataset.act;
     if (act === 'nav' && el.dataset.tab === current) return;
+    if (act === 'theme') { appsmith.updateModel({ action: 'theme', theme: m.theme === 'dark' ? 'light' : 'dark' }); appsmith.triggerEvent('onAction'); return; }
     appsmith.updateModel({ action: act, page: el.dataset.page || '' , tab: el.dataset.tab || '' });
     appsmith.triggerEvent('onAction');
   }));
@@ -294,7 +283,8 @@ TABLO_CSS = TOKENS + """
 .bars .lbl{font-size:11px;fill:var(--ink);font-weight:600}
 .empty{color:var(--faint);font-size:13px;padding:24px 0;text-align:center}
 """
-TABLO_JS = r"""const C = ['#D99A00', '#2E6FD6', '#1FA463', '#7B5CC7', '#D9532B'];
+TABLO_JS = r"""const PAL = { light: ['#D99A00', '#2E6FD6', '#1FA463', '#7B5CC7', '#D9532B'], dark: ['#B98700', '#4C86E0', '#22A468', '#8F73D9', '#E8663F'] };
+let C = PAL.light;
 const fmt = (n) => Number(n || 0).toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const int = (n) => Number(n || 0).toLocaleString('bg-BG');
 const PERIODS = [['today', 'Днес'], ['week', '7 дни'], ['month', 'Месец']];
@@ -348,6 +338,8 @@ function bars(labels, values, label) {
 
 function render() {
   const m = appsmith.model || {};
+  document.documentElement.dataset.theme = m.theme === 'dark' ? 'dark' : 'light';
+  C = m.theme === 'dark' ? PAL.dark : PAL.light;
   const period = m.period || 'week';
   const st = (Array.isArray(m.stats) ? m.stats[0] : m.stats) || {};
   const pay = Array.isArray(m.payment) ? m.payment : [];
@@ -400,13 +392,16 @@ appsmith.onReady(render);
 appsmith.onModelChange(render);
 """
 
+HEADER_ON = "{{(async () => { const m = BoHeader.model || {}; if (m.action === 'theme' && m.theme) { return storeValue('bo_theme', m.theme); } if (m.action === 'logout') { return AuthManager.logout(); } if (m.action === 'new') { return showModal('CreateOrderModal'); } if (m.action === 'nav') { if (m.tab === 'orders') { return navigateTo('Dashboard', { tab: 'orders' }); } if (m.tab === 'tablo') { return navigateTo('Dashboard'); } if (m.page) { return navigateTo(m.page); } } })()}}"
+TABLO_ON = "{{(async () => { const m = BoTablo.model || {}; if (m.action === 'period' && m.period) { await storeValue('bo_period', m.period); await Promise.all([BoStats.run(), BoPayment.run(), BoStatus.run()]); return; } if (m.action === 'new') { return showModal('CreateOrderModal'); } if (m.action === 'nav' && m.page) { return navigateTo(m.page); } })()}}"
+
 def custom(name, top, bottom, html, css, js, model, height, key_seed, visible=None):
     d = {
         "animateLoading": True, "backgroundColor": "transparent", "borderColor": "transparent", "borderRadius": "0px", "borderWidth": "0",
         "boxShadow": "none", "bottomRow": bottom, "defaultModel": model,
         "dynamicBindingPathList": [{"key": "theme"}, {"key": "defaultModel"}],
         "dynamicHeight": height, "dynamicTriggerPathList": [{"key": "onAction"}],
-        "events": ["onAction"], "onAction": "{{BoNav.on" + ("Header" if name == "BoHeader" else "Tablo") + "()}}",
+        "events": ["onAction"], "onAction": HEADER_ON if name == "BoHeader" else TABLO_ON,
         "isLoading": False, "isVisible": True, "key": key_seed, "leftColumn": 0,
         "maxDynamicHeight": 9000, "minDynamicHeight": 4, "minWidth": 450,
         "mobileBottomRow": bottom, "mobileLeftColumn": 0, "mobileRightColumn": 64, "mobileTopRow": top,
@@ -423,10 +418,10 @@ def custom(name, top, bottom, html, css, js, model, height, key_seed, visible=No
     w(f'Dashboard/widgets/{name}.json', d)
 
 custom('BoHeader', 0, 8, HEADER_HTML, HEADER_CSS, HEADER_JS,
-       "{{ { page: (appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders') ? 'orders' : 'tablo', merchant: appsmith.store.customer_name || '', logo: appsmith.store.customer_logo || '' } }}",
+       "{{ { page: (appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders') ? 'orders' : 'tablo', theme: appsmith.store.bo_theme || 'light', merchant: appsmith.store.customer_name || '', logo: appsmith.store.customer_logo || '' } }}",
        "FIXED", "hdrq1w2e3r")
 custom('BoTablo', 9, 72, TABLO_HTML, TABLO_CSS, TABLO_JS,
-       "{{ { period: appsmith.store.bo_period || 'week', merchant: appsmith.store.customer_name || '', stats: BoStats.data, payment: BoPayment.data, status: BoStatus.data, days: BoDays.data } }}",
+       "{{ { period: appsmith.store.bo_period || 'week', theme: appsmith.store.bo_theme || 'light', merchant: appsmith.store.customer_name || '', stats: BoStats.data, payment: BoPayment.data, status: BoStatus.data, days: BoDays.data } }}",
        "AUTO_HEIGHT", "tblz9x8c7v", visible="{{!(appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders')}}")
 
 # ---------------------------------------------------------------- existing widgets, restyled
@@ -434,6 +429,8 @@ def load(rel): return json.load(open(os.path.join(REPO, rel), encoding='utf-8'))
 
 t6 = load('Dashboard/widgets/Text6.json'); t6.update(text="{{(appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders') ? 'Поръчки' : 'Последни поръчки'}}", fontSize='1.25rem', topRow=75, bottomRow=79, originalTopRow=75, originalBottomRow=79, mobileTopRow=75, mobileBottomRow=79)
 if not any(x.get('key') == 'text' for x in t6['dynamicBindingPathList']): t6['dynamicBindingPathList'].append({"key": "text"})
+t6['textColor'] = "{{appsmith.store.bo_theme === 'dark' ? '#F5F5F7' : '#1D1D1F'}}"
+if not any(x.get('key') == 'textColor' for x in t6['dynamicBindingPathList']): t6['dynamicBindingPathList'].append({"key": "textColor"})
 w('Dashboard/widgets/Text6.json', t6)
 b6 = load('Dashboard/widgets/Button6.json'); b6.update(text='+ Нова поръчка', buttonColor='#FFC400', topRow=75, bottomRow=79, originalTopRow=75, originalBottomRow=79, mobileTopRow=75, mobileBottomRow=79); w('Dashboard/widgets/Button6.json', b6)
 
@@ -446,6 +443,28 @@ labels = dict(order_id='Поръчка', status='Статус', created_date='С
 for k, l in labels.items():
     if k in cols: cols[k]['label'] = l
 cols['customColumn2']['isVisible'] = False
+# The merchant's list: shop order number first, the recipient and where the parcel goes,
+# nothing about the merchant themselves (it is their own portal), no pickup, no tracking.
+cols['internal_reference'].update(label='Поръчка', isVisible=True)
+cols['order_id']['isVisible'] = False
+cols['customer_name']['isVisible'] = False
+cols['external_order_id']['isVisible'] = False
+cols['delivery_address']['label'] = 'Получател'   # dropoff.name - the person who receives
+import copy
+for new_id, label in (('recipient_phone', 'Телефон'), ('delivery_full_address', 'Адрес')):
+    c = copy.deepcopy(cols['delivery_address']); c.update(id=new_id, alias=new_id, originalId=new_id, label=label, isVisible=True)
+    c['computedValue'] = c['computedValue'].replace('delivery_address', new_id)
+    cols[new_id] = c
+    tb['dynamicBindingPathList'].append({"key": f"primaryColumns.{new_id}.computedValue"})
+tb['columnOrder'] = ['customColumn1', 'internal_reference', 'status', 'created_date', 'delivery_address', 'recipient_phone', 'delivery_full_address', 'total_amount', 'customColumn4', 'order_id', 'customer_name', 'external_order_id', 'customColumn2', 'customer_email', 'customer_phone', 'pickup_location', 'driver_name', 'tracking_number', 'payment_method', 'store_type', 'status_display']
+for i, k in enumerate(tb['columnOrder']):
+    if k in cols: cols[k]['index'] = i
+# the table follows the light/dark toggle
+tb['cellBackground'] = "{{appsmith.store.bo_theme === 'dark' ? '#121212' : '#FFFFFF'}}"
+tb['textColor'] = "{{appsmith.store.bo_theme === 'dark' ? '#F5F5F7' : '#1D1D1F'}}"
+tb['borderColor'] = "{{appsmith.store.bo_theme === 'dark' ? '#262626' : '#E5E5EA'}}"
+for k in ('cellBackground', 'textColor', 'borderColor'):
+    if not any(x.get('key') == k for x in tb['dynamicBindingPathList']): tb['dynamicBindingPathList'].append({"key": k})
 cols['customColumn1']['buttonLabel'] = 'Детайли'; cols['customColumn1']['buttonColor'] = '#FFC400'
 PILL = r"""(() => {
       const s = currentRow.status_display;

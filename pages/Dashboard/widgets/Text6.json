@@ -1,13 +1,16 @@
 {
   "animateLoading": true,
   "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
-  "bottomRow": 131,
+  "bottomRow": 79,
   "dynamicBindingPathList": [
     {
       "key": "text"
     },
     {
       "key": "fontFamily"
+    },
+    {
+      "key": "textColor"
     }
   ],
   "dynamicHeight": "AUTO_HEIGHT",
@@ -27,8 +30,8 @@
   "mobileRightColumn": 16,
   "mobileTopRow": 75,
   "needsErrorInfo": false,
-  "originalBottomRow": 147,
-  "originalTopRow": 110,
+  "originalBottomRow": 79,
+  "originalTopRow": 75,
   "overflow": "NONE",
   "parentColumnSpace": 10.484375,
   "parentId": "0",
@@ -39,8 +42,8 @@
   "shouldTruncate": false,
   "text": "{{(appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders') ? 'Поръчки' : 'Последни поръчки'}}",
   "textAlign": "LEFT",
-  "textColor": "#231F20",
-  "topRow": 127,
+  "textColor": "{{appsmith.store.bo_theme === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
+  "topRow": 75,
   "truncateButtonColor": "{{appsmith.theme.colors.primaryColor}}",
   "type": "TEXT_WIDGET",
   "version": 1,

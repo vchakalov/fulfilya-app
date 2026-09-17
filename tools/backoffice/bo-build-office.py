@@ -13,11 +13,11 @@ def w(path, content):
     p = os.path.join(OUT, path); os.makedirs(os.path.dirname(p), exist_ok=True)
     with open(p, 'w', encoding='utf-8') as f:
         f.write(content if isinstance(content, str) else json.dumps(content, ensure_ascii=False, indent=2) + '\n')
-LOGOUT = "{{(async () => { const m = BoHeader.model || {}; if (m.action !== 'logout') { return; } await removeValue('authToken'); await removeValue('is_admin'); await removeValue('customer_name'); await removeValue('customer_uuid'); navigateTo('Authentication'); })()}}"
+LOGOUT = "{{(async () => { const m = BoHeader.model || {}; if (m.action === 'theme' && m.theme) { return storeValue('bo_theme', m.theme); } if (m.action !== 'logout') { return; } await removeValue('authToken'); await removeValue('is_admin'); await removeValue('customer_name'); await removeValue('customer_uuid'); navigateTo('Authentication'); })()}}"
 d = {
     "animateLoading": True, "backgroundColor": "transparent", "borderColor": "transparent", "borderRadius": "0px", "borderWidth": "0",
     "boxShadow": "none", "bottomRow": 8,
-    "defaultModel": "{{ { page: 'office', admin: true, merchant: 'Fulfilya · офис', logo: '' } }}",
+    "defaultModel": "{{ { page: 'office', admin: true, theme: appsmith.store.bo_theme || 'light', merchant: 'Fulfilya · офис', logo: '' } }}",
     "dynamicBindingPathList": [{"key": "theme"}, {"key": "defaultModel"}], "dynamicHeight": "FIXED",
     "dynamicTriggerPathList": [{"key": "onAction"}], "events": ["onAction"], "onAction": LOGOUT,
     "isLoading": False, "isVisible": True, "key": "hdr0ff1ce9", "leftColumn": 0, "maxDynamicHeight": 9000, "minDynamicHeight": 4, "minWidth": 450,
@@ -29,12 +29,17 @@ d = {
     "theme": "{{appsmith.theme}}", "topRow": 0, "type": "CUSTOM_WIDGET", "version": 1, "widgetId": "bohdr0ff1c", "widgetName": "BoHeader",
 }
 w('pages/Office/widgets/BoHeader.json', d)
-# every Office widget moves down to make room
+# every Office widget moves down to make room - once. The repo's copies are already
+# shifted after the first run (OfficeTitle sits at row 10), so this only shifts a fresh
+# tree, and never touches the header it just wrote.
+title = json.load(open(f'{REPO}/pages/Office/widgets/OfficeTitle.json', encoding='utf-8'))
+shift = 9 if int(title.get('topRow') or 0) < 9 else 0
 for f in sorted(glob.glob(f'{REPO}/pages/Office/widgets/*.json')):
+    if os.path.basename(f) == 'BoHeader.json' or not shift: continue
     x = json.load(open(f, encoding='utf-8'))
     if x.get('parentId') != '0': continue
     for k in ('topRow', 'bottomRow', 'originalTopRow', 'originalBottomRow', 'mobileTopRow', 'mobileBottomRow'):
-        if x.get(k) is not None: x[k] = int(x[k]) + 9
+        if x.get(k) is not None: x[k] = int(x[k]) + shift
     w('pages/Office/widgets/' + os.path.basename(f), x)
 # Appsmith's navbar off
 a = json.load(open(f'{REPO}/application.json', encoding='utf-8'))

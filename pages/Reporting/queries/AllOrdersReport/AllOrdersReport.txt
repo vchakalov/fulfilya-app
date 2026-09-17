@@ -38,6 +38,8 @@
       COALESCE(MAX(CASE WHEN cf.name = 'amount:' THEN cfv.value END), '0.00') as order_amount_display,
       COALESCE(pickup.name, 'Unknown') as pickup_location,
       COALESCE(dropoff.name, 'Unknown') as dropoff_location,
+      COALESCE(dropoff.phone, '') as recipient_phone,
+      TRIM(BOTH ', ' FROM CONCAT_WS(', ', dropoff.street1, dropoff.city)) as delivery_address,
       COALESCE(d_user.name, 'Unassigned') as driver_name,
       COALESCE(tn.tracking_number, '') as tracking_number
   FROM orders o
@@ -63,6 +65,9 @@
       c.email,
       pickup.name,
       dropoff.name,
+      dropoff.phone,
+      dropoff.street1,
+      dropoff.city,
       d_user.name,
       tn.tracking_number
   ORDER BY o.created_at DESC;

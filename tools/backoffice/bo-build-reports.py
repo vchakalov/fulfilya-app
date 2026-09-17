@@ -39,6 +39,7 @@ def w(path, content):
 # Справки count by the day the money changed hands: a delivered order belongs to the Sofia
 # day of its last status change (same rule as the office's CodReport). The period comes
 # from RpNav.since()/until() - today, Monday-Sunday week, calendar month or a range.
+TZ = "{{RpNav.tz()}}"  # the Reporting page has RpNav, not the Dashboard's BoNav - a Dashboard token here reads as nothing
 LOCAL_DONE = f"DATE(DATE_ADD(o.updated_at, INTERVAL {TZ} HOUR))"
 LOCAL_CREATED = f"DATE(DATE_ADD(o.created_at, INTERVAL {TZ} HOUR))"
 FINISHED = f"({DELIVERED[1:-1]}, {RETURNED[1:-1]}, {CANCELLED[1:-1]})"
@@ -113,13 +114,13 @@ SQL_PRODUCTS = f"""-- Справки: the five most delivered products in the pe
 -- entities.meta.quantity and the name carries " x N" for more than one.
 SELECT
   REGEXP_REPLACE(e.name, ' x [0-9]+$', '') AS product,
-  SUM(COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(e.meta, '$.quantity')) AS UNSIGNED), 1)) AS qty,
+  SUM(GREATEST(1, COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(e.meta, '$.quantity')) AS UNSIGNED), 1))) AS qty,
   COUNT(DISTINCT o.uuid) AS orders
 FROM (
 {base()}
 ) o
 JOIN entities e ON e.payload_uuid = o.payload_uuid AND e.deleted_at <=> NULL
-WHERE o.status IN {DELIVERED}
+WHERE o.status IN {DELIVERED} AND NOT (e.name <=> NULL) AND TRIM(e.name) <> ''
 GROUP BY 1
 ORDER BY qty DESC, orders DESC
 LIMIT 5;"""
@@ -159,6 +160,8 @@ for n, s in QUERIES: query(n, s)
 
 # ---------------------------------------------------------------- JS
 RPNAV = r"""export default {
+  // Pure on purpose - see the Dashboard's dates object: a reference to a widget or a
+  // query in here closes a dependency loop and nothing runs on page load.
   tz: () => moment().tz('Europe/Sofia').utcOffset() / 60,
   today: () => moment().tz('Europe/Sofia').format('YYYY-MM-DD'),
   period: () => appsmith.store.rp_period || 'month',
@@ -179,48 +182,7 @@ RPNAV = r"""export default {
     if (p === 'range' && appsmith.store.rp_to) return appsmith.store.rp_to;
     return now.endOf('month').format('YYYY-MM-DD');
   },
-  monthsSince: () => moment().tz('Europe/Sofia').subtract(5, 'months').startOf('month').format('YYYY-MM-DD'),
-
-  reload: async () => {
-    await Promise.all([RpStats.run(), RpPayment.run(), RpService.run(), RpOutcome.run(), RpProducts.run(), RpDaily.run()]);
-  },
-  setPeriod: async (p) => {
-    await storeValue('rp_period', p);
-    await RpNav.reload();
-  },
-  setRange: async (from, to) => {
-    await storeValue('rp_from', from);
-    await storeValue('rp_to', to);
-    await storeValue('rp_period', 'range');
-    await RpNav.reload();
-  },
-
-  // The daily table as a CSV the merchant's accountant can open. Excel in Bulgaria reads a
-  // semicolon-separated file with a BOM as columns straight away; a comma-separated one
-  // lands in a single column.
-  exportCsv: () => {
-    const rows = RpDaily.data || [];
-    const head = ['Ден', 'Доставени', 'Върнати', 'НП в брой', 'НП с карта', 'Платени онлайн', 'Общо събрано', 'Доставка и такса НП', 'За изплащане'];
-    const cell = (v) => String(v == null ? '' : v).replace('.', ',');
-    const lines = [head.join(';')].concat(rows.map((r) => [r.day, r.delivered, r.returned, cell(r.cod_cash), cell(r.cod_card), cell(r.prepaid), cell(r.collected), cell(r.fees), cell(r.payout)].join(';')));
-    download('﻿' + lines.join('\r\n'), `fulfilya-otchet-${RpNav.since()}-${RpNav.until()}.csv`, 'text/csv');
-  },
-
-  onHeader: async () => {
-    const m = BoHeader.model || {};
-    if (m.action === 'logout') return AuthManager.logout();
-    if (m.action === 'new') return navigateTo('Dashboard', { new: '1' });
-    if (m.action === 'nav') {
-      if (m.tab === 'orders') return navigateTo('Dashboard', { tab: 'orders' });
-      if (m.page) return navigateTo(m.page);
-    }
-  },
-  onReports: async () => {
-    const m = BoReports.model || {};
-    if (m.action === 'period' && m.period) return RpNav.setPeriod(m.period);
-    if (m.action === 'range' && m.from && m.to) return RpNav.setRange(m.from, m.to);
-    if (m.action === 'csv') return RpNav.exportCsv();
-  }
+  monthsSince: () => moment().tz('Europe/Sofia').subtract(5, 'months').startOf('month').format('YYYY-MM-DD')
 }
 """
 w('Reporting/jsobjects/RpNav/RpNav.js', RPNAV)
@@ -291,7 +253,8 @@ tfoot td{font-weight:700;border-top:2px solid var(--line-strong);border-bottom:0
 td.r,th.r{text-align:right}
 .empty{color:var(--faint);font-size:13px;padding:24px 0;text-align:center}
 """
-REPORTS_JS = r"""const C = ['#D99A00', '#2E6FD6', '#1FA463', '#7B5CC7', '#D9532B'];
+REPORTS_JS = r"""const PAL = { light: ['#D99A00', '#2E6FD6', '#1FA463', '#7B5CC7', '#D9532B'], dark: ['#B98700', '#4C86E0', '#22A468', '#8F73D9', '#E8663F'] };
+let C = PAL.light;
 const fmt = (n) => Number(n || 0).toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const int = (n) => Number(n || 0).toLocaleString('bg-BG');
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -334,6 +297,8 @@ function bars(labels, values, label) {
 
 function render() {
   const m = appsmith.model || {};
+  document.documentElement.dataset.theme = m.theme === 'dark' ? 'dark' : 'light';
+  C = m.theme === 'dark' ? PAL.dark : PAL.light;
   const period = m.period || 'month';
   const st = (Array.isArray(m.stats) ? m.stats[0] : m.stats) || {};
   const pay = Array.isArray(m.payment) ? m.payment : [];
@@ -393,6 +358,9 @@ appsmith.onReady(render);
 appsmith.onModelChange(render);
 """
 
+RP_HEADER_ON = "{{(async () => { const m = BoHeader.model || {}; if (m.action === 'theme' && m.theme) { return storeValue('bo_theme', m.theme); } if (m.action === 'logout') { return AuthManager.logout(); } if (m.action === 'new') { return navigateTo('Dashboard', { new: '1' }); } if (m.action === 'nav') { if (m.tab === 'orders') { return navigateTo('Dashboard', { tab: 'orders' }); } if (m.page) { return navigateTo(m.page); } } })()}}"
+RP_REPORTS_ON = "{{(async () => { const m = BoReports.model || {}; const reload = () => Promise.all([RpStats.run(), RpPayment.run(), RpService.run(), RpOutcome.run(), RpProducts.run(), RpDaily.run()]); if (m.action === 'period' && m.period) { await storeValue('rp_period', m.period); await reload(); return; } if (m.action === 'range' && m.from && m.to) { await storeValue('rp_from', m.from); await storeValue('rp_to', m.to); await storeValue('rp_period', 'range'); await reload(); return; } if (m.action === 'csv') { const rows = RpDaily.data || []; const head = ['Ден', 'Доставени', 'Върнати', 'НП в брой', 'НП с карта', 'Платени онлайн', 'Общо събрано', 'Доставка и такса НП', 'За изплащане']; const cell = (v) => String(v == null ? '' : v).replace('.', ','); const lines = [head.join(';')].concat(rows.map((r) => [r.day, r.delivered, r.returned, cell(r.cod_cash), cell(r.cod_card), cell(r.prepaid), cell(r.collected), cell(r.fees), cell(r.payout)].join(';'))); return download('\\ufeff' + lines.join('\\r\\n'), 'fulfilya-otchet-' + RpNav.since() + '-' + RpNav.until() + '.csv', 'text/csv'); } })()}}"
+
 def custom(page, name, top, bottom, html, css, js, model, height, key_seed, handler):
     d = {
         "animateLoading": True, "backgroundColor": "transparent", "borderColor": "transparent", "borderRadius": "0px", "borderWidth": "0",
@@ -413,11 +381,11 @@ def custom(page, name, top, bottom, html, css, js, model, height, key_seed, hand
     w(f'{page}/widgets/{name}.json', d)
 
 custom('Reporting', 'BoHeader', 0, 8, HEADER_HTML, HEADER_CSS, HEADER_JS,
-       "{{ { page: 'reports', merchant: appsmith.store.customer_name || '', logo: appsmith.store.customer_logo || '' } }}",
-       "FIXED", "hdrrep0rt1", "{{RpNav.onHeader()}}")
+       "{{ { page: 'reports', theme: appsmith.store.bo_theme || 'light', merchant: appsmith.store.customer_name || '', logo: appsmith.store.customer_logo || '' } }}",
+       "FIXED", "hdrrep0rt1", RP_HEADER_ON)
 custom('Reporting', 'BoReports', 9, 100, REPORTS_HTML, REPORTS_CSS, REPORTS_JS,
-       "{{ { period: appsmith.store.rp_period || 'month', since: RpNav.since(), until: RpNav.until(), stats: RpStats.data, payment: RpPayment.data, service: RpService.data, outcome: RpOutcome.data, months: RpMonths.data, products: RpProducts.data, daily: RpDaily.data } }}",
-       "AUTO_HEIGHT", "rptz9x8c7v", "{{RpNav.onReports()}}")
+       "{{ { period: appsmith.store.rp_period || 'month', theme: appsmith.store.bo_theme || 'light', since: RpNav.since(), until: RpNav.until(), stats: RpStats.data, payment: RpPayment.data, service: RpService.data, outcome: RpOutcome.data, months: RpMonths.data, products: RpProducts.data, daily: RpDaily.data } }}",
+       "AUTO_HEIGHT", "rptz9x8c7v", RP_REPORTS_ON)
 
 # ---------------------------------------------------------------- the detailed tables move down, retitled
 c2 = json.load(open(os.path.join(REPO, 'Reporting/widgets/Container2/Container2.json'), encoding='utf-8'))
