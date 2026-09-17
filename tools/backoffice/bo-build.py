@@ -167,7 +167,7 @@ html,body{margin:0;background:transparent}
 body{color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
 h1,h2,h3,h4{font-family:var(--display)!important;margin:0;letter-spacing:-.01em;color:var(--ink)!important;font-weight:800}
 a,a:visited,a:hover{color:inherit;text-decoration:none}
-body,div,span,p,td,th{color:inherit}
+html,body{color:var(--ink)!important}
 button{font:inherit;color:inherit}
 .num{font-variant-numeric:tabular-nums}
 :root[data-theme="dark"]{--bg:#000000;--card:#121212;--ground:#0A0A0A;--ink:#F5F5F7;--muted:#A1A1A6;--faint:#6E6E73;--line:#262626;--line-strong:#333336;
@@ -218,10 +218,12 @@ function render() {
   const current = m.page || 'tablo';
   const logo = m.logo ? `<img class="logo" src="${esc(m.logo)}" alt="" onerror="this.remove()">` : `<span class="avatar">${esc(initials(m.merchant))}</span>`;
   document.documentElement.dataset.theme = m.theme === 'dark' ? 'dark' : 'light';
+  const INK = m.theme === 'dark' ? '#F5F5F7' : '#1D1D1F', GOLD = m.theme === 'dark' ? '#FFD84D' : '#8A6500';
+  document.body.style.color = INK;
   const tabs = m.admin ? '' : `<nav class="tabs">${TABS.map((t) => `<button class="tab${t.id === current ? ' on' : ''}" data-act="${t.page ? 'nav' : 'new'}" data-page="${t.page || ''}" data-tab="${t.id}">${t.label}</button>`).join('')}</nav>`;
   document.getElementById('bo-header').innerHTML =
     `<div class="topbar">` +
-    `<a class="brand" href="#" data-act="nav" data-page="Dashboard"><img src="${MARK}" alt=""><span class="word">Fulfil<span>ya</span></span><span class="product">BackOffice</span></a>` +
+    `<a class="brand" href="#" data-act="nav" data-page="Dashboard"><img src="${MARK}" alt=""><span class="word" style="color:${INK}">Fulfil<span style="color:${GOLD}">ya</span></span><span class="product">BackOffice</span></a>` +
     tabs +
     `<span class="grow"></span>` +
     `<span class="merchant">${logo}<span class="name">${esc(m.merchant || '')}</span></span>` +
@@ -344,6 +346,8 @@ function render() {
   const m = appsmith.model || {};
   document.documentElement.dataset.theme = m.theme === 'dark' ? 'dark' : 'light';
   C = m.theme === 'dark' ? PAL.dark : PAL.light;
+  const INK = m.theme === 'dark' ? '#F5F5F7' : '#1D1D1F';
+  document.body.style.color = INK;
   const period = m.period || 'week';
   const st = (Array.isArray(m.stats) ? m.stats[0] : m.stats) || {};
   const pay = Array.isArray(m.payment) ? m.payment : [];
@@ -366,7 +370,7 @@ function render() {
 
   document.getElementById('bo-tablo').innerHTML =
     `<div class="wrap">` +
-    `<div class="row"><div><h2>${greeting()}, ${esc(m.merchant || '')}</h2><div class="sub">${todayLine()}</div></div>` +
+    `<div class="row"><div><h2 style="color:${INK}">${greeting()}, ${esc(m.merchant || '')}</h2><div class="sub">${todayLine()}</div></div>` +
     `<div class="chips">${PERIODS.map(([k, l]) => `<button class="chip${k === period ? ' on' : ''}" data-period="${k}">${l}</button>`).join('')}</div></div>` +
     `<div class="grid g4">` +
     `<div class="card kpi"><h3>Поръчки</h3><div class="big num">${int(total)}</div><div class="foot"><span class="delta ${Number(st.total_today) ? 'up' : 'flat'}">+${int(st.total_today)} днес</span> ${pl}</div></div>` +
@@ -433,7 +437,7 @@ custom('BoTablo', 9, 72, TABLO_HTML, TABLO_CSS, TABLO_JS,
 
 TITLE_HTML = FONT_LINK + '<div id="bo-title"></div>'
 TITLE_CSS = TOKENS + '.t{display:flex;align-items:center;height:40px}.t h2{font-size:22px;font-weight:800}'
-TITLE_JS = r"""function render(){ const m = appsmith.model || {}; document.documentElement.dataset.theme = m.theme === 'dark' ? 'dark' : 'light'; document.getElementById('bo-title').innerHTML = '<div class="t"><h2>' + String(m.title || '').replace(/[&<>]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[c]) + '</h2></div>'; }
+TITLE_JS = r"""function render(){ const m = appsmith.model || {}; document.documentElement.dataset.theme = m.theme === 'dark' ? 'dark' : 'light'; const INK = m.theme === 'dark' ? '#F5F5F7' : '#1D1D1F'; document.body.style.color = INK; document.getElementById('bo-title').innerHTML = '<div class="t"><h2 style="color:' + INK + '">' + String(m.title || '').replace(/[&<>]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[c]) + '</h2></div>'; }
 appsmith.onReady(render); appsmith.onModelChange(render);"""
 custom('BoTitle', 75, 79, TITLE_HTML, TITLE_CSS, TITLE_JS,
        "{{ { theme: appsmith.store.bo_theme || 'dark', title: (appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders') ? 'Поръчки' : 'Последни поръчки' } }}",

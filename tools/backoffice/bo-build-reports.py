@@ -299,6 +299,8 @@ function render() {
   const m = appsmith.model || {};
   document.documentElement.dataset.theme = m.theme === 'dark' ? 'dark' : 'light';
   C = m.theme === 'dark' ? PAL.dark : PAL.light;
+  const INK = m.theme === 'dark' ? '#F5F5F7' : '#1D1D1F';
+  document.body.style.color = INK;
   const period = m.period || 'month';
   const st = (Array.isArray(m.stats) ? m.stats[0] : m.stats) || {};
   const pay = Array.isArray(m.payment) ? m.payment : [];
@@ -327,7 +329,7 @@ function render() {
 
   document.getElementById('bo-reports').innerHTML =
     `<div class="wrap">` +
-    `<div class="row"><div><h2>Справки</h2><div class="sub">${dmy(since)} – ${dmy(until)} · по ден на доставка</div></div>` +
+    `<div class="row"><div><h2 style="color:${INK}">Справки</h2><div class="sub">${dmy(since)} – ${dmy(until)} · по ден на доставка</div></div>` +
     `<div class="toolbar"><div class="chips">${PERIODS.map(([k, l]) => `<button class="chip${k === period ? ' on' : ''}" data-period="${k}">${l}</button>`).join('')}</div>` +
     `<span class="range${period === 'range' ? ' on' : ''}"><input type="date" id="from" value="${esc(period === 'range' ? since : '')}"> – <input type="date" id="to" value="${esc(period === 'range' ? until : '')}"><button id="apply">Покажи</button></span>` +
     `<button class="btn" id="csv">Свали CSV</button></div></div>` +
