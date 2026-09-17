@@ -211,7 +211,7 @@ const initials = (name) => String(name || '').split(/\s+/).filter(Boolean).slice
 function render() {
   const m = appsmith.model || {};
   const current = m.page || 'tablo';
-  const logo = m.logo ? `<img class="logo" src="${esc(m.logo)}" alt="" onerror="this.remove()">` : `<span class="avatar">${esc(initials(m.merchant))}</span>`;
+  const logo = `<span class="avatar">${esc(initials(m.merchant))}</span>`;
   document.documentElement.dataset.theme = 'light';
   const INK = '#1D1D1F', GOLD = '#8A6500';
   document.body.style.color = INK;
@@ -242,7 +242,7 @@ TABLO_HTML = FONT_LINK + """
 TABLO_CSS = TOKENS + """
 .wrap{display:grid;gap:14px;padding:4px 2px 8px}
 .row{display:flex;align-items:end;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.hero{display:flex;align-items:center;gap:22px}.hero .logo{height:56px;width:auto;max-width:220px;border-radius:10px;object-fit:contain;display:block}
+
 .row h2{font-size:22px;font-weight:800}
 .row .sub{color:var(--muted);margin-top:2px}
 .chips{display:flex;gap:6px;flex-wrap:wrap}
@@ -364,7 +364,7 @@ function render() {
 
   document.getElementById('bo-tablo').innerHTML =
     `<div class="wrap">` +
-    `<div class="row"><div class="hero"><div><h2 style="color:${INK}">${greeting()}, ${esc(m.merchant || '')}</h2><div class="sub">${todayLine()}</div></div>${m.logo ? `<img class="logo" src="${esc(m.logo)}" alt="" onerror="this.remove()">` : ''}</div>` +
+    `<div class="row"><div><h2 style="color:${INK}">${greeting()}, ${esc(m.merchant || '')}</h2><div class="sub">${todayLine()}</div></div>` +
     `<div class="chips">${PERIODS.map(([k, l]) => `<button class="chip${k === period ? ' on' : ''}" data-period="${k}">${l}</button>`).join('')}</div></div>` +
     `<div class="grid g4">` +
     `<div class="card kpi"><h3>Поръчки</h3><div class="big num">${int(total)}</div><div class="foot"><span class="delta ${Number(st.total_today) ? 'up' : 'flat'}">+${int(st.total_today)} днес</span> ${pl}</div></div>` +
@@ -423,10 +423,10 @@ def custom(name, top, bottom, html, css, js, model, height, key_seed, visible=No
     w(f'Dashboard/widgets/{name}.json', d)
 
 custom('BoHeader', 0, 8, HEADER_HTML, HEADER_CSS, HEADER_JS,
-       "{{ { page: (appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders') ? 'orders' : 'tablo', merchant: appsmith.store.customer_name || '', logo: appsmith.store.customer_logo || '' } }}",
+       "{{ { page: (appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders') ? 'orders' : 'tablo', merchant: appsmith.store.customer_name || '' } }}",
        "FIXED", "hdrq1w2e3r")
 custom('BoTablo', 9, 58, TABLO_HTML, TABLO_CSS, TABLO_JS,
-       "{{ { period: appsmith.store.bo_period || 'week', merchant: appsmith.store.customer_name || '', logo: appsmith.store.customer_logo || '', stats: BoStats.data, payment: BoPayment.data, status: BoStatus.data, days: BoDays.data } }}",
+       "{{ { period: appsmith.store.bo_period || 'week', merchant: appsmith.store.customer_name || '', stats: BoStats.data, payment: BoPayment.data, status: BoStatus.data, days: BoDays.data } }}",
        "FIXED", "tblz9x8c7v", visible="{{!(appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders')}}")
 
 TITLE_HTML = FONT_LINK + '<div id="bo-title"></div>'
