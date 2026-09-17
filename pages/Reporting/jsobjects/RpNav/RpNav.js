@@ -1,6 +1,6 @@
 export default {
-  // Pure on purpose - see BoNav on the Dashboard: a reference to a widget or a query in
-  // here closes a dependency loop and nothing runs on page load.
+  // Pure on purpose - see the Dashboard's dates object: a reference to a widget or a
+  // query in here closes a dependency loop and nothing runs on page load.
   tz: () => moment().tz('Europe/Sofia').utcOffset() / 60,
   today: () => moment().tz('Europe/Sofia').format('YYYY-MM-DD'),
   period: () => appsmith.store.rp_period || 'month',
