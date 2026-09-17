@@ -38,10 +38,10 @@
     }
   ],
   "iconAlign": "left",
-  "isDisabled": true,
+  "isDisabled": false,
   "isLoading": false,
   "isRequired": false,
-  "isVisible": "true",
+  "isVisible": false,
   "key": "3vkfaofi6t",
   "label": "Amount:",
   "labelAlignment": "left",

@@ -30,11 +30,11 @@
       "key": "onOptionChange"
     }
   ],
-  "isDisabled": true,
+  "isDisabled": false,
   "isFilterable": false,
   "isLoading": false,
   "isRequired": false,
-  "isVisible": true,
+  "isVisible": false,
   "key": "k6hoagtt0l",
   "labelAlignment": "left",
   "labelPosition": "Top",
