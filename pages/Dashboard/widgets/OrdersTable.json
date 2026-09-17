@@ -4,7 +4,7 @@
   "borderColor": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#262626' : '#E5E5EA'}}",
   "borderRadius": "18px",
   "borderWidth": "1",
-  "bottomRow": 286,
+  "bottomRow": 116,
   "boxShadow": "0 1px 2px rgba(0,0,0,.04), 0 12px 32px -12px rgba(29,29,31,.14)",
   "cachedTableData": {},
   "canFreezeColumn": true,
@@ -61,7 +61,7 @@
     "recipient_notes",
     "shop_order_id"
   ],
-  "columnUpdatedAt": 1789670588425,
+  "columnUpdatedAt": 1789671561185,
   "columnWidthMap": {
     "customColumn3": 198,
     "external_order_id": 203
@@ -357,6 +357,12 @@
     },
     {
       "key": "primaryColumns.delivery_full_address.computedValue"
+    },
+    {
+      "key": "primaryColumns.recipient_phone.computedValue"
+    },
+    {
+      "key": "primaryColumns.delivery_full_address.computedValue"
     }
   ],
   "dynamicPropertyPathList": [
@@ -565,13 +571,13 @@
   "label": "Data",
   "leftColumn": 0,
   "minWidth": 450,
-  "mobileBottomRow": 130,
+  "mobileBottomRow": 116,
   "mobileLeftColumn": 0,
   "mobileRightColumn": 13,
-  "mobileTopRow": 80,
+  "mobileTopRow": 66,
   "needsErrorInfo": false,
-  "originalBottomRow": 234,
-  "originalTopRow": 184,
+  "originalBottomRow": 116,
+  "originalTopRow": 66,
   "parentColumnSpace": 10.484375,
   "parentId": "0",
   "parentRowSpace": 10,
@@ -1503,7 +1509,7 @@
   "tableData": "{{GetOrdersList.data}}",
   "textColor": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
   "textSize": "1rem",
-  "topRow": 236,
+  "topRow": 66,
   "totalRecordsCount": 0,
   "type": "TABLE_WIDGET_V2",
   "version": 2,

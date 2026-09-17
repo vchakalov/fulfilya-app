@@ -163,7 +163,7 @@ TOKENS = """:root{--bg:#FFFFFF;--card:#FFFFFF;--ground:#F7F7F8;--ink:#1D1D1F;--m
 --display:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;--body:'Onest',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 --r:18px;--r-s:11px;--shadow:0 1px 2px rgba(0,0,0,.04),0 12px 32px -12px rgba(29,29,31,.14)}
 *{box-sizing:border-box}
-html,body{margin:0;background:transparent}
+html,body{margin:0;background:transparent;height:auto!important;min-height:0!important;overflow:visible}
 body{color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
 h1,h2,h3,h4{font-family:var(--display)!important;margin:0;letter-spacing:-.01em;color:var(--ink)!important;font-weight:800}
 a,a:visited,a:hover{color:inherit;text-decoration:none}
@@ -431,7 +431,7 @@ def custom(name, top, bottom, html, css, js, model, height, key_seed, visible=No
 custom('BoHeader', 0, 8, HEADER_HTML, HEADER_CSS, HEADER_JS,
        "{{ { page: (appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders') ? 'orders' : 'tablo', theme: appsmith.store.bo_theme || 'dark', merchant: appsmith.store.customer_name || '', logo: appsmith.store.customer_logo || '' } }}",
        "FIXED", "hdrq1w2e3r")
-custom('BoTablo', 9, 72, TABLO_HTML, TABLO_CSS, TABLO_JS,
+custom('BoTablo', 9, 58, TABLO_HTML, TABLO_CSS, TABLO_JS,
        "{{ { period: appsmith.store.bo_period || 'week', theme: appsmith.store.bo_theme || 'dark', merchant: appsmith.store.customer_name || '', stats: BoStats.data, payment: BoPayment.data, status: BoStatus.data, days: BoDays.data } }}",
        "AUTO_HEIGHT", "tblz9x8c7v", visible="{{!(appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders')}}")
 
@@ -439,7 +439,7 @@ TITLE_HTML = FONT_LINK + '<div id="bo-title"></div>'
 TITLE_CSS = TOKENS + '.t{display:flex;align-items:center;height:40px}.t h2{font-size:22px;font-weight:800}'
 TITLE_JS = r"""function render(){ const m = appsmith.model || {}; document.documentElement.dataset.theme = m.theme === 'dark' ? 'dark' : 'light'; const INK = m.theme === 'dark' ? '#F5F5F7' : '#1D1D1F'; document.body.style.color = INK; document.getElementById('bo-title').innerHTML = '<div class="t"><h2 style="color:' + INK + '">' + String(m.title || '').replace(/[&<>]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[c]) + '</h2></div>'; }
 appsmith.onReady(render); appsmith.onModelChange(render);"""
-custom('BoTitle', 75, 79, TITLE_HTML, TITLE_CSS, TITLE_JS,
+custom('BoTitle', 60, 64, TITLE_HTML, TITLE_CSS, TITLE_JS,
        "{{ { theme: appsmith.store.bo_theme || 'dark', title: (appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders') ? 'Поръчки' : 'Последни поръчки' } }}",
        "FIXED", "ttl5r6t7y8", events=False)
 
@@ -447,10 +447,10 @@ custom('BoTitle', 75, 79, TITLE_HTML, TITLE_CSS, TITLE_JS,
 def load(rel): return json.load(open(os.path.join(REPO, rel), encoding='utf-8'))
 
 # Text6 (the old list title) is gone - BoTitle above replaces it.
-b6 = load('Dashboard/widgets/Button6.json'); b6.update(text='+ Нова поръчка', buttonColor='#FFC400', topRow=75, bottomRow=79, originalTopRow=75, originalBottomRow=79, mobileTopRow=75, mobileBottomRow=79); w('Dashboard/widgets/Button6.json', b6)
+b6 = load('Dashboard/widgets/Button6.json'); b6.update(text='+ Нова поръчка', buttonColor='#FFC400', topRow=60, bottomRow=64, originalTopRow=60, originalBottomRow=64, mobileTopRow=60, mobileBottomRow=64); w('Dashboard/widgets/Button6.json', b6)
 
 tb = load('Dashboard/widgets/OrdersTable.json')
-tb.update(topRow=80, bottomRow=130, originalTopRow=80, originalBottomRow=130, mobileTopRow=80, mobileBottomRow=130,
+tb.update(topRow=66, bottomRow=116, originalTopRow=66, originalBottomRow=116, mobileTopRow=66, mobileBottomRow=116,
           accentColor='#FFC400', boxShadow='0 1px 2px rgba(0,0,0,.04), 0 12px 32px -12px rgba(29,29,31,.14)', borderRadius='18px')
 cols = tb['primaryColumns']
 labels = dict(order_id='Поръчка', status='Статус', created_date='Създадена', delivery_address='Адрес', customer_name='Получател',
