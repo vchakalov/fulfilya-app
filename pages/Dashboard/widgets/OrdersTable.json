@@ -4,7 +4,7 @@
   "borderColor": "{{appsmith.store.bo_theme === 'dark' ? '#262626' : '#E5E5EA'}}",
   "borderRadius": "18px",
   "borderWidth": "1",
-  "bottomRow": 130,
+  "bottomRow": 182,
   "boxShadow": "0 1px 2px rgba(0,0,0,.04), 0 12px 32px -12px rgba(29,29,31,.14)",
   "cachedTableData": {},
   "canFreezeColumn": true,
@@ -658,12 +658,12 @@
       "notation": "standard",
       "originalId": "created_date",
       "sticky": "",
+      "textColor": "{{appsmith.store.bo_theme === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
       "textSize": "1rem",
       "thousandSeparator": true,
       "validation": {},
       "verticalAlignment": "CENTER",
-      "width": 150,
-      "textColor": "{{appsmith.store.bo_theme === 'dark' ? '#F5F5F7' : '#1D1D1F'}}"
+      "width": 150
     },
     "customColumn1": {
       "alias": "",
@@ -699,12 +699,12 @@
       "onClick": "{{\n      OrdersTable.setSelectedRowIndex(\n        OrdersTable.tableData.findIndex(row => row.order_id === currentRow.order_id)\n      );\n      setTimeout(() => {\n        GetOrderDetails.run();\n        GetOrderItems.run();\n        showModal('OrderManagementModal');\n      }, 100);\n    }}\n  }",
       "originalId": "customColumn1",
       "sticky": "",
+      "textColor": "{{appsmith.store.bo_theme === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
       "textSize": "1rem",
       "thousandSeparator": true,
       "validation": {},
       "verticalAlignment": "CENTER",
-      "width": 150,
-      "textColor": "{{appsmith.store.bo_theme === 'dark' ? '#F5F5F7' : '#1D1D1F'}}"
+      "width": 150
     },
     "customColumn2": {
       "alias": "Age",
@@ -734,12 +734,12 @@
       "notation": "standard",
       "originalId": "customColumn2",
       "sticky": "",
+      "textColor": "{{appsmith.store.bo_theme === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
       "textSize": "1rem",
       "thousandSeparator": true,
       "validation": {},
       "verticalAlignment": "CENTER",
-      "width": 150,
-      "textColor": "{{appsmith.store.bo_theme === 'dark' ? '#F5F5F7' : '#1D1D1F'}}"
+      "width": 150
     },
     "customColumn4": {
       "alias": "Payment",
@@ -769,12 +769,12 @@
       "notation": "standard",
       "originalId": "customColumn4",
       "sticky": "",
+      "textColor": "{{appsmith.store.bo_theme === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
       "textSize": "1rem",
       "thousandSeparator": true,
       "validation": {},
       "verticalAlignment": "CENTER",
-      "width": 150,
-      "textColor": "{{appsmith.store.bo_theme === 'dark' ? '#F5F5F7' : '#1D1D1F'}}"
+      "width": 150
     },
     "customer_email": {
       "alias": "customer_email",
@@ -904,12 +904,12 @@
       "notation": "standard",
       "originalId": "delivery_address",
       "sticky": "",
+      "textColor": "{{appsmith.store.bo_theme === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
       "textSize": "1rem",
       "thousandSeparator": true,
       "validation": {},
       "verticalAlignment": "CENTER",
-      "width": 150,
-      "textColor": "{{appsmith.store.bo_theme === 'dark' ? '#F5F5F7' : '#1D1D1F'}}"
+      "width": 150
     },
     "delivery_amount": {
       "alias": "delivery_amount",
@@ -971,12 +971,12 @@
       "notation": "standard",
       "originalId": "delivery_full_address",
       "sticky": "",
+      "textColor": "{{appsmith.store.bo_theme === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
       "textSize": "1rem",
       "thousandSeparator": true,
       "validation": {},
       "verticalAlignment": "CENTER",
-      "width": 150,
-      "textColor": "{{appsmith.store.bo_theme === 'dark' ? '#F5F5F7' : '#1D1D1F'}}"
+      "width": 150
     },
     "driver_name": {
       "alias": "driver_name",
@@ -1140,12 +1140,12 @@
       "notation": "standard",
       "originalId": "order_id",
       "sticky": "",
+      "textColor": "{{appsmith.store.bo_theme === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
       "textSize": "1rem",
       "thousandSeparator": true,
       "validation": {},
       "verticalAlignment": "CENTER",
-      "width": 150,
-      "textColor": "{{appsmith.store.bo_theme === 'dark' ? '#F5F5F7' : '#1D1D1F'}}"
+      "width": 150
     },
     "payment_method": {
       "alias": "payment_method",
@@ -1275,12 +1275,12 @@
       "notation": "standard",
       "originalId": "recipient_phone",
       "sticky": "",
+      "textColor": "{{appsmith.store.bo_theme === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
       "textSize": "1rem",
       "thousandSeparator": true,
       "validation": {},
       "verticalAlignment": "CENTER",
-      "width": 150,
-      "textColor": "{{appsmith.store.bo_theme === 'dark' ? '#F5F5F7' : '#1D1D1F'}}"
+      "width": 150
     },
     "shop_order_id": {
       "alias": "shop_order_id",
@@ -1375,12 +1375,12 @@
       "notation": "standard",
       "originalId": "status_display",
       "sticky": "",
+      "textColor": "{{appsmith.store.bo_theme === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
       "textSize": "1rem",
       "thousandSeparator": true,
       "validation": {},
       "verticalAlignment": "CENTER",
-      "width": 150,
-      "textColor": "{{appsmith.store.bo_theme === 'dark' ? '#F5F5F7' : '#1D1D1F'}}"
+      "width": 150
     },
     "store_type": {
       "alias": "store_type",
@@ -1442,12 +1442,12 @@
       "notation": "standard",
       "originalId": "total_amount",
       "sticky": "",
+      "textColor": "{{appsmith.store.bo_theme === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
       "textSize": "1rem",
       "thousandSeparator": true,
       "validation": {},
       "verticalAlignment": "CENTER",
-      "width": 150,
-      "textColor": "{{appsmith.store.bo_theme === 'dark' ? '#F5F5F7' : '#1D1D1F'}}"
+      "width": 150
     },
     "tracking_number": {
       "alias": "tracking_number",
@@ -1489,13 +1489,13 @@
   "rightColumn": 64,
   "searchKey": "",
   "tableData": "{{GetOrdersList.data}}",
+  "textColor": "{{appsmith.store.bo_theme === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
   "textSize": "1rem",
-  "topRow": 80,
+  "topRow": 132,
   "totalRecordsCount": 0,
   "type": "TABLE_WIDGET_V2",
   "version": 2,
   "verticalAlignment": "CENTER",
   "widgetId": "dzjlv1xqle",
-  "widgetName": "OrdersTable",
-  "textColor": "{{appsmith.store.bo_theme === 'dark' ? '#F5F5F7' : '#1D1D1F'}}"
+  "widgetName": "OrdersTable"
 }

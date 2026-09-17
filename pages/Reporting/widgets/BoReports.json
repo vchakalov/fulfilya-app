@@ -37,7 +37,7 @@
   "mobileTopRow": 9,
   "needsErrorInfo": false,
   "onAction": "{{(async () => { const m = BoReports.model || {}; const reload = () => Promise.all([RpStats.run(), RpPayment.run(), RpService.run(), RpOutcome.run(), RpProducts.run(), RpDaily.run()]); if (m.action === 'period' && m.period) { await storeValue('rp_period', m.period); await reload(); return; } if (m.action === 'range' && m.from && m.to) { await storeValue('rp_from', m.from); await storeValue('rp_to', m.to); await storeValue('rp_period', 'range'); await reload(); return; } if (m.action === 'csv') { const rows = RpDaily.data || []; const head = ['Ден', 'Доставени', 'Върнати', 'НП в брой', 'НП с карта', 'Платени онлайн', 'Общо събрано', 'Доставка и такса НП', 'За изплащане']; const cell = (v) => String(v == null ? '' : v).replace('.', ','); const lines = [head.join(';')].concat(rows.map((r) => [r.day, r.delivered, r.returned, cell(r.cod_cash), cell(r.cod_card), cell(r.prepaid), cell(r.collected), cell(r.fees), cell(r.payout)].join(';'))); return download('\\ufeff' + lines.join('\\r\\n'), 'fulfilya-otchet-' + RpNav.since() + '-' + RpNav.until() + '.csv', 'text/csv'); } })()}}",
-  "originalBottomRow": 100,
+  "originalBottomRow": 181,
   "originalTopRow": 9,
   "parentColumnSpace": 10.484375,
   "parentId": "0",

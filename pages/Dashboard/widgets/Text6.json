@@ -1,7 +1,7 @@
 {
   "animateLoading": true,
   "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
-  "bottomRow": 79,
+  "bottomRow": 131,
   "dynamicBindingPathList": [
     {
       "key": "text"
@@ -14,6 +14,14 @@
     }
   ],
   "dynamicHeight": "AUTO_HEIGHT",
+  "dynamicPropertyPathList": [
+    {
+      "key": "textColor"
+    },
+    {
+      "key": "text"
+    }
+  ],
   "dynamicTriggerPathList": [],
   "fontFamily": "{{appsmith.theme.fontFamily.appFont}}",
   "fontSize": "1.25rem",
@@ -43,18 +51,10 @@
   "text": "{{(appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders') ? 'Поръчки' : 'Последни поръчки'}}",
   "textAlign": "LEFT",
   "textColor": "{{appsmith.store.bo_theme === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
-  "topRow": 75,
+  "topRow": 127,
   "truncateButtonColor": "{{appsmith.theme.colors.primaryColor}}",
   "type": "TEXT_WIDGET",
   "version": 1,
   "widgetId": "caymio08pj",
-  "widgetName": "Text6",
-  "dynamicPropertyPathList": [
-    {
-      "key": "textColor"
-    },
-    {
-      "key": "text"
-    }
-  ]
+  "widgetName": "Text6"
 }
