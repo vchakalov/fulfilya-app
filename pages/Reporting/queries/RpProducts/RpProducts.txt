@@ -2,7 +2,7 @@
 -- entities.meta.quantity and the name carries " x N" for more than one.
 SELECT
   REGEXP_REPLACE(e.name, ' x [0-9]+$', '') AS product,
-  SUM(COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(e.meta, '$.quantity')) AS UNSIGNED), 1)) AS qty,
+  SUM(GREATEST(1, COALESCE(CAST(JSON_UNQUOTE(JSON_EXTRACT(e.meta, '$.quantity')) AS UNSIGNED), 1))) AS qty,
   COUNT(DISTINCT o.uuid) AS orders
 FROM (
 SELECT o.uuid, o.status, o.payload_uuid, DATE(DATE_ADD(o.updated_at, INTERVAL {{RpNav.tz()}} HOUR)) AS done_day,
@@ -18,7 +18,7 @@ WHERE o.customer_uuid = '{{appsmith.store.customer_uuid}}' AND o.deleted_at <=> 
   AND DATE(DATE_ADD(o.updated_at, INTERVAL {{RpNav.tz()}} HOUR)) BETWEEN '{{RpNav.since()}}' AND '{{RpNav.until()}}'
 ) o
 JOIN entities e ON e.payload_uuid = o.payload_uuid AND e.deleted_at <=> NULL
-WHERE o.status IN ('completed', 'order_completed', 'delivered', 'order_delivered')
+WHERE o.status IN ('completed', 'order_completed', 'delivered', 'order_delivered') AND NOT (e.name <=> NULL) AND TRIM(e.name) <> ''
 GROUP BY 1
 ORDER BY qty DESC, orders DESC
 LIMIT 5;
