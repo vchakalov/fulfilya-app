@@ -29,7 +29,7 @@
     ],
     "name": "ServiceBillingReport",
     "pageId": "Reporting",
-    "runBehaviour": "ON_PAGE_LOAD",
+    "runBehaviour": "MANUAL",
     "userSetOnLoad": false
   }
 }
