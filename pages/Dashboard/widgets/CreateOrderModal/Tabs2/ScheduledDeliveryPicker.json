@@ -10,16 +10,16 @@
   "defaultDate": "{{moment().add(1,'days').startOf('day').add(9, \"hours\");}}",
   "dynamicBindingPathList": [
     {
-      "key": "accentColor"
-    },
-    {
-      "key": "borderRadius"
-    },
-    {
       "key": "defaultDate"
     },
     {
       "key": "minDate"
+    },
+    {
+      "key": "accentColor"
+    },
+    {
+      "key": "borderRadius"
     }
   ],
   "dynamicHeight": "FIXED",

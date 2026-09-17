@@ -11,16 +11,16 @@
   "defaultText": "{{GetOrderDetails.data[0]?.amount?.replace('$', '')}}",
   "dynamicBindingPathList": [
     {
-      "key": "accentColor"
-    },
-    {
-      "key": "borderRadius"
-    },
-    {
       "key": "defaultText"
     },
     {
       "key": "isDisabled"
+    },
+    {
+      "key": "accentColor"
+    },
+    {
+      "key": "borderRadius"
     }
   ],
   "dynamicHeight": "FIXED",

@@ -8,13 +8,13 @@
   "defaultText": "{{(() => {\n    const name = GetOrderDetails.data[0]?.pickup_name || '';\n    const street = GetOrderDetails.data[0]?.pickup_street || '';\n    return street || name;\n  })()}}",
   "dynamicBindingPathList": [
     {
+      "key": "defaultText"
+    },
+    {
       "key": "accentColor"
     },
     {
       "key": "borderRadius"
-    },
-    {
-      "key": "defaultText"
     }
   ],
   "dynamicHeight": "FIXED",

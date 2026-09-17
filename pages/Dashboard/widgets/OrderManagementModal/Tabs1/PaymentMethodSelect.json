@@ -7,13 +7,10 @@
   "defaultOptionValue": "{{ ((options, serverSideFiltering) => ( GetOrderDetails.data[0]?.payment_method))(PaymentMethodSelect.options, PaymentMethodSelect.serverSideFiltering) }}",
   "dynamicBindingPathList": [
     {
-      "key": "accentColor"
+      "key": "defaultOptionValue"
     },
     {
       "key": "borderRadius"
-    },
-    {
-      "key": "defaultOptionValue"
     }
   ],
   "dynamicHeight": "FIXED",

@@ -7,16 +7,16 @@
   "defaultMarkers": "{{(() => {\n     const data = GetOrderTracking.data[0];\n     const markers = [];\n     \n     // Pickup location\n     if (data?.pickup_lat && data?.pickup_lng) {\n       markers.push({\n         lat: parseFloat(data.pickup_lat),\n         long: parseFloat(data.pickup_lng),\n         title: data.pickup_name || \"Pickup Location\",\n         color: \"green\"\n       });\n     }\n     \n     // Dropoff location\n     if (data?.dropoff_lat && data?.dropoff_lng) {\n       markers.push({\n         lat: parseFloat(data.dropoff_lat),\n         long: parseFloat(data.dropoff_lng),\n         title: data.dropoff_name || \"Delivery Location\",\n         color: \"red\"\n       });\n     }\n     \n     // Driver location (if online)\n     if (data?.driver_online && data?.driver_lat) {\n       markers.push({\n         lat: parseFloat(data.driver_lat),\n         long: parseFloat(data.driver_lng),\n         title: \"Driver: \" + (data.driver_name || \"Driver\"),\n         color: \"blue\"\n       });\n     }\n     \n     return markers;\n   })()}}",
   "dynamicBindingPathList": [
     {
-      "key": "borderRadius"
-    },
-    {
-      "key": "boxShadow"
-    },
-    {
       "key": "mapCenter"
     },
     {
       "key": "defaultMarkers"
+    },
+    {
+      "key": "borderRadius"
+    },
+    {
+      "key": "boxShadow"
     }
   ],
   "dynamicPropertyPathList": [

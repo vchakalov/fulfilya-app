@@ -7,9 +7,6 @@
   "defaultOptionValue": "{\"label\": \"Internal\", \"value\": \"Internal\"}",
   "dynamicBindingPathList": [
     {
-      "key": "accentColor"
-    },
-    {
       "key": "borderRadius"
     }
   ],

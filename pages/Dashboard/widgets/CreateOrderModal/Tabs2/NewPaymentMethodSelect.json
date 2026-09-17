@@ -7,9 +7,6 @@
   "defaultOptionValue": "{\"label\": \"Cash on Delivery (COD)\", \"value\": \"COD\"}",
   "dynamicBindingPathList": [
     {
-      "key": "accentColor"
-    },
-    {
       "key": "borderRadius"
     }
   ],

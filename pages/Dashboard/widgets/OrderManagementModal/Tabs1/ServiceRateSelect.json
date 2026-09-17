@@ -7,16 +7,13 @@
   "defaultOptionValue": "{{ ((options, serverSideFiltering) => ( GetOrderDetails.data[0]?.service_rate_uuid || ''))(ServiceRateSelect.options, ServiceRateSelect.serverSideFiltering) }}",
   "dynamicBindingPathList": [
     {
-      "key": "accentColor"
-    },
-    {
-      "key": "borderRadius"
-    },
-    {
       "key": "sourceData"
     },
     {
       "key": "defaultOptionValue"
+    },
+    {
+      "key": "borderRadius"
     }
   ],
   "dynamicHeight": "FIXED",

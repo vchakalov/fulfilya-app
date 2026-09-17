@@ -4,7 +4,7 @@
   "borderColor": "#E0DEDE",
   "borderRadius": "18px",
   "borderWidth": "1",
-  "bottomRow": 130,
+  "bottomRow": 165,
   "boxShadow": "0 1px 2px rgba(0,0,0,.04), 0 12px 32px -12px rgba(29,29,31,.14)",
   "cachedTableData": {},
   "canFreezeColumn": true,
@@ -69,34 +69,19 @@
   "delimiter": ",",
   "dynamicBindingPathList": [
     {
-      "key": "accentColor"
-    },
-    {
-      "key": "borderRadius"
-    },
-    {
       "key": "tableData"
-    },
-    {
-      "key": "primaryColumns.order_id.computedValue"
-    },
-    {
-      "key": "primaryColumns.status.computedValue"
-    },
-    {
-      "key": "primaryColumns.created_date.computedValue"
-    },
-    {
-      "key": "primaryColumns.delivery_address.computedValue"
-    },
-    {
-      "key": "primaryColumns.total_amount.computedValue"
     },
     {
       "key": "primaryColumns.status_display.computedValue"
     },
     {
-      "key": "primaryColumns.status.textColor"
+      "key": "primaryColumns.delivery_address.computedValue"
+    },
+    {
+      "key": "primaryColumns.pickup_location.computedValue"
+    },
+    {
+      "key": "primaryColumns.customer_phone.computedValue"
     },
     {
       "key": "primaryColumns.customColumn1.borderRadius"
@@ -108,37 +93,43 @@
       "key": "primaryColumns.customColumn2.computedValue"
     },
     {
+      "key": "primaryColumns.store_type.computedValue"
+    },
+    {
       "key": "primaryColumns.customColumn4.computedValue"
-    },
-    {
-      "key": "primaryColumns.internal_reference.computedValue"
-    },
-    {
-      "key": "primaryColumns.customer_name.computedValue"
-    },
-    {
-      "key": "primaryColumns.customer_email.computedValue"
-    },
-    {
-      "key": "primaryColumns.customer_phone.computedValue"
-    },
-    {
-      "key": "primaryColumns.pickup_location.computedValue"
     },
     {
       "key": "primaryColumns.driver_name.computedValue"
     },
     {
+      "key": "primaryColumns.total_amount.computedValue"
+    },
+    {
+      "key": "primaryColumns.customer_email.computedValue"
+    },
+    {
+      "key": "primaryColumns.external_order_id.computedValue"
+    },
+    {
       "key": "primaryColumns.tracking_number.computedValue"
+    },
+    {
+      "key": "primaryColumns.created_date.computedValue"
+    },
+    {
+      "key": "primaryColumns.customer_name.computedValue"
+    },
+    {
+      "key": "primaryColumns.internal_reference.computedValue"
+    },
+    {
+      "key": "primaryColumns.order_id.computedValue"
     },
     {
       "key": "primaryColumns.payment_method.computedValue"
     },
     {
-      "key": "primaryColumns.store_type.computedValue"
-    },
-    {
-      "key": "primaryColumns.external_order_id.computedValue"
+      "key": "primaryColumns.status.computedValue"
     }
   ],
   "dynamicPropertyPathList": [
@@ -844,7 +835,7 @@
   "searchKey": "",
   "tableData": "{{GetOrdersList.data}}",
   "textSize": "1rem",
-  "topRow": 80,
+  "topRow": 115,
   "totalRecordsCount": 0,
   "type": "TABLE_WIDGET_V2",
   "version": 2,
