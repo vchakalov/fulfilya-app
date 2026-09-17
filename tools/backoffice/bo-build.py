@@ -165,7 +165,7 @@ TOKENS = """:root{--bg:#FFFFFF;--card:#FFFFFF;--ground:#F7F7F8;--ink:#1D1D1F;--m
 *{box-sizing:border-box}
 html,body{margin:0;background:transparent}
 body{color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
-h1,h2,h3{font-family:var(--display);margin:0;letter-spacing:-.01em}
+h1,h2,h3{font-family:var(--display);margin:0;letter-spacing:-.01em;color:var(--ink)}
 button{font:inherit;color:inherit}
 .num{font-variant-numeric:tabular-nums}
 :root[data-theme="dark"]{--bg:#000000;--card:#121212;--ground:#0A0A0A;--ink:#F5F5F7;--muted:#A1A1A6;--faint:#6E6E73;--line:#262626;--line-strong:#333336;
@@ -430,7 +430,10 @@ def load(rel): return json.load(open(os.path.join(REPO, rel), encoding='utf-8'))
 t6 = load('Dashboard/widgets/Text6.json'); t6.update(text="{{(appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders') ? 'Поръчки' : 'Последни поръчки'}}", fontSize='1.25rem', topRow=75, bottomRow=79, originalTopRow=75, originalBottomRow=79, mobileTopRow=75, mobileBottomRow=79)
 if not any(x.get('key') == 'text' for x in t6['dynamicBindingPathList']): t6['dynamicBindingPathList'].append({"key": "text"})
 t6['textColor'] = "{{appsmith.store.bo_theme === 'dark' ? '#F5F5F7' : '#1D1D1F'}}"
-if not any(x.get('key') == 'textColor' for x in t6['dynamicBindingPathList']): t6['dynamicBindingPathList'].append({"key": "textColor"})
+t6.setdefault('dynamicPropertyPathList', [])
+for k in ('textColor', 'text'):
+    for lst in (t6['dynamicBindingPathList'], t6['dynamicPropertyPathList']):
+        if not any(x.get('key') == k for x in lst): lst.append({"key": k})
 w('Dashboard/widgets/Text6.json', t6)
 b6 = load('Dashboard/widgets/Button6.json'); b6.update(text='+ Нова поръчка', buttonColor='#FFC400', topRow=75, bottomRow=79, originalTopRow=75, originalBottomRow=79, mobileTopRow=75, mobileBottomRow=79); w('Dashboard/widgets/Button6.json', b6)
 
@@ -456,15 +459,34 @@ for new_id, label in (('recipient_phone', 'Телефон'), ('delivery_full_add
     c['computedValue'] = c['computedValue'].replace('delivery_address', new_id)
     cols[new_id] = c
     tb['dynamicBindingPathList'].append({"key": f"primaryColumns.{new_id}.computedValue"})
-tb['columnOrder'] = ['customColumn1', 'internal_reference', 'status', 'created_date', 'delivery_address', 'recipient_phone', 'delivery_full_address', 'total_amount', 'customColumn4', 'order_id', 'customer_name', 'external_order_id', 'customColumn2', 'customer_email', 'customer_phone', 'pickup_location', 'driver_name', 'tracking_number', 'payment_method', 'store_type', 'status_display']
+# Every key the query returns that the merchant should not see as a raw column.
+for hidden_id in ('cod_amount', 'goods_amount', 'delivery_amount', 'cod_fee', 'recipient_notes', 'shop_order_id'):
+    if hidden_id not in cols:
+        c = copy.deepcopy(cols['delivery_address']); c.update(id=hidden_id, alias=hidden_id, originalId=hidden_id, label=hidden_id)
+        c['computedValue'] = c['computedValue'].replace('delivery_address', hidden_id)
+        cols[hidden_id] = c
+        tb['dynamicBindingPathList'].append({"key": f"primaryColumns.{hidden_id}.computedValue"})
+    cols[hidden_id]['isVisible'] = False
+tb['columnOrder'] = ['customColumn1', 'internal_reference', 'status', 'created_date', 'delivery_address', 'recipient_phone', 'delivery_full_address', 'total_amount', 'customColumn4', 'order_id', 'customer_name', 'external_order_id', 'customColumn2', 'customer_email', 'customer_phone', 'pickup_location', 'driver_name', 'tracking_number', 'payment_method', 'store_type', 'status_display', 'cod_amount', 'goods_amount', 'delivery_amount', 'cod_fee', 'recipient_notes', 'shop_order_id']
 for i, k in enumerate(tb['columnOrder']):
     if k in cols: cols[k]['index'] = i
 # the table follows the light/dark toggle
 tb['cellBackground'] = "{{appsmith.store.bo_theme === 'dark' ? '#121212' : '#FFFFFF'}}"
 tb['textColor'] = "{{appsmith.store.bo_theme === 'dark' ? '#F5F5F7' : '#1D1D1F'}}"
 tb['borderColor'] = "{{appsmith.store.bo_theme === 'dark' ? '#262626' : '#E5E5EA'}}"
+tb.setdefault('dynamicPropertyPathList', [])
 for k in ('cellBackground', 'textColor', 'borderColor'):
-    if not any(x.get('key') == k for x in tb['dynamicBindingPathList']): tb['dynamicBindingPathList'].append({"key": k})
+    for lst in (tb['dynamicBindingPathList'], tb['dynamicPropertyPathList']):
+        if not any(x.get('key') == k for x in lst): lst.append({"key": k})
+# Table V2 paints each cell from the COLUMN's colours, not the widget's, so every column
+# carries the same two bindings (found 2026-09-17: the widget-level ones changed nothing).
+for cid, c in cols.items():
+    c['cellBackground'] = "{{appsmith.store.bo_theme === 'dark' ? '#121212' : '#FFFFFF'}}"
+    c['textColor'] = "{{appsmith.store.bo_theme === 'dark' ? '#F5F5F7' : '#1D1D1F'}}"
+    for prop in ('cellBackground', 'textColor'):
+        key = f'primaryColumns.{cid}.{prop}'
+        for lst in (tb['dynamicBindingPathList'], tb['dynamicPropertyPathList']):
+            if not any(x.get('key') == key for x in lst): lst.append({"key": key})
 cols['customColumn1']['buttonLabel'] = 'Детайли'; cols['customColumn1']['buttonColor'] = '#FFC400'
 PILL = r"""(() => {
       const s = currentRow.status_display;
