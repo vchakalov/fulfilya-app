@@ -19,7 +19,7 @@
     -- in the name the driver reads ("Camembert x 2"). COUNT(*) therefore returned 1 for
     -- every line, and a merchant checking what went out saw "1" against an order of three.
     --
-    -- meta first because it is the number itself rather than a parsed label; the name is
+    -- meta first because it is the number itself rather than a parsed label - the name is
     -- the fallback for anything written before meta was set. The name pattern is anchored
     -- on the whole " x N" suffix, not on a trailing number, or a product legitimately
     -- called "Camembert 250" would be read as 250 of them. SUM because the GROUP BY below

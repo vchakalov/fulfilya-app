@@ -5,7 +5,7 @@
   --   * the delivered state is `completed` - 'delivered' / 'in_transit' never appear
   --   * the COD amount lives in the custom field literally named `amount:`
   --   * `cod-with-card` (uuid below) is written by the driver app when the customer
-  --     paid by card on the POS terminal; absent or FALSE means cash
+  --     paid by card on the POS terminal - absent or FALSE means cash
   SELECT
     DATE(o.created_at) as report_date,
     DAYNAME(DATE(o.created_at)) as day_of_week,

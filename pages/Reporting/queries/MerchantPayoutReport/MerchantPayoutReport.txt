@@ -18,7 +18,7 @@
   --
   -- A STANDING VIEW, not a weekly statement (Ico, 2026-09-15: "just information that they
   -- will see all the time - to be updated all the time"). The merchant opens it whenever
-  -- they want and sees where they stand; the payout itself happening weekly is a fact
+  -- they want and sees where they stand - the payout itself happening weekly is a fact
   -- about the money moving, not about how this list is cut. So the default window is
   -- wide (90 days) rather than one week, and the date pickers narrow it when somebody
   -- wants to look at a particular period.
@@ -28,12 +28,12 @@
   -- (TODO 5) the merchant and the office reconcile against the dates themselves.
   --
   -- Only orders whose money has actually been collected are listed. An order still in
-  -- the van is not a payable; a returned or cancelled one never produced any cash.
+  -- the van is not a payable - a returned or cancelled one never produced any cash.
   SELECT
     o.public_id as order_id,
 
     -- The merchant's own order number, the one they see in WooCommerce. internal_id is
-    -- "woo:59"; they know it as 59.
+    -- "woo:59" - they know it as 59.
     COALESCE(SUBSTRING_INDEX(o.internal_id, ':', -1), '') as shop_order_id,
 
     DATE_FORMAT(o.created_at, '%Y-%m-%d') as order_date,

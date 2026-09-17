@@ -45,7 +45,7 @@ SELECT
     --
     -- cod_amount is what the driver collects at the door, goods_amount is what the
     -- merchant is paid, and the other two are Fulfilya's. MAX() because the GROUP BY
-    -- below collapses the custom-field rows; there is one quote per order.
+    -- below collapses the custom-field rows - there is one quote per order.
     ROUND(MAX(CAST(JSON_UNQUOTE(JSON_EXTRACT(sq.meta, '$.cod_amount')) AS DECIMAL(12,2))) / 100, 2)     as cod_amount,
     ROUND(MAX(CAST(JSON_UNQUOTE(JSON_EXTRACT(sq.meta, '$.goods_amount')) AS DECIMAL(12,2))) / 100, 2)  as goods_amount,
     ROUND(MAX(CAST(JSON_UNQUOTE(JSON_EXTRACT(sq.meta, '$.delivery_amount')) AS DECIMAL(12,2))) / 100, 2) as delivery_amount,

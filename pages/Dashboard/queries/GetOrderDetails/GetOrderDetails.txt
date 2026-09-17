@@ -47,7 +47,7 @@
 
       -- How this order settles, in euros. From the quote, in cents, and they add up:
       -- cod_amount = goods_amount + delivery_amount + cod_fee. The merchant is paid
-      -- goods_amount; delivery and the fee were paid by the shopper and are Fulfilya's.
+      -- goods_amount - delivery and the fee were paid by the shopper and are Fulfilya's.
       ROUND(CAST(JSON_UNQUOTE(JSON_EXTRACT(sq.meta, '$.cod_amount')) AS DECIMAL(12,2)) / 100, 2)      as cod_amount,
       ROUND(CAST(JSON_UNQUOTE(JSON_EXTRACT(sq.meta, '$.goods_amount')) AS DECIMAL(12,2)) / 100, 2)   as goods_amount,
       ROUND(CAST(JSON_UNQUOTE(JSON_EXTRACT(sq.meta, '$.delivery_amount')) AS DECIMAL(12,2)) / 100, 2) as delivery_amount,
