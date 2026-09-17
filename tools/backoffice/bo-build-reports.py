@@ -387,7 +387,7 @@ custom('Reporting', 'BoHeader', 0, 8, HEADER_HTML, HEADER_CSS, HEADER_JS,
        "FIXED", "hdrrep0rt1", RP_HEADER_ON)
 custom('Reporting', 'BoReports', 9, 94, REPORTS_HTML, REPORTS_CSS, REPORTS_JS,
        "{{ { period: appsmith.store.rp_period || 'month', theme: appsmith.store.bo_theme || 'dark', since: RpNav.since(), until: RpNav.until(), stats: RpStats.data, payment: RpPayment.data, service: RpService.data, outcome: RpOutcome.data, months: RpMonths.data, products: RpProducts.data, daily: RpDaily.data } }}",
-       "AUTO_HEIGHT", "rptz9x8c7v", RP_REPORTS_ON)
+       "FIXED", "rptz9x8c7v", RP_REPORTS_ON)
 
 # ---------------------------------------------------------------- the detailed tables move down, retitled
 c2 = json.load(open(os.path.join(REPO, 'Reporting/widgets/Container2/Container2.json'), encoding='utf-8'))

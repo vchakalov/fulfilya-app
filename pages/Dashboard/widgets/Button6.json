@@ -1,7 +1,7 @@
 {
   "animateLoading": true,
   "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
-  "bottomRow": 130,
+  "bottomRow": 64,
   "boxShadow": "none",
   "buttonColor": "#FFC400",
   "buttonVariant": "PRIMARY",
@@ -48,7 +48,7 @@
   "responsiveBehavior": "hug",
   "rightColumn": 64,
   "text": "+ Нова поръчка",
-  "topRow": 126,
+  "topRow": 60,
   "type": "BUTTON_WIDGET",
   "version": 1,
   "widgetId": "t560dmvkvh",

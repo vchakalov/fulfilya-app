@@ -163,7 +163,7 @@ TOKENS = """:root{--bg:#FFFFFF;--card:#FFFFFF;--ground:#F7F7F8;--ink:#1D1D1F;--m
 --display:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;--body:'Onest',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 --r:18px;--r-s:11px;--shadow:0 1px 2px rgba(0,0,0,.04),0 12px 32px -12px rgba(29,29,31,.14)}
 *{box-sizing:border-box}
-html,body{margin:0;background:transparent;height:auto!important;min-height:0!important;overflow:visible}
+html,body{margin:0;background:transparent;height:auto!important;min-height:0!important;overflow:auto}
 body{color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
 h1,h2,h3,h4{font-family:var(--display)!important;margin:0;letter-spacing:-.01em;color:var(--ink)!important;font-weight:800}
 a,a:visited,a:hover{color:inherit;text-decoration:none}
@@ -433,7 +433,7 @@ custom('BoHeader', 0, 8, HEADER_HTML, HEADER_CSS, HEADER_JS,
        "FIXED", "hdrq1w2e3r")
 custom('BoTablo', 9, 58, TABLO_HTML, TABLO_CSS, TABLO_JS,
        "{{ { period: appsmith.store.bo_period || 'week', theme: appsmith.store.bo_theme || 'dark', merchant: appsmith.store.customer_name || '', stats: BoStats.data, payment: BoPayment.data, status: BoStatus.data, days: BoDays.data } }}",
-       "AUTO_HEIGHT", "tblz9x8c7v", visible="{{!(appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders')}}")
+       "FIXED", "tblz9x8c7v", visible="{{!(appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders')}}")
 
 TITLE_HTML = FONT_LINK + '<div id="bo-title"></div>'
 TITLE_CSS = TOKENS + '.t{display:flex;align-items:center;height:40px}.t h2{font-size:22px;font-weight:800}'
