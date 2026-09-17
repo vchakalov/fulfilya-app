@@ -10,7 +10,7 @@ SELECT
   ROUND(COALESCE(SUM(CASE WHEN o.status IN ('completed', 'order_completed', 'delivered', 'order_delivered') AND o.pm = 'COD' THEN o.dfee + o.cfee ELSE 0 END), 0), 2) AS fees,
   ROUND(COALESCE(SUM(CASE WHEN o.status IN ('completed', 'order_completed', 'delivered', 'order_delivered') AND o.pm = 'COD' THEN o.amount - o.dfee - o.cfee ELSE 0 END), 0), 2) AS payout
 FROM (
-SELECT o.uuid, o.status, o.payload_uuid, DATE(DATE_ADD(o.updated_at, INTERVAL {{BoNav.tz()}} HOUR)) AS done_day,
+SELECT o.uuid, o.status, o.payload_uuid, DATE(DATE_ADD(o.updated_at, INTERVAL {{RpNav.tz()}} HOUR)) AS done_day,
        UPPER(COALESCE((SELECT v.value FROM custom_field_values v WHERE v.subject_uuid = o.uuid AND v.custom_field_uuid = '79707269-ef79-4e2c-b63b-eaf76f4a3f85' AND v.deleted_at <=> NULL ORDER BY v.created_at DESC LIMIT 1), '')) AS pm,
        UPPER(COALESCE((SELECT v.value FROM custom_field_values v WHERE v.subject_uuid = o.uuid AND v.custom_field_uuid = '38c677ff-5bd4-4087-bb0e-2f4c031153c7' AND v.deleted_at <=> NULL ORDER BY v.created_at DESC LIMIT 1), '')) AS card,
        LOWER(COALESCE((SELECT v.value FROM custom_field_values v WHERE v.subject_uuid = o.uuid AND v.custom_field_uuid = '8e9a772d-2694-4750-8c8c-f8e9e6996ac2' AND v.deleted_at <=> NULL ORDER BY v.created_at DESC LIMIT 1), 'standard')) AS tier,
@@ -20,7 +20,7 @@ SELECT o.uuid, o.status, o.payload_uuid, DATE(DATE_ADD(o.updated_at, INTERVAL {{
 FROM orders o
 WHERE o.customer_uuid = '{{appsmith.store.customer_uuid}}' AND o.deleted_at <=> NULL
   AND o.status IN ('completed', 'order_completed', 'delivered', 'order_delivered', 'order_returned', 'returned', 'canceled', 'cancelled', 'order_cancel', 'order_canceled', 'order_cancelled')
-  AND DATE(DATE_ADD(o.updated_at, INTERVAL {{BoNav.tz()}} HOUR)) BETWEEN '{{RpNav.since()}}' AND '{{RpNav.until()}}'
+  AND DATE(DATE_ADD(o.updated_at, INTERVAL {{RpNav.tz()}} HOUR)) BETWEEN '{{RpNav.since()}}' AND '{{RpNav.until()}}'
 ) o
 GROUP BY 1
 ORDER BY 1 DESC;

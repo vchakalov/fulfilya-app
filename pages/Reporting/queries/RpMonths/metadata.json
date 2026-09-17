@@ -5,7 +5,7 @@
   "pluginType": "DB",
   "unpublishedAction": {
     "actionConfiguration": {
-      "body": "-- Справки: orders created per month, last six months (Sofia)\nSELECT DATE_FORMAT(DATE_ADD(o.created_at, INTERVAL {{BoNav.tz()}} HOUR), '%Y-%m') AS month, COUNT(*) AS n\nFROM orders o\nWHERE o.customer_uuid = '{{appsmith.store.customer_uuid}}' AND o.deleted_at <=> NULL\n  AND DATE(DATE_ADD(o.created_at, INTERVAL {{BoNav.tz()}} HOUR)) >= '{{RpNav.monthsSince()}}'\nGROUP BY 1\nORDER BY 1;",
+      "body": "-- Справки: orders created per month, last six months (Sofia)\nSELECT DATE_FORMAT(DATE_ADD(o.created_at, INTERVAL {{RpNav.tz()}} HOUR), '%Y-%m') AS month, COUNT(*) AS n\nFROM orders o\nWHERE o.customer_uuid = '{{appsmith.store.customer_uuid}}' AND o.deleted_at <=> NULL\n  AND DATE(DATE_ADD(o.created_at, INTERVAL {{RpNav.tz()}} HOUR)) >= '{{RpNav.monthsSince()}}'\nGROUP BY 1\nORDER BY 1;",
       "encodeParamsToggle": true,
       "paginationType": "NONE",
       "pluginSpecifiedTemplates": [
