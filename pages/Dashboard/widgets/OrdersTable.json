@@ -86,7 +86,34 @@
       "key": "primaryColumns.delivery_address.computedValue"
     },
     {
+      "key": "primaryColumns.recipient_notes.computedValue"
+    },
+    {
+      "key": "primaryColumns.delivery_amount.computedValue"
+    },
+    {
+      "key": "primaryColumns.cod_amount.computedValue"
+    },
+    {
+      "key": "primaryColumns.delivery_full_address.computedValue"
+    },
+    {
+      "key": "primaryColumns.tracking_number.computedValue"
+    },
+    {
+      "key": "primaryColumns.shop_order_id.computedValue"
+    },
+    {
+      "key": "primaryColumns.payment_method.computedValue"
+    },
+    {
+      "key": "primaryColumns.cod_fee.computedValue"
+    },
+    {
       "key": "primaryColumns.pickup_location.computedValue"
+    },
+    {
+      "key": "primaryColumns.goods_amount.computedValue"
     },
     {
       "key": "primaryColumns.customer_phone.computedValue"
@@ -119,9 +146,6 @@
       "key": "primaryColumns.external_order_id.computedValue"
     },
     {
-      "key": "primaryColumns.tracking_number.computedValue"
-    },
-    {
       "key": "primaryColumns.created_date.computedValue"
     },
     {
@@ -134,76 +158,10 @@
       "key": "primaryColumns.order_id.computedValue"
     },
     {
-      "key": "primaryColumns.payment_method.computedValue"
+      "key": "primaryColumns.recipient_phone.computedValue"
     },
     {
       "key": "primaryColumns.status.computedValue"
-    },
-    {
-      "key": "primaryColumns.delivery_full_address.computedValue"
-    },
-    {
-      "key": "primaryColumns.recipient_phone.computedValue"
-    },
-    {
-      "key": "primaryColumns.shop_order_id.computedValue"
-    },
-    {
-      "key": "primaryColumns.recipient_notes.computedValue"
-    },
-    {
-      "key": "primaryColumns.cod_amount.computedValue"
-    },
-    {
-      "key": "primaryColumns.goods_amount.computedValue"
-    },
-    {
-      "key": "primaryColumns.delivery_amount.computedValue"
-    },
-    {
-      "key": "primaryColumns.cod_fee.computedValue"
-    },
-    {
-      "key": "primaryColumns.recipient_phone.computedValue"
-    },
-    {
-      "key": "primaryColumns.delivery_full_address.computedValue"
-    },
-    {
-      "key": "primaryColumns.recipient_phone.computedValue"
-    },
-    {
-      "key": "primaryColumns.delivery_full_address.computedValue"
-    },
-    {
-      "key": "primaryColumns.recipient_phone.computedValue"
-    },
-    {
-      "key": "primaryColumns.delivery_full_address.computedValue"
-    },
-    {
-      "key": "primaryColumns.recipient_phone.computedValue"
-    },
-    {
-      "key": "primaryColumns.delivery_full_address.computedValue"
-    },
-    {
-      "key": "primaryColumns.recipient_phone.computedValue"
-    },
-    {
-      "key": "primaryColumns.delivery_full_address.computedValue"
-    },
-    {
-      "key": "primaryColumns.recipient_phone.computedValue"
-    },
-    {
-      "key": "primaryColumns.delivery_full_address.computedValue"
-    },
-    {
-      "key": "primaryColumns.recipient_phone.computedValue"
-    },
-    {
-      "key": "primaryColumns.delivery_full_address.computedValue"
     }
   ],
   "dynamicPropertyPathList": [

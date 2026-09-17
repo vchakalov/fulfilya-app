@@ -4,9 +4,6 @@
   "bottomRow": 10,
   "dynamicBindingPathList": [
     {
-      "key": "text"
-    },
-    {
       "key": "fontFamily"
     }
   ],
@@ -21,7 +18,6 @@
   "leftColumn": 44,
   "maxDynamicHeight": 9000,
   "minDynamicHeight": 4,
-  "minWidth": null,
   "mobileBottomRow": 10,
   "mobileLeftColumn": 44,
   "mobileRightColumn": 64,
