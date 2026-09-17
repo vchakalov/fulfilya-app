@@ -1,0 +1,7 @@
+-- Справки: orders created per month, last six months (Sofia)
+SELECT DATE_FORMAT(DATE_ADD(o.created_at, INTERVAL {{BoNav.tz()}} HOUR), '%Y-%m') AS month, COUNT(*) AS n
+FROM orders o
+WHERE o.customer_uuid = '{{appsmith.store.customer_uuid}}' AND o.deleted_at <=> NULL
+  AND DATE(DATE_ADD(o.created_at, INTERVAL {{BoNav.tz()}} HOUR)) >= '{{RpNav.monthsSince()}}'
+GROUP BY 1
+ORDER BY 1;
