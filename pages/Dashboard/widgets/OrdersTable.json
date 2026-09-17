@@ -4,7 +4,7 @@
   "borderColor": "{{appsmith.store.bo_theme === 'dark' ? '#262626' : '#E5E5EA'}}",
   "borderRadius": "18px",
   "borderWidth": "1",
-  "bottomRow": 182,
+  "bottomRow": 130,
   "boxShadow": "0 1px 2px rgba(0,0,0,.04), 0 12px 32px -12px rgba(29,29,31,.14)",
   "cachedTableData": {},
   "canFreezeColumn": true,
@@ -61,7 +61,7 @@
     "recipient_notes",
     "shop_order_id"
   ],
-  "columnUpdatedAt": 1789667720940,
+  "columnUpdatedAt": 1789669915825,
   "columnWidthMap": {
     "customColumn3": 198,
     "external_order_id": 203
@@ -345,6 +345,12 @@
     },
     {
       "key": "primaryColumns.tracking_number.textColor"
+    },
+    {
+      "key": "primaryColumns.recipient_phone.computedValue"
+    },
+    {
+      "key": "primaryColumns.delivery_full_address.computedValue"
     }
   ],
   "dynamicPropertyPathList": [
@@ -1491,7 +1497,7 @@
   "tableData": "{{GetOrdersList.data}}",
   "textColor": "{{appsmith.store.bo_theme === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
   "textSize": "1rem",
-  "topRow": 132,
+  "topRow": 80,
   "totalRecordsCount": 0,
   "type": "TABLE_WIDGET_V2",
   "version": 2,

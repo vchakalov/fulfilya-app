@@ -471,6 +471,10 @@ for hidden_id in ('cod_amount', 'goods_amount', 'delivery_amount', 'cod_fee', 'r
 tb['columnOrder'] = ['customColumn1', 'internal_reference', 'status', 'created_date', 'delivery_address', 'recipient_phone', 'delivery_full_address', 'total_amount', 'customColumn4', 'order_id', 'customer_name', 'external_order_id', 'customColumn2', 'customer_email', 'customer_phone', 'pickup_location', 'driver_name', 'tracking_number', 'payment_method', 'store_type', 'status_display', 'cod_amount', 'goods_amount', 'delivery_amount', 'cod_fee', 'recipient_notes', 'shop_order_id']
 for i, k in enumerate(tb['columnOrder']):
     if k in cols: cols[k]['index'] = i
+# A viewer's browser remembers a table's column order (localStorage tableWidgetColumnOrder)
+# and only lets go of it when the widget's columnUpdatedAt is newer - stamp it.
+import time
+tb['columnUpdatedAt'] = int(time.time() * 1000)
 # the table follows the light/dark toggle
 tb['cellBackground'] = "{{appsmith.store.bo_theme === 'dark' ? '#121212' : '#FFFFFF'}}"
 tb['textColor'] = "{{appsmith.store.bo_theme === 'dark' ? '#F5F5F7' : '#1D1D1F'}}"
