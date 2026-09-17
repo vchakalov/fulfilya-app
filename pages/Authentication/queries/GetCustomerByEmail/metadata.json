@@ -5,7 +5,7 @@
   "pluginType": "DB",
   "unpublishedAction": {
     "actionConfiguration": {
-      "body": "SELECT \n  c.uuid as customer_uuid,\n  c.name as customer_name,\n  c.email as customer_email\nFROM contacts c\nWHERE c.email = '{{EmailInput.text}}'\n  AND c.type = 'customer'\n  AND c.deleted_at IS NULL\nLIMIT 1;",
+      "body": "SELECT\n  c.uuid as customer_uuid,\n  c.name as customer_name,\n  c.email as customer_email,\n  CASE WHEN f.path <=> NULL THEN '' ELSE CONCAT('https://api.operations.fulfilya.com/storage/', f.path) END as customer_logo\nFROM contacts c\nLEFT JOIN files f ON f.uuid = c.photo_uuid AND f.deleted_at <=> NULL\nWHERE c.email = '{{EmailInput.text}}'\n  AND c.type = 'customer'\n  AND c.deleted_at <=> NULL\nLIMIT 1;",
       "encodeParamsToggle": true,
       "paginationType": "NONE",
       "pluginSpecifiedTemplates": [

@@ -1,9 +1,11 @@
-SELECT 
+SELECT
   c.uuid as customer_uuid,
   c.name as customer_name,
-  c.email as customer_email
+  c.email as customer_email,
+  CASE WHEN f.path <=> NULL THEN '' ELSE CONCAT('https://api.operations.fulfilya.com/storage/', f.path) END as customer_logo
 FROM contacts c
+LEFT JOIN files f ON f.uuid = c.photo_uuid AND f.deleted_at <=> NULL
 WHERE c.email = '{{EmailInput.text}}'
   AND c.type = 'customer'
-  AND c.deleted_at IS NULL
+  AND c.deleted_at <=> NULL
 LIMIT 1;

@@ -1,0 +1,7 @@
+-- Табло: orders per Sofia day, last 14 days (the JS fills the empty days)
+SELECT DATE(DATE_ADD(o.created_at, INTERVAL {{BoNav.tz()}} HOUR)) AS day, COUNT(*) AS n
+FROM orders o
+WHERE o.customer_uuid = '{{appsmith.store.customer_uuid}}' AND o.deleted_at <=> NULL
+  AND DATE(DATE_ADD(o.created_at, INTERVAL {{BoNav.tz()}} HOUR)) >= '{{BoNav.daysSince()}}'
+GROUP BY 1
+ORDER BY 1;

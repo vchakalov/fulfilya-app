@@ -38,6 +38,8 @@ export default {
           storeValue('customer_uuid', customer.customer_uuid);
           storeValue('customer_name', customer.customer_name);
           storeValue('customer_email', customer.customer_email);
+          // The merchant's logo: the photo on their Contact in the console, if one was uploaded.
+          storeValue('customer_logo', customer.customer_logo || '');
           
           // Navigate to dashboard
           showAlert(`Welcome ${customer.customer_name}!`, 'success');
