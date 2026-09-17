@@ -30,7 +30,7 @@ SELECT
     COALESCE(MAX(CASE WHEN cf.name = 'order-source-id' THEN cfv.value END), '') as external_order_id,
 
     -- The merchant's own order number, as it reads in their shop. internal_id is
-    -- "woo:59" / "shopify:1234"; the merchant knows it as 59, so the prefix is dropped.
+    -- "woo:59" / "shopify:1234" - the merchant knows it as 59, so the prefix is dropped.
     -- Empty for orders created in the console or the portal, which have no shop order.
     COALESCE(SUBSTRING_INDEX(o.internal_id, ':', -1), '') as shop_order_id,
 
