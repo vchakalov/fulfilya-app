@@ -6,7 +6,7 @@
   "borderWidth": "0",
   "boxShadow": "none",
   "bottomRow": 8,
-  "defaultModel": "{{ { page: (appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders') ? 'orders' : 'tablo', theme: appsmith.store.bo_theme || 'light', merchant: appsmith.store.customer_name || '', logo: appsmith.store.customer_logo || '' } }}",
+  "defaultModel": "{{ { page: (appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders') ? 'orders' : 'tablo', theme: appsmith.store.bo_theme || 'dark', merchant: appsmith.store.customer_name || '', logo: appsmith.store.customer_logo || '' } }}",
   "dynamicBindingPathList": [
     {
       "key": "theme"

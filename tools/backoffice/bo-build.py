@@ -395,7 +395,7 @@ appsmith.onModelChange(render);
 HEADER_ON = "{{(async () => { const m = BoHeader.model || {}; if (m.action === 'theme' && m.theme) { return storeValue('bo_theme', m.theme); } if (m.action === 'logout') { return AuthManager.logout(); } if (m.action === 'new') { return showModal('CreateOrderModal'); } if (m.action === 'nav') { if (m.tab === 'orders') { return navigateTo('Dashboard', { tab: 'orders' }); } if (m.tab === 'tablo') { return navigateTo('Dashboard'); } if (m.page) { return navigateTo(m.page); } } })()}}"
 TABLO_ON = "{{(async () => { const m = BoTablo.model || {}; if (m.action === 'period' && m.period) { await storeValue('bo_period', m.period); await Promise.all([BoStats.run(), BoPayment.run(), BoStatus.run()]); return; } if (m.action === 'new') { return showModal('CreateOrderModal'); } if (m.action === 'nav' && m.page) { return navigateTo(m.page); } })()}}"
 
-def custom(name, top, bottom, html, css, js, model, height, key_seed, visible=None):
+def custom(name, top, bottom, html, css, js, model, height, key_seed, visible=None, events=True):
     d = {
         "animateLoading": True, "backgroundColor": "transparent", "borderColor": "transparent", "borderRadius": "0px", "borderWidth": "0",
         "boxShadow": "none", "bottomRow": bottom, "defaultModel": model,
@@ -415,22 +415,33 @@ def custom(name, top, bottom, html, css, js, model, height, key_seed, visible=No
     if visible is not None:
         d['isVisible'] = visible
         d['dynamicBindingPathList'].append({"key": "isVisible"})
+    if not events:
+        d['events'] = []; d.pop('onAction', None); d['dynamicTriggerPathList'] = []
+        d['rightColumn'] = 40; d['mobileRightColumn'] = 40; d['minWidth'] = 200
     w(f'Dashboard/widgets/{name}.json', d)
 
 custom('BoHeader', 0, 8, HEADER_HTML, HEADER_CSS, HEADER_JS,
-       "{{ { page: (appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders') ? 'orders' : 'tablo', theme: appsmith.store.bo_theme || 'light', merchant: appsmith.store.customer_name || '', logo: appsmith.store.customer_logo || '' } }}",
+       "{{ { page: (appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders') ? 'orders' : 'tablo', theme: appsmith.store.bo_theme || 'dark', merchant: appsmith.store.customer_name || '', logo: appsmith.store.customer_logo || '' } }}",
        "FIXED", "hdrq1w2e3r")
 custom('BoTablo', 9, 72, TABLO_HTML, TABLO_CSS, TABLO_JS,
-       "{{ { period: appsmith.store.bo_period || 'week', theme: appsmith.store.bo_theme || 'light', merchant: appsmith.store.customer_name || '', stats: BoStats.data, payment: BoPayment.data, status: BoStatus.data, days: BoDays.data } }}",
+       "{{ { period: appsmith.store.bo_period || 'week', theme: appsmith.store.bo_theme || 'dark', merchant: appsmith.store.customer_name || '', stats: BoStats.data, payment: BoPayment.data, status: BoStatus.data, days: BoDays.data } }}",
        "AUTO_HEIGHT", "tblz9x8c7v", visible="{{!(appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders')}}")
+
+TITLE_HTML = FONT_LINK + '<div id="bo-title"></div>'
+TITLE_CSS = TOKENS + '.t{display:flex;align-items:center;height:40px}.t h2{font-size:22px;font-weight:800}'
+TITLE_JS = r"""function render(){ const m = appsmith.model || {}; document.documentElement.dataset.theme = m.theme === 'dark' ? 'dark' : 'light'; document.getElementById('bo-title').innerHTML = '<div class="t"><h2>' + String(m.title || '').replace(/[&<>]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[c]) + '</h2></div>'; }
+appsmith.onReady(render); appsmith.onModelChange(render);"""
+custom('BoTitle', 75, 79, TITLE_HTML, TITLE_CSS, TITLE_JS,
+       "{{ { theme: appsmith.store.bo_theme || 'dark', title: (appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders') ? 'Поръчки' : 'Последни поръчки' } }}",
+       "FIXED", "ttl5r6t7y8", events=False)
 
 # ---------------------------------------------------------------- existing widgets, restyled
 def load(rel): return json.load(open(os.path.join(REPO, rel), encoding='utf-8'))
 
 # The Text widget ignored a bound textColor (2026-09-17), so the colour rides inside the text.
-t6 = load('Dashboard/widgets/Text6.json'); t6.update(text="{{'<span style=\"color:' + (appsmith.store.bo_theme === 'dark' ? '#F5F5F7' : '#1D1D1F') + '\">' + ((appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders') ? 'Поръчки' : 'Последни поръчки') + '</span>'}}", fontSize='1.25rem', topRow=75, bottomRow=79, originalTopRow=75, originalBottomRow=79, mobileTopRow=75, mobileBottomRow=79)
+t6 = load('Dashboard/widgets/Text6.json'); t6['isVisible'] = False  # replaced by BoTitle; file deleted by the caller; t6.update(text="{{'<span style=\"color:' + ((appsmith.store.bo_theme || 'dark') === 'dark' ? '#F5F5F7' : '#1D1D1F') + '\">' + ((appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders') ? 'Поръчки' : 'Последни поръчки') + '</span>'}}", fontSize='1.25rem', topRow=75, bottomRow=79, originalTopRow=75, originalBottomRow=79, mobileTopRow=75, mobileBottomRow=79)
 if not any(x.get('key') == 'text' for x in t6['dynamicBindingPathList']): t6['dynamicBindingPathList'].append({"key": "text"})
-t6['textColor'] = "{{appsmith.store.bo_theme === 'dark' ? '#F5F5F7' : '#1D1D1F'}}"
+t6['textColor'] = "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#F5F5F7' : '#1D1D1F'}}"
 t6.setdefault('dynamicPropertyPathList', [])
 for k in ('textColor', 'text'):
     for lst in (t6['dynamicBindingPathList'], t6['dynamicPropertyPathList']):
@@ -476,9 +487,9 @@ for i, k in enumerate(tb['columnOrder']):
 import time
 tb['columnUpdatedAt'] = int(time.time() * 1000)
 # the table follows the light/dark toggle
-tb['cellBackground'] = "{{appsmith.store.bo_theme === 'dark' ? '#121212' : '#FFFFFF'}}"
-tb['textColor'] = "{{appsmith.store.bo_theme === 'dark' ? '#F5F5F7' : '#1D1D1F'}}"
-tb['borderColor'] = "{{appsmith.store.bo_theme === 'dark' ? '#262626' : '#E5E5EA'}}"
+tb['cellBackground'] = "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#121212' : '#FFFFFF'}}"
+tb['textColor'] = "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#F5F5F7' : '#1D1D1F'}}"
+tb['borderColor'] = "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#262626' : '#E5E5EA'}}"
 tb.setdefault('dynamicPropertyPathList', [])
 for k in ('cellBackground', 'textColor', 'borderColor'):
     for lst in (tb['dynamicBindingPathList'], tb['dynamicPropertyPathList']):
@@ -486,8 +497,8 @@ for k in ('cellBackground', 'textColor', 'borderColor'):
 # Table V2 paints each cell from the COLUMN's colours, not the widget's, so every column
 # carries the same two bindings (found 2026-09-17: the widget-level ones changed nothing).
 for cid, c in cols.items():
-    c['cellBackground'] = "{{appsmith.store.bo_theme === 'dark' ? '#121212' : '#FFFFFF'}}"
-    c['textColor'] = "{{appsmith.store.bo_theme === 'dark' ? '#F5F5F7' : '#1D1D1F'}}"
+    c['cellBackground'] = "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#121212' : '#FFFFFF'}}"
+    c['textColor'] = "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#F5F5F7' : '#1D1D1F'}}"
     for prop in ('cellBackground', 'textColor'):
         key = f'primaryColumns.{cid}.{prop}'
         for lst in (tb['dynamicBindingPathList'], tb['dynamicPropertyPathList']):

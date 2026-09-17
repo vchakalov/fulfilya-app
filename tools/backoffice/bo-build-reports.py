@@ -381,10 +381,10 @@ def custom(page, name, top, bottom, html, css, js, model, height, key_seed, hand
     w(f'{page}/widgets/{name}.json', d)
 
 custom('Reporting', 'BoHeader', 0, 8, HEADER_HTML, HEADER_CSS, HEADER_JS,
-       "{{ { page: 'reports', theme: appsmith.store.bo_theme || 'light', merchant: appsmith.store.customer_name || '', logo: appsmith.store.customer_logo || '' } }}",
+       "{{ { page: 'reports', theme: appsmith.store.bo_theme || 'dark', merchant: appsmith.store.customer_name || '', logo: appsmith.store.customer_logo || '' } }}",
        "FIXED", "hdrrep0rt1", RP_HEADER_ON)
 custom('Reporting', 'BoReports', 9, 100, REPORTS_HTML, REPORTS_CSS, REPORTS_JS,
-       "{{ { period: appsmith.store.rp_period || 'month', theme: appsmith.store.bo_theme || 'light', since: RpNav.since(), until: RpNav.until(), stats: RpStats.data, payment: RpPayment.data, service: RpService.data, outcome: RpOutcome.data, months: RpMonths.data, products: RpProducts.data, daily: RpDaily.data } }}",
+       "{{ { period: appsmith.store.rp_period || 'month', theme: appsmith.store.bo_theme || 'dark', since: RpNav.since(), until: RpNav.until(), stats: RpStats.data, payment: RpPayment.data, service: RpService.data, outcome: RpOutcome.data, months: RpMonths.data, products: RpProducts.data, daily: RpDaily.data } }}",
        "AUTO_HEIGHT", "rptz9x8c7v", RP_REPORTS_ON)
 
 # ---------------------------------------------------------------- the detailed tables move down, retitled

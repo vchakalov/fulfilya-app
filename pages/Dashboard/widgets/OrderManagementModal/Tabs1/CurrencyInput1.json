@@ -14,9 +14,6 @@
       "key": "defaultText"
     },
     {
-      "key": "isDisabled"
-    },
-    {
       "key": "accentColor"
     },
     {
@@ -41,7 +38,7 @@
     }
   ],
   "iconAlign": "left",
-  "isDisabled": "{{GetOrderDetails.data[0]?.payment_method === 'Paid'}} ",
+  "isDisabled": true,
   "isLoading": false,
   "isRequired": false,
   "isVisible": "true",

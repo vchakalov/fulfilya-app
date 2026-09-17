@@ -17,7 +17,7 @@ LOGOUT = "{{(async () => { const m = BoHeader.model || {}; if (m.action === 'the
 d = {
     "animateLoading": True, "backgroundColor": "transparent", "borderColor": "transparent", "borderRadius": "0px", "borderWidth": "0",
     "boxShadow": "none", "bottomRow": 8,
-    "defaultModel": "{{ { page: 'office', admin: true, theme: appsmith.store.bo_theme || 'light', merchant: 'Fulfilya · офис', logo: '' } }}",
+    "defaultModel": "{{ { page: 'office', admin: true, theme: appsmith.store.bo_theme || 'dark', merchant: 'Fulfilya · офис', logo: '' } }}",
     "dynamicBindingPathList": [{"key": "theme"}, {"key": "defaultModel"}], "dynamicHeight": "FIXED",
     "dynamicTriggerPathList": [{"key": "onAction"}], "events": ["onAction"], "onAction": LOGOUT,
     "isLoading": False, "isVisible": True, "key": "hdr0ff1ce9", "leftColumn": 0, "maxDynamicHeight": 9000, "minDynamicHeight": 4, "minWidth": 450,
