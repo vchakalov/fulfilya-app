@@ -1,7 +1,7 @@
 {
   "animateLoading": true,
   "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
-  "bottomRow": 131,
+  "bottomRow": 79,
   "dynamicBindingPathList": [
     {
       "key": "text"
@@ -14,14 +14,6 @@
     }
   ],
   "dynamicHeight": "AUTO_HEIGHT",
-  "dynamicPropertyPathList": [
-    {
-      "key": "textColor"
-    },
-    {
-      "key": "text"
-    }
-  ],
   "dynamicTriggerPathList": [],
   "fontFamily": "{{appsmith.theme.fontFamily.appFont}}",
   "fontSize": "1.25rem",
@@ -48,13 +40,21 @@
   "responsiveBehavior": "fill",
   "rightColumn": 16,
   "shouldTruncate": false,
-  "text": "{{(appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders') ? 'Поръчки' : 'Последни поръчки'}}",
+  "text": "{{'<span style=\"color:' + (appsmith.store.bo_theme === 'dark' ? '#F5F5F7' : '#1D1D1F') + '\">' + ((appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders') ? 'Поръчки' : 'Последни поръчки') + '</span>'}}",
   "textAlign": "LEFT",
   "textColor": "{{appsmith.store.bo_theme === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
-  "topRow": 127,
+  "topRow": 75,
   "truncateButtonColor": "{{appsmith.theme.colors.primaryColor}}",
   "type": "TEXT_WIDGET",
   "version": 1,
   "widgetId": "caymio08pj",
-  "widgetName": "Text6"
+  "widgetName": "Text6",
+  "dynamicPropertyPathList": [
+    {
+      "key": "textColor"
+    },
+    {
+      "key": "text"
+    }
+  ]
 }
