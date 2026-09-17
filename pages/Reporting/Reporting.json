@@ -5,7 +5,7 @@
     "layouts": [
       {
         "dsl": {
-          "backgroundColor": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#000000' : '#F7F7F8'}}",
+          "backgroundColor": "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#000000' : '#FFFFFF'}}",
           "bottomRow": 4890,
           "canExtend": true,
           "containerStyle": "none",
