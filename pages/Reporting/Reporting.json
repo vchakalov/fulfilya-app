@@ -6,7 +6,7 @@
       {
         "dsl": {
           "backgroundColor": "{{appsmith.store.bo_theme === 'dark' ? '#000000' : '#F7F7F8'}}",
-          "bottomRow": 4080,
+          "bottomRow": 4890,
           "canExtend": true,
           "containerStyle": "none",
           "detachFromLayout": true,

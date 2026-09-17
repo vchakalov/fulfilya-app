@@ -1,7 +1,7 @@
 {
   "animateLoading": true,
   "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
-  "bottomRow": 79,
+  "bottomRow": 131,
   "dynamicBindingPathList": [
     {
       "key": "text"
@@ -43,7 +43,7 @@
   "text": "{{(appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders') ? 'Поръчки' : 'Последни поръчки'}}",
   "textAlign": "LEFT",
   "textColor": "{{appsmith.store.bo_theme === 'dark' ? '#F5F5F7' : '#1D1D1F'}}",
-  "topRow": 75,
+  "topRow": 127,
   "truncateButtonColor": "{{appsmith.theme.colors.primaryColor}}",
   "type": "TEXT_WIDGET",
   "version": 1,
