@@ -50,7 +50,10 @@ export default {
     const m = BoHeader.model || {};
     if (m.action === 'logout') return AuthManager.logout();
     if (m.action === 'new') return navigateTo('Dashboard', { new: '1' });
-    if (m.action === 'nav' && m.page) return navigateTo(m.page);
+    if (m.action === 'nav') {
+      if (m.tab === 'orders') return navigateTo('Dashboard', { tab: 'orders' });
+      if (m.page) return navigateTo(m.page);
+    }
   },
   onReports: async () => {
     const m = BoReports.model || {};

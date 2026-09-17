@@ -1,7 +1,7 @@
 {
   "animateLoading": true,
   "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
-  "bottomRow": 29,
+  "bottomRow": 38,
   "dynamicBindingPathList": [
     {
       "key": "truncateButtonColor"
@@ -28,13 +28,13 @@
   "maxDynamicHeight": 9000,
   "minDynamicHeight": 4,
   "minWidth": 450,
-  "mobileBottomRow": 27,
+  "mobileBottomRow": 36,
   "mobileLeftColumn": 0,
   "mobileRightColumn": 64,
-  "mobileTopRow": 21,
+  "mobileTopRow": 30,
   "needsErrorInfo": false,
-  "originalBottomRow": 7,
-  "originalTopRow": 3,
+  "originalBottomRow": 16,
+  "originalTopRow": 12,
   "overflow": "NONE",
   "parentColumnSpace": 19.125,
   "parentId": "0",
@@ -46,7 +46,7 @@
   "text": "{{(() => {\n  const r = GetCodReport.data;\n  if (!r || !r.totals) return 'Изберете период.';\n  const t = r.totals;\n  const who = MerchantSelect.selectedOptionValue && MerchantSelect.selectedOptionValue !== 'all' ? (MerchantSelect.selectedOptionLabel || '') : 'всички клиенти';\n  const e = (n) => (Number(n) || 0).toFixed(2) + ' €';\n  return `Период ${r.period.label} · ${who} · ${t.orders} поръчки\\nГрупа А — Наложен платеж: ${e(t.total)} (в брой ${e(t.cash)}, с карта ${e(t.card)})\\nГрупа Б — Приходи: ${e(t.revenue)} (в брой ${e(t.revenue_cash)}, с карта ${e(t.revenue_card)}) — доставки ${e(t.delivery)} + такса НП ${e(t.fee)}`;\n})()}}",
   "textAlign": "RIGHT",
   "textColor": "#6b7280",
-  "topRow": 21,
+  "topRow": 30,
   "truncateButtonColor": "{{appsmith.theme.colors.primaryColor}}",
   "type": "TEXT_WIDGET",
   "version": 1,

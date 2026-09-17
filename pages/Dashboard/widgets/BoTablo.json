@@ -13,6 +13,9 @@
     },
     {
       "key": "defaultModel"
+    },
+    {
+      "key": "isVisible"
     }
   ],
   "dynamicHeight": "AUTO_HEIGHT",
@@ -26,7 +29,7 @@
   ],
   "onAction": "{{BoNav.onTablo()}}",
   "isLoading": false,
-  "isVisible": true,
+  "isVisible": "{{!(appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders')}}",
   "key": "tblz9x8c7v",
   "leftColumn": 0,
   "maxDynamicHeight": 9000,

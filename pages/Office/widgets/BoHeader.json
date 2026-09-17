@@ -6,7 +6,7 @@
   "borderWidth": "0",
   "boxShadow": "none",
   "bottomRow": 8,
-  "defaultModel": "{{ { page: 'reports', merchant: appsmith.store.customer_name || '', logo: appsmith.store.customer_logo || '' } }}",
+  "defaultModel": "{{ { page: 'office', admin: true, merchant: 'Fulfilya · офис', logo: '' } }}",
   "dynamicBindingPathList": [
     {
       "key": "theme"
@@ -24,10 +24,10 @@
   "events": [
     "onAction"
   ],
-  "onAction": "{{RpNav.onHeader()}}",
+  "onAction": "{{(async () => { const m = BoHeader.model || {}; if (m.action !== 'logout') { return; } await removeValue('authToken'); await removeValue('is_admin'); await removeValue('customer_name'); await removeValue('customer_uuid'); navigateTo('Authentication'); })()}}",
   "isLoading": false,
   "isVisible": true,
-  "key": "hdrrep0rt1",
+  "key": "hdr0ff1ce9",
   "leftColumn": 0,
   "maxDynamicHeight": 9000,
   "minDynamicHeight": 4,
@@ -59,6 +59,6 @@
   "topRow": 0,
   "type": "CUSTOM_WIDGET",
   "version": 1,
-  "widgetId": "bohdrrep0r",
+  "widgetId": "bohdr0ff1c",
   "widgetName": "BoHeader"
 }

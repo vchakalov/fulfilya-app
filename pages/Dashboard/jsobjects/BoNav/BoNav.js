@@ -24,7 +24,13 @@ export default {
     const m = BoHeader.model || {};
     if (m.action === 'logout') return AuthManager.logout();
     if (m.action === 'new') return showModal('CreateOrderModal');
-    if (m.action === 'nav' && m.page) return navigateTo(m.page);
+    if (m.action === 'nav') {
+      // Табло and Поръчки are two views of this page: ?tab=orders hides the Табло block
+      // so the order list sits right under the header, with its own search and filters.
+      if (m.tab === 'orders') return navigateTo('Dashboard', { tab: 'orders' });
+      if (m.tab === 'tablo') return navigateTo('Dashboard');
+      if (m.page) return navigateTo(m.page);
+    }
   },
   onTablo: async () => {
     const m = BoTablo.model || {};
