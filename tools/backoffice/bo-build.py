@@ -165,7 +165,9 @@ TOKENS = """:root{--bg:#FFFFFF;--card:#FFFFFF;--ground:#F7F7F8;--ink:#1D1D1F;--m
 *{box-sizing:border-box}
 html,body{margin:0;background:transparent}
 body{color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
-h1,h2,h3{font-family:var(--display);margin:0;letter-spacing:-.01em;color:var(--ink)}
+h1,h2,h3,h4{font-family:var(--display)!important;margin:0;letter-spacing:-.01em;color:var(--ink)!important;font-weight:800}
+a,a:visited,a:hover{color:inherit;text-decoration:none}
+body,div,span,p,td,th{color:inherit}
 button{font:inherit;color:inherit}
 .num{font-variant-numeric:tabular-nums}
 :root[data-theme="dark"]{--bg:#000000;--card:#121212;--ground:#0A0A0A;--ink:#F5F5F7;--muted:#A1A1A6;--faint:#6E6E73;--line:#262626;--line-strong:#333336;
@@ -180,7 +182,9 @@ HEADER_HTML = FONT_LINK + """
 <div id="bo-header"></div>"""
 HEADER_CSS = TOKENS + """
 .topbar{background:var(--card);border-bottom:1px solid var(--line);padding:0 4px;display:flex;align-items:center;gap:14px;height:72px}
-.brand{display:flex;align-items:center;gap:10px;text-decoration:none;flex:none}
+.brand,.brand:visited,.brand:hover{display:flex;align-items:center;gap:10px;text-decoration:none!important;flex:none;color:var(--ink)!important}
+.brand .word{color:var(--ink)!important}
+.brand .word span{color:var(--accent-ink)!important}
 .brand img{height:26px;width:auto;display:block}
 .brand .word{font-family:var(--display);font-weight:800;font-size:19px;letter-spacing:-.02em}
 .brand .word span{color:var(--accent-ink)}
@@ -438,15 +442,7 @@ custom('BoTitle', 75, 79, TITLE_HTML, TITLE_CSS, TITLE_JS,
 # ---------------------------------------------------------------- existing widgets, restyled
 def load(rel): return json.load(open(os.path.join(REPO, rel), encoding='utf-8'))
 
-# The Text widget ignored a bound textColor (2026-09-17), so the colour rides inside the text.
-t6 = load('Dashboard/widgets/Text6.json'); t6['isVisible'] = False  # replaced by BoTitle; file deleted by the caller; t6.update(text="{{'<span style=\"color:' + ((appsmith.store.bo_theme || 'dark') === 'dark' ? '#F5F5F7' : '#1D1D1F') + '\">' + ((appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders') ? 'Поръчки' : 'Последни поръчки') + '</span>'}}", fontSize='1.25rem', topRow=75, bottomRow=79, originalTopRow=75, originalBottomRow=79, mobileTopRow=75, mobileBottomRow=79)
-if not any(x.get('key') == 'text' for x in t6['dynamicBindingPathList']): t6['dynamicBindingPathList'].append({"key": "text"})
-t6['textColor'] = "{{(appsmith.store.bo_theme || 'dark') === 'dark' ? '#F5F5F7' : '#1D1D1F'}}"
-t6.setdefault('dynamicPropertyPathList', [])
-for k in ('textColor', 'text'):
-    for lst in (t6['dynamicBindingPathList'], t6['dynamicPropertyPathList']):
-        if not any(x.get('key') == k for x in lst): lst.append({"key": k})
-w('Dashboard/widgets/Text6.json', t6)
+# Text6 (the old list title) is gone - BoTitle above replaces it.
 b6 = load('Dashboard/widgets/Button6.json'); b6.update(text='+ Нова поръчка', buttonColor='#FFC400', topRow=75, bottomRow=79, originalTopRow=75, originalBottomRow=79, mobileTopRow=75, mobileBottomRow=79); w('Dashboard/widgets/Button6.json', b6)
 
 tb = load('Dashboard/widgets/OrdersTable.json')
