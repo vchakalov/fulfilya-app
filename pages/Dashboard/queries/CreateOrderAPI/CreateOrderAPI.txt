@@ -19,12 +19,18 @@
 		throw new Error("Please choose Standard or Express");
 	}
 
+	const NewCustomerEmail = (CustomerEmailInput.text || "").trim();
+
 	return {
 		// A single line the server geocodes against Bulgaria, which is what gives the
 		// driver a real street, city and postcode. The old call sent coordinates and a
 		// formatted string that Fleetbase silently dropped.
 		"dropoff": {
-			"address": NewDropoffAddressInput.text
+			"address": NewDropoffAddressInput.text,
+			// The shopper's own email, so the office can write to them about the
+			// delivery. Optional, and left out entirely when blank rather than sent
+			// empty - the server validates it as an address when it arrives.
+			...(NewCustomerEmail ? { "email": NewCustomerEmail } : {})
 		},
 		"service_rate_uuid": OrderShippingSelect.selectedOptionValue,
 		"payment_method": NewPaymentMethodSelect.selectedOptionValue,

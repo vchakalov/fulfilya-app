@@ -202,6 +202,7 @@ updateNewDropoffFromGeocode: () => {
     ItemQuantityInput.setValue('1');
     DeliveryNotesInput.setValue('');
     OrderSourceIdInput.setValue('');
+    CustomerEmailInput.setValue('');
     NewAmountInput.setValue('');
     storeValue('newOrderItems', []);
 
