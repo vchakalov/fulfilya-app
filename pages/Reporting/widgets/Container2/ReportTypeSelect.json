@@ -11,6 +11,9 @@
     },
     {
       "key": "borderRadius"
+    },
+    {
+      "key": "sourceData"
     }
   ],
   "dynamicHeight": "FIXED",
@@ -58,7 +61,7 @@
   "responsiveBehavior": "fill",
   "rightColumn": 58,
   "serverSideFiltering": false,
-  "sourceData": "[\n  {\"label\": \"💶 Дължимо към вас\", \"value\": \"merchant_payout\"},\n  {\"label\": \"📦 Всички поръчки\", \"value\": \"all_orders\"},\n  {\"label\": \"💰 Дневен паричен поток\", \"value\": \"daily_cash_flow\"},\n  {\"label\": \"📊 Анализ на плащанията\", \"value\": \"payment_analysis\"},\n  {\"label\": \"🚚 Такси за доставка\", \"value\": \"service_billing\"},\n  {\"label\": \"📅 Месечна справка\", \"value\": \"monthly_summary\"},\n  {\"label\": \"📈 Бизнес показатели\", \"value\": \"business_metrics\"}\n]",
+  "sourceData": "{{appsmith.store.bo_lang === 'en' ? [{\"label\": \"💶 Owed to you\", \"value\": \"merchant_payout\"}, {\"label\": \"📦 All orders\", \"value\": \"all_orders\"}, {\"label\": \"💰 Daily cash flow\", \"value\": \"daily_cash_flow\"}, {\"label\": \"📊 Payment analysis\", \"value\": \"payment_analysis\"}, {\"label\": \"🚚 Delivery charges\", \"value\": \"service_billing\"}, {\"label\": \"📅 Monthly summary\", \"value\": \"monthly_summary\"}, {\"label\": \"📈 Business metrics\", \"value\": \"business_metrics\"}] : [{\"label\": \"💶 Дължимо към вас\", \"value\": \"merchant_payout\"}, {\"label\": \"📦 Всички поръчки\", \"value\": \"all_orders\"}, {\"label\": \"💰 Дневен паричен поток\", \"value\": \"daily_cash_flow\"}, {\"label\": \"📊 Анализ на плащанията\", \"value\": \"payment_analysis\"}, {\"label\": \"🚚 Такси за доставка\", \"value\": \"service_billing\"}, {\"label\": \"📅 Месечна справка\", \"value\": \"monthly_summary\"}, {\"label\": \"📈 Бизнес показатели\", \"value\": \"business_metrics\"}]}}",
   "topRow": 10,
   "type": "SELECT_WIDGET",
   "version": 1,
