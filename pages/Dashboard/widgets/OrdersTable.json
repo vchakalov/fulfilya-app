@@ -61,7 +61,7 @@
     "recipient_notes",
     "shop_order_id"
   ],
-  "columnUpdatedAt": 1789804015815,
+  "columnUpdatedAt": 1789804154580,
   "columnWidthMap": {
     "customColumn3": 198,
     "external_order_id": 203
@@ -134,6 +134,9 @@
       "key": "primaryColumns.delivery_full_address.computedValue"
     },
     {
+      "key": "primaryColumns.delivery_full_address.label"
+    },
+    {
       "key": "primaryColumns.driver_name.computedValue"
     },
     {
@@ -147,6 +150,9 @@
     },
     {
       "key": "primaryColumns.internal_reference.computedValue"
+    },
+    {
+      "key": "primaryColumns.internal_reference.label"
     },
     {
       "key": "primaryColumns.order_id.computedValue"
@@ -165,6 +171,9 @@
     },
     {
       "key": "primaryColumns.recipient_phone.computedValue"
+    },
+    {
+      "key": "primaryColumns.recipient_phone.label"
     },
     {
       "key": "primaryColumns.shop_order_id.computedValue"
@@ -576,7 +585,7 @@
       "isEditable": false,
       "isSaveVisible": true,
       "isVisible": true,
-      "label": "Получател",
+      "label": "{{appsmith.store.bo_lang === 'en' ? \"Recipient\" : \"Получател\"}}",
       "notation": "standard",
       "originalId": "delivery_address",
       "sticky": "",
@@ -643,7 +652,7 @@
       "isEditable": false,
       "isSaveVisible": true,
       "isVisible": true,
-      "label": "Адрес",
+      "label": "{{appsmith.store.bo_lang === 'en' ? \"Address\" : \"Адрес\"}}",
       "notation": "standard",
       "originalId": "delivery_full_address",
       "sticky": "",
@@ -779,7 +788,7 @@
       "isEditable": false,
       "isSaveVisible": true,
       "isVisible": true,
-      "label": "Поръчка",
+      "label": "{{appsmith.store.bo_lang === 'en' ? \"Order\" : \"Поръчка\"}}",
       "notation": "standard",
       "originalId": "internal_reference",
       "sticky": "",
@@ -947,7 +956,7 @@
       "isEditable": false,
       "isSaveVisible": true,
       "isVisible": true,
-      "label": "Телефон",
+      "label": "{{appsmith.store.bo_lang === 'en' ? \"Phone\" : \"Телефон\"}}",
       "notation": "standard",
       "originalId": "recipient_phone",
       "sticky": "",

@@ -489,17 +489,20 @@ for k, l in labels.items():
 cols['customColumn2']['isVisible'] = False
 # The merchant's list: shop order number first, the recipient and where the parcel goes,
 # nothing about the merchant themselves (it is their own portal), no pickup, no tracking.
-cols['internal_reference'].update(label='Поръчка', isVisible=True)
+cols['internal_reference'].update(label=bi('Поръчка'), isVisible=True)
+tb['dynamicBindingPathList'] += [{'key': 'primaryColumns.internal_reference.label'},
+                                 {'key': 'primaryColumns.delivery_address.label'}]
 cols['order_id']['isVisible'] = False
 cols['customer_name']['isVisible'] = False
 cols['external_order_id']['isVisible'] = False
-cols['delivery_address']['label'] = 'Получател'   # dropoff.name - the person who receives
+cols['delivery_address']['label'] = bi('Получател')   # dropoff.name - the person who receives
 import copy
-for new_id, label in (('recipient_phone', 'Телефон'), ('delivery_full_address', 'Адрес')):
+for new_id, label in (('recipient_phone', bi('Телефон')), ('delivery_full_address', bi('Адрес'))):
     c = copy.deepcopy(cols['delivery_address']); c.update(id=new_id, alias=new_id, originalId=new_id, label=label, isVisible=True)
     c['computedValue'] = c['computedValue'].replace('delivery_address', new_id)
     cols[new_id] = c
     tb['dynamicBindingPathList'].append({"key": f"primaryColumns.{new_id}.computedValue"})
+    tb['dynamicBindingPathList'].append({"key": f"primaryColumns.{new_id}.label"})
 # Every key the query returns that the merchant should not see as a raw column.
 for hidden_id in ('cod_amount', 'goods_amount', 'delivery_amount', 'cod_fee', 'recipient_notes', 'shop_order_id'):
     if hidden_id not in cols:
@@ -531,6 +534,7 @@ for cid, c in cols.items():
             lst[:] = [x for x in lst if x.get('key') != key]
 cols['customColumn1']['buttonLabel'] = bi('Детайли'); cols['customColumn1']['buttonColor'] = '#FFC400'
 binds.add('primaryColumns.customColumn1.buttonLabel')
+binds |= {e['key'] for e in tb.get('dynamicBindingPathList', [])}
 tb['dynamicBindingPathList'] = [{'key': k} for k in sorted(binds)]
 PILL = r"""(() => {
       const s = currentRow.status_display;
@@ -562,6 +566,16 @@ PAY = r"""(() => {
 cols['customColumn4']['computedValue'] = "{{(() => { const tableData = OrdersTable.processedTableData || []; return tableData.length > 0 ? tableData.map((currentRow, currentIndex) => (" + PAY + ")) : " + PAY + " })()}}"
 AMT = r"""(() => { const a = String(currentRow.total_amount || '0').replace(/[\"$]/g, ''); const n = Number(a); return (isFinite(n) ? n.toLocaleString('bg-BG', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : a) + ' €'; })()"""
 cols['total_amount']['computedValue'] = "{{(() => { const tableData = OrdersTable.processedTableData || []; return tableData.length > 0 ? tableData.map((currentRow, currentIndex) => (" + AMT + ")) : " + AMT + " })()}}"
+# Any column label that ended up a binding must be listed as one, wherever in this
+# script it was set - three were missed when the later relabels overwrote the first
+# pass and their paths were not registered.
+_paths = {e['key'] for e in tb.get('dynamicBindingPathList', [])}
+for _cid, _c in cols.items():
+    if isinstance(_c.get('label'), str) and '{{' in _c['label']:
+        _paths.add('primaryColumns.%s.label' % _cid)
+    if isinstance(_c.get('buttonLabel'), str) and '{{' in _c['buttonLabel']:
+        _paths.add('primaryColumns.%s.buttonLabel' % _cid)
+tb['dynamicBindingPathList'] = [{'key': k} for k in sorted(_paths)]
 w('Dashboard/widgets/OrdersTable.json', tb)
 
 # ---------------------------------------------------------------- login: the merchant's logo
