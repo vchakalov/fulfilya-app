@@ -53,7 +53,7 @@ HTML = FONT_LINK + """
   </a>
 
   <div class="mid">
-    <h1>Поръчките ви,<br>на едно място.</h1>
+    <h1>Поръчките ви, на едно място.</h1>
     <p>Следите доставките си на живо, виждате наложения платеж ден по ден и сваляте справки, когато ви потрябват.</p>
     <ul>__POINTS__</ul>
   </div>
@@ -78,11 +78,15 @@ background-size:26px 26px}
 .brand .product{font-family:var(--display);font-weight:700;font-size:10px;letter-spacing:.08em;
 text-transform:uppercase;color:var(--accent-ink);background:#FFFFFF;border-radius:6px;padding:4px 8px}
 .mid{flex:1;display:flex;flex-direction:column;justify-content:center;gap:18px;min-height:0}
-h1{margin:0;font-family:var(--display);font-weight:800;font-size:40px;line-height:1.1;letter-spacing:-.03em}
+h1{margin:0;font-family:var(--display);font-weight:800;line-height:1.1;letter-spacing:-.03em;
+/* The panel is 27 of con_login's 64 columns, so its width follows the browser:
+   ~640px on a wide screen, ~430px on a 1024 laptop. A fixed 40px headline broke
+   into four ragged lines down there; this keeps it to two wherever it lands. */
+font-size:clamp(26px,5.6vw,40px);text-wrap:balance}
 p{margin:0;font-size:15px;line-height:1.55;color:#5A4A1F;max-width:400px}
 ul{margin:4px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:12px}
-li{display:flex;align-items:center;gap:11px;font-size:14px;font-weight:500}
-li i{width:24px;height:24px;border-radius:50%;background:var(--ink);display:grid;place-items:center;flex:none}
+li{display:flex;align-items:flex-start;gap:11px;font-size:14px;font-weight:500;line-height:1.35}
+li i{width:24px;height:24px;border-radius:50%;background:var(--ink);display:grid;place-items:center;flex:none;margin-top:1px}
 li i svg{width:13px;height:13px;display:block}
 .foot{flex:none;font-size:12px;font-weight:500;color:#7A6528}
 @media (max-height:560px){h1{font-size:32px}.mid{gap:12px}ul{gap:9px}}
