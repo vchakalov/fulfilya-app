@@ -155,6 +155,8 @@ EN = {
     'Няма неизплатени поръчки — всичко събрано до момента е преведено.':
         'Nothing outstanding — everything collected so far has been transferred.',
     'Още няма направено изплащане.': 'No payout has been made yet.',
+    'Разписка': 'Statement',
+    'Разписката не дойде от сървъра.': 'The statement did not come back from the server.',
     'Все още няма доставени поръчки с наложен платеж.':
         'No cash-on-delivery orders have been delivered yet.',
     'Всяка доставена поръчка с наложен платеж влиза в точно едно изплащане. „За вас" е стойността на стоката — събраното без доставката и таксата, които плаща купувачът.':
