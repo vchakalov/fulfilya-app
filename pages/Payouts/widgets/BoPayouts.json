@@ -5,7 +5,7 @@
   "borderRadius": "0px",
   "borderWidth": "0",
   "boxShadow": "none",
-  "bottomRow": 120,
+  "bottomRow": 78,
   "defaultModel": "{{ { lang: appsmith.store.bo_lang || 'bg', lines: PoLines.data } }}",
   "dynamicBindingPathList": [
     {
@@ -15,7 +15,7 @@
       "key": "defaultModel"
     }
   ],
-  "dynamicHeight": "FIXED",
+  "dynamicHeight": "AUTO_HEIGHT",
   "dynamicTriggerPathList": [
     {
       "key": "onAction"
@@ -32,12 +32,12 @@
   "maxDynamicHeight": 9000,
   "minDynamicHeight": 4,
   "minWidth": 450,
-  "mobileBottomRow": 120,
+  "mobileBottomRow": 78,
   "mobileLeftColumn": 0,
   "mobileRightColumn": 64,
   "mobileTopRow": 9,
   "needsErrorInfo": false,
-  "originalBottomRow": 120,
+  "originalBottomRow": 78,
   "originalTopRow": 9,
   "parentColumnSpace": 10.484375,
   "parentId": "0",

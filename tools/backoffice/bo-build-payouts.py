@@ -378,14 +378,14 @@ appsmith.onModelChange(render);
 PO_HEADER_ON = "{{(async () => { const m = BoHeader.model || {}; if (m.action === 'lang') { return storeValue('bo_lang', m.lang || 'bg'); } if (m.action === 'logout') { return AuthManager.logout(); } if (m.action === 'new') { return navigateTo('Dashboard', { new: '1' }); } if (m.action === 'nav') { if (m.tab === 'orders') { return navigateTo('Dashboard', { tab: 'orders' }); } if (m.page) { return navigateTo(m.page); } } })()}}"
 
 
-def custom(name, top, bottom, html, css, js, model, key_seed, handler):
+def custom(name, top, bottom, html, css, js, model, key_seed, handler, height='FIXED'):
     js = js + bo_i18n.translator_js() + ns['BO_WATCH']
     model = model.replace('{{ { ', '{{ { ' + bo_i18n.MODEL_LANG + ', ', 1)
     w(f'{PAGE}/widgets/{name}.json', {
         "animateLoading": True, "backgroundColor": "transparent", "borderColor": "transparent", "borderRadius": "0px", "borderWidth": "0",
         "boxShadow": "none", "bottomRow": bottom, "defaultModel": model,
         "dynamicBindingPathList": [{"key": "theme"}, {"key": "defaultModel"}],
-        "dynamicHeight": "FIXED", "dynamicTriggerPathList": [{"key": "onAction"}],
+        "dynamicHeight": height, "dynamicTriggerPathList": [{"key": "onAction"}],
         "events": ["onAction"], "onAction": handler,
         "isLoading": False, "isVisible": True, "key": key_seed, "leftColumn": 0,
         "maxDynamicHeight": 9000, "minDynamicHeight": 4, "minWidth": 450,
@@ -401,9 +401,9 @@ def custom(name, top, bottom, html, css, js, model, key_seed, handler):
 custom('BoHeader', 0, 8, HEADER_HTML, HEADER_CSS, HEADER_JS,
        "{{ { page: 'payouts', merchant: appsmith.store.customer_name || '' } }}",
        "hdrpayout1", PO_HEADER_ON)
-custom('BoPayouts', 9, 120, PAYOUTS_HTML, PAYOUTS_CSS, PAYOUTS_JS,
+custom('BoPayouts', 9, 78, PAYOUTS_HTML, PAYOUTS_CSS, PAYOUTS_JS,
        "{{ { lines: PoLines.data } }}",
-       "poutz4k7m2", "{{(async () => {})()}}")
+       "poutz4k7m2", "{{(async () => {})()}}", height='AUTO_HEIGHT')
 
 # ---------------------------------------------------------------- the page itself
 w(f'{PAGE}/{PAGE}.json', {
