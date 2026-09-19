@@ -463,14 +463,17 @@ custom('BoTitle', 60, 64, TITLE_HTML, TITLE_CSS, TITLE_JS,
 # ---------------------------------------------------------------- existing widgets, restyled
 def load(rel): return json.load(open(os.path.join(REPO, rel), encoding='utf-8'))
 
-# Text6 (the old list title) is gone - BoTitle above replaces it.
-b6 = load('Dashboard/widgets/Button6.json'); b6.update(text='+ Нова поръчка', buttonColor='#FFC400', topRow=60, bottomRow=64, originalTopRow=60, originalBottomRow=64, mobileTopRow=60, mobileBottomRow=64); w('Dashboard/widgets/Button6.json', b6)
 
 def bi(bg, en=None):
     """A native-widget label that follows appsmith.store.bo_lang."""
     en = en or bo_i18n.EN.get(bg, bg)
     return "{{appsmith.store.bo_lang === 'en' ? %s : %s}}" % (json.dumps(en, ensure_ascii=False), json.dumps(bg, ensure_ascii=False))
 
+
+
+# Text6 (the old list title) is gone - BoTitle above replaces it.
+b6 = load('Dashboard/widgets/Button6.json'); b6.update(text=bi('+ Нова поръчка'), buttonColor='#FFC400', topRow=60, bottomRow=64, originalTopRow=60, originalBottomRow=64, mobileTopRow=60, mobileBottomRow=64); b6['dynamicBindingPathList'] = [{'key': k} for k in sorted({e['key'] for e in b6.get('dynamicBindingPathList', [])} | {'text'})]
+w('Dashboard/widgets/Button6.json', b6)
 
 tb = load('Dashboard/widgets/OrdersTable.json')
 tb.update(topRow=66, bottomRow=116, originalTopRow=66, originalBottomRow=116, mobileTopRow=66, mobileBottomRow=116,

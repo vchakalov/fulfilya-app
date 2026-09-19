@@ -50,7 +50,7 @@
   "resetFormOnClick": false,
   "responsiveBehavior": "hug",
   "rightColumn": 64,
-  "text": "+ Нова поръчка",
+  "text": "{{appsmith.store.bo_lang === 'en' ? \"+ New order\" : \"+ Нова поръчка\"}}",
   "topRow": 60,
   "type": "BUTTON_WIDGET",
   "version": 1,
