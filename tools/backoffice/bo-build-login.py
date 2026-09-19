@@ -47,9 +47,11 @@ POINTS = [
 
 HTML = FONT_LINK + """
 <div class="panel">
+  <img class="ghost" alt="" aria-hidden="true">
+
   <a class="brand">
     <img src="data:image/png;base64,__MARK__" alt="">
-    <span class="word">Fulfil<span>ya</span></span>
+    <span class="word">Fulfilya</span>
     <span class="product">BackOffice</span>
   </a>
 
@@ -68,16 +70,18 @@ CSS = """:root{--ink:#1D1D1F;--accent:#FFC400;--accent-ink:#8A6500;--accent-soft
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;overflow:hidden}
 body{font-family:var(--body);color:var(--ink);-webkit-font-smoothing:antialiased}
-.panel{height:100%;padding:40px 36px;display:flex;flex-direction:column;
-background-color:var(--accent-soft);
-background-image:radial-gradient(rgba(138,101,0,.13) 1.5px,transparent 1.5px);
-background-size:26px 26px}
-.brand{display:flex;align-items:center;gap:9px;flex:none;text-decoration:none}
-.brand img{height:26px;width:auto;display:block}
-.brand .word{font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:-.02em;color:var(--ink)}
-.brand .word span{color:var(--accent-ink)}
-.brand .product{font-family:var(--display);font-weight:700;font-size:10px;letter-spacing:.08em;
-text-transform:uppercase;color:var(--accent-ink);background:#FFFFFF;border-radius:6px;padding:4px 8px}
+.panel{position:relative;overflow:hidden;height:100%;padding:40px 36px;display:flex;
+flex-direction:column;background:var(--accent-soft)}
+/* The dotted field read as texture for its own sake. One oversized mark bleeding
+   off the bottom corner says the same thing and says whose page it is. */
+.ghost{position:absolute;right:-14%;bottom:-6%;width:105%;height:auto;opacity:.16;
+pointer-events:none;user-select:none}
+.panel>*:not(.ghost){position:relative}
+.brand{display:flex;align-items:center;gap:13px;flex:none;text-decoration:none}
+.brand img{height:40px;width:auto;display:block}
+.brand .word{font-family:var(--display);font-weight:800;font-size:31px;letter-spacing:-.025em;color:var(--ink)}
+.brand .product{font-family:var(--display);font-weight:700;font-size:11px;letter-spacing:.08em;
+text-transform:uppercase;color:var(--accent-ink);background:#FFFFFF;border-radius:7px;padding:5px 9px}
 .mid{flex:1;display:flex;flex-direction:column;justify-content:center;gap:18px;min-height:0}
 h1{margin:0;font-family:var(--display);font-weight:800;line-height:1.1;letter-spacing:-.03em;
 /* The panel is 27 of con_login's 64 columns, so its width follows the browser:
@@ -95,9 +99,15 @@ li i svg{width:13px;height:13px;display:block}
 
 # Plain script, like bo-build.py's - a custom widget's js is not a module, so
 # `export default` here is a syntax error and the panel renders blank.
-JS = """// Static panel: the markup is the whole widget. Nothing to render from the
-// model, nothing to report back - so this only confirms the frame is alive.
-appsmith.onReady(() => {});
+JS = """// The panel is static: nothing to render from the model, nothing to report back.
+// The one job here is to point the oversized background mark at the image the
+// lockup already carries, so the base64 is embedded once rather than twice - the
+// widget json holds srcDoc AND uncompiledSrcDoc, so each copy costs four.
+appsmith.onReady(() => {
+  const ghost = document.querySelector('.ghost');
+  const mark = document.querySelector('.brand img');
+  if (ghost && mark) ghost.src = mark.src;
+});
 """
 
 
