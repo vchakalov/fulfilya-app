@@ -14,7 +14,7 @@ export default {
             .then(() => storeValue('reportLoading', false))
             .catch(() => {
               storeValue('reportLoading', false);
-              showAlert('Failed to load All Orders report', 'error');
+              showAlert('Справката „Всички поръчки“ не се зареди', 'error');
             });
           break;
         case 'daily_cash_flow':
@@ -22,7 +22,7 @@ export default {
             .then(() => storeValue('reportLoading', false))
             .catch(() => {
               storeValue('reportLoading', false);
-              showAlert('Failed to load Daily Cash Flow report', 'error');
+              showAlert('Справката „Дневен паричен поток“ не се зареди', 'error');
             });
           break;
         case 'payment_analysis':
@@ -30,7 +30,7 @@ export default {
             .then(() => storeValue('reportLoading', false))
             .catch(() => {
               storeValue('reportLoading', false);
-              showAlert('Failed to load Payment Analysis report', 'error');
+              showAlert('Справката „Анализ на плащанията“ не се зареди', 'error');
             });
           break;
         case 'monthly_summary':
@@ -38,7 +38,7 @@ export default {
             .then(() => storeValue('reportLoading', false))
             .catch(() => {
               storeValue('reportLoading', false);
-              showAlert('Failed to load Monthly Summary report', 'error');
+              showAlert('Справката „Месечна справка“ не се зареди', 'error');
             });
           break;
         case 'business_metrics':
@@ -46,7 +46,7 @@ export default {
             .then(() => storeValue('reportLoading', false))
             .catch(() => {
               storeValue('reportLoading', false);
-              showAlert('Failed to load Business Metrics report', 'error');
+              showAlert('Справката „Бизнес показатели“ не се зареди', 'error');
             });
           break;
         case 'service_billing':
@@ -54,7 +54,7 @@ export default {
             .then(() => storeValue('reportLoading', false))
             .catch(() => {
               storeValue('reportLoading', false);
-              showAlert('Failed to load Service Billing report', 'error');
+              showAlert('Справката „Такси за доставка“ не се зареди', 'error');
             });
           break;
         // What Fulfilya owes the merchant. Nothing is invoiced to them: their shoppers
@@ -65,7 +65,7 @@ export default {
             .then(() => storeValue('reportLoading', false))
             .catch(() => {
               storeValue('reportLoading', false);
-              showAlert('Failed to load the payout report', 'error');
+              showAlert('Справката „Дължимо към вас“ не се зареди', 'error');
             });
           break;
         default:

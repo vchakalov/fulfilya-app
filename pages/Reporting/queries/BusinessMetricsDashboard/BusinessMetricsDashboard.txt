@@ -1,3 +1,6 @@
+  -- Status words come from bo-build.py, the vocabulary the Табло and Справки use.
+  -- This report read 'delivered' / 'canceled' / 'Paid', none of which this database
+  -- writes, so every figure here was zero until 2026-09-19.
   SELECT
     -- Time Period Info
     '{{moment(StartDatePicker.selectedDate).format("YYYY-MM-DD")}}' as period_start,
@@ -14,15 +17,15 @@
 
     -- Payment Method Distribution
     COUNT(DISTINCT CASE WHEN payment_data.payment_method = 'COD' THEN o.uuid END) as cod_orders_count,
-    COUNT(DISTINCT CASE WHEN payment_data.payment_method = 'Paid' THEN o.uuid END) as paid_orders_count,
+    COUNT(DISTINCT CASE WHEN payment_data.payment_method IN ('CARD', 'Paid') THEN o.uuid END) as paid_orders_count,
     ROUND(COUNT(DISTINCT CASE WHEN payment_data.payment_method = 'COD' THEN o.uuid END) * 100.0 / COUNT(DISTINCT o.uuid), 1) as
   cod_percentage,
-    ROUND(COUNT(DISTINCT CASE WHEN payment_data.payment_method = 'Paid' THEN o.uuid END) * 100.0 / COUNT(DISTINCT o.uuid), 1) as
+    ROUND(COUNT(DISTINCT CASE WHEN payment_data.payment_method IN ('CARD', 'Paid') THEN o.uuid END) * 100.0 / COUNT(DISTINCT o.uuid), 1) as
   paid_percentage,
 
     -- Revenue Metrics
     SUM(CASE
-      WHEN (o.status = 'delivered' OR payment_data.payment_method = 'Paid') AND payment_data.cod_amount > 0
+      WHEN (o.status IN ('completed', 'order_completed', 'delivered', 'order_delivered') OR payment_data.payment_method IN ('CARD', 'Paid')) AND payment_data.cod_amount > 0
       THEN payment_data.cod_amount
       ELSE 0
     END) as total_revenue,
@@ -30,19 +33,19 @@
     ROUND(AVG(CASE WHEN payment_data.cod_amount > 0 THEN payment_data.cod_amount END), 2) as avg_order_value,
 
     SUM(CASE
-      WHEN payment_data.payment_method = 'COD' AND o.status IN ('created', 'dispatched', 'in_transit') AND payment_data.cod_amount > 0
+      WHEN payment_data.payment_method = 'COD' AND o.status IN ('created', 'dispatched', 'started', 'enroute', 'delivery_attempted', 'returning', 'in_transit') AND payment_data.cod_amount > 0
       THEN payment_data.cod_amount
       ELSE 0
     END) as pending_cod_amount,
 
     -- Performance KPIs
-    COUNT(DISTINCT CASE WHEN o.status = 'delivered' THEN o.uuid END) as delivered_orders,
-    COUNT(DISTINCT CASE WHEN o.status = 'canceled' THEN o.uuid END) as cancelled_orders,
-    COUNT(DISTINCT CASE WHEN o.status IN ('created', 'dispatched', 'in_transit') THEN o.uuid END) as active_orders,
+    COUNT(DISTINCT CASE WHEN o.status IN ('completed', 'order_completed', 'delivered', 'order_delivered') THEN o.uuid END) as delivered_orders,
+    COUNT(DISTINCT CASE WHEN o.status IN ('canceled', 'cancelled', 'order_cancel', 'order_canceled', 'order_cancelled') THEN o.uuid END) as cancelled_orders,
+    COUNT(DISTINCT CASE WHEN o.status IN ('created', 'dispatched', 'started', 'enroute', 'delivery_attempted', 'returning', 'in_transit') THEN o.uuid END) as active_orders,
 
-    ROUND(COUNT(DISTINCT CASE WHEN o.status = 'delivered' THEN o.uuid END) * 100.0 / COUNT(DISTINCT o.uuid), 1) as
+    ROUND(COUNT(DISTINCT CASE WHEN o.status IN ('completed', 'order_completed', 'delivered', 'order_delivered') THEN o.uuid END) * 100.0 / COUNT(DISTINCT o.uuid), 1) as
   overall_delivery_rate,
-    ROUND(COUNT(DISTINCT CASE WHEN o.status = 'canceled' THEN o.uuid END) * 100.0 / COUNT(DISTINCT o.uuid), 1) as cancellation_rate,
+    ROUND(COUNT(DISTINCT CASE WHEN o.status IN ('canceled', 'cancelled', 'order_cancel', 'order_canceled', 'order_cancelled') THEN o.uuid END) * 100.0 / COUNT(DISTINCT o.uuid), 1) as cancellation_rate,
 
     -- Operational Metrics
     COUNT(DISTINCT payment_data.store_type) as active_store_platforms,
