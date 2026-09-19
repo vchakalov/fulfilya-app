@@ -1,46 +1,56 @@
 {
   "animateLoading": true,
   "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
-  "bottomRow": 13,
+  "bottomRow": 47,
   "displayName": "Text",
   "dynamicBindingPathList": [
+    {
+      "key": "truncateButtonColor"
+    },
+    {
+      "key": "fontFamily"
+    },
     {
       "key": "borderRadius"
     }
   ],
-  "dynamicHeight": "FIXED",
+  "dynamicHeight": "AUTO_HEIGHT",
   "dynamicTriggerPathList": [],
-  "fontFamily": "Open Sans",
-  "fontSize": "1.875rem",
-  "fontStyle": "BOLD",
+  "fontFamily": "{{appsmith.theme.fontFamily.appFont}}",
+  "fontSize": "0.875rem",
+  "fontStyle": "",
   "hideCard": false,
   "iconSVG": "/static/media/icon.97c59b523e6f70ba6f40a10fc2c7c5b5.svg",
   "isDeprecated": false,
   "isLoading": false,
   "isVisible": true,
-  "key": "tcimoejkol",
+  "key": "bohelp01tx",
   "leftColumn": 2,
   "maxDynamicHeight": 9000,
   "minDynamicHeight": 4,
+  "minWidth": 450,
+  "originalBottomRow": 48,
+  "originalTopRow": 44,
   "overflow": "NONE",
-  "parentColumnSpace": 18.1875,
+  "parentColumnSpace": 19.5,
   "parentId": "8rq3ao3yqz",
   "parentRowSpace": 10,
   "renderMode": "CANVAS",
-  "rightColumn": 32,
+  "responsiveBehavior": "fill",
+  "rightColumn": 62,
   "searchTags": [
     "typography",
     "paragraph",
     "label"
   ],
   "shouldTruncate": false,
-  "text": "Вход",
-  "textAlign": "LEFT",
-  "textColor": "#1D1D1F",
-  "topRow": 8,
-  "truncateButtonColor": "#FFC13D",
+  "text": "Проблем с достъпа? Пишете на office@fulfilya.com",
+  "textAlign": "CENTER",
+  "textColor": "#6E6E73",
+  "topRow": 43,
+  "truncateButtonColor": "{{appsmith.theme.colors.primaryColor}}",
   "type": "TEXT_WIDGET",
   "version": 1,
-  "widgetId": "18wnv63ezo",
-  "widgetName": "txt_signIn"
+  "widgetId": "bohelp01tx",
+  "widgetName": "txt_help"
 }

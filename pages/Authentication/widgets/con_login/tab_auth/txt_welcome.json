@@ -1,7 +1,7 @@
 {
   "animateLoading": true,
   "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
-  "bottomRow": 20,
+  "bottomRow": 17,
   "displayName": "Text",
   "dynamicBindingPathList": [
     {
@@ -29,8 +29,8 @@
   "maxDynamicHeight": 9000,
   "minDynamicHeight": 4,
   "minWidth": 450,
-  "originalBottomRow": 21,
-  "originalTopRow": 16,
+  "originalBottomRow": 18,
+  "originalTopRow": 14,
   "overflow": "NONE",
   "parentColumnSpace": 19.5,
   "parentId": "8rq3ao3yqz",
@@ -44,10 +44,10 @@
     "label"
   ],
   "shouldTruncate": false,
-  "text": "Welcome back! Please enter your details.",
+  "text": "Въведете данните си за достъп до вашия BackOffice.",
   "textAlign": "LEFT",
-  "textColor": "#231F20",
-  "topRow": 16,
+  "textColor": "#6E6E73",
+  "topRow": 13,
   "truncateButtonColor": "{{appsmith.theme.colors.primaryColor}}",
   "type": "TEXT_WIDGET",
   "version": 1,
