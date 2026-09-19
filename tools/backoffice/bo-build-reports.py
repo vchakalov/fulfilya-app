@@ -8,15 +8,27 @@ applies it.
 """
 import json, os, sys, uuid, importlib.util
 
-S = '/private/tmp/claude-501/-Users-fulfilyaood-Documents-fulfilya/5f59735c-c391-4498-949a-cf3ef8cc5597/scratchpad'
+import bo_i18n
+
+import os as _os, tempfile as _tempfile
+
+# Where this generator reads its siblings and writes its output. Until 2026-09-19
+# both pointed at the scratchpad of the session they were written in
+# (…/5f59735c…/scratchpad), so bo-build-reports.py was reading a copy of
+# bo-build.py frozen on 2026-09-17 - regenerating Справки would have quietly
+# reverted every header change made since. Resolved from this file instead.
+HERE = _os.path.dirname(_os.path.abspath(__file__))
+S = HERE
+BUILD = _os.path.join(_tempfile.gettempdir(), 'fulfilya-bo-build')
 REPO = '/Users/fulfilyaood/Documents/fulfilya/fulfilya-app/pages'
-OUT = f'{S}/bo-build-reports/pages'
+OUT = _os.path.join(BUILD, 'reports', 'pages')
 APP = '68600ba97c31ed49d151bad2'
 
 # pull the shared pieces out of the Табло generator without running its writes
 src = open(f'{S}/bo-build.py', encoding='utf-8').read().split('# ---------------------------------------------------------------- existing widgets, restyled')[0]
 src = src.replace("OUT = ", "OUT_UNUSED = ").replace("for n, s in (('BoStats'", "for n, s in (('__skip__'")
-ns = {'OUT': f'{S}/bo-build-scratch/pages'}
+# __file__ so the exec'd generator can still find mark.b64 beside itself
+ns = {'OUT': _os.path.join(BUILD, 'scratch', 'pages'), '__file__': _os.path.join(HERE, 'bo-build.py')}
 exec(compile(src.replace("w('Dashboard/jsobjects/BoNav/BoNav.js', BONAV)", "").replace("w('Dashboard/jsobjects/BoNav/metadata.json'", "(lambda *a, **k: None)('x'"), 'bo-build', 'exec'), ns)
 CF, cfv, money, TZ, DELIVERED, IN_TRANSIT, RETURNED, CANCELLED = (ns[k] for k in ('CF', 'cfv', 'money', 'TZ', 'DELIVERED', 'IN_TRANSIT', 'RETURNED', 'CANCELLED'))
 HEADER_HTML, HEADER_CSS, HEADER_JS, TOKENS, FONT_LINK = (ns[k] for k in ('HEADER_HTML', 'HEADER_CSS', 'HEADER_JS', 'TOKENS', 'FONT_LINK'))
@@ -360,10 +372,12 @@ appsmith.onReady(render);
 appsmith.onModelChange(render);
 """
 
-RP_HEADER_ON = "{{(async () => { const m = BoHeader.model || {}; if (m.action === 'logout') { return AuthManager.logout(); } if (m.action === 'new') { return navigateTo('Dashboard', { new: '1' }); } if (m.action === 'nav') { if (m.tab === 'orders') { return navigateTo('Dashboard', { tab: 'orders' }); } if (m.page) { return navigateTo(m.page); } } })()}}"
+RP_HEADER_ON = "{{(async () => { const m = BoHeader.model || {}; if (m.action === 'lang') { return storeValue('bo_lang', m.lang || 'bg'); } if (m.action === 'logout') { return AuthManager.logout(); } if (m.action === 'new') { return navigateTo('Dashboard', { new: '1' }); } if (m.action === 'nav') { if (m.tab === 'orders') { return navigateTo('Dashboard', { tab: 'orders' }); } if (m.page) { return navigateTo(m.page); } } })()}}"
 RP_REPORTS_ON = "{{(async () => { const m = BoReports.model || {}; const reload = () => Promise.all([RpStats.run(), RpPayment.run(), RpService.run(), RpOutcome.run(), RpProducts.run(), RpDaily.run()]); if (m.action === 'period' && m.period) { await storeValue('rp_period', m.period); await reload(); return; } if (m.action === 'range' && m.from && m.to) { await storeValue('rp_from', m.from); await storeValue('rp_to', m.to); await storeValue('rp_period', 'range'); await reload(); return; } if (m.action === 'csv') { const rows = RpDaily.data || []; const head = ['Ден', 'Доставени', 'Върнати', 'НП в брой', 'НП с карта', 'Платени онлайн', 'Общо събрано', 'Доставка и такса НП', 'За изплащане']; const cell = (v) => String(v == null ? '' : v).replace('.', ','); const lines = [head.join(';')].concat(rows.map((r) => [r.day, r.delivered, r.returned, cell(r.cod_cash), cell(r.cod_card), cell(r.prepaid), cell(r.collected), cell(r.fees), cell(r.payout)].join(';'))); return download('\\ufeff' + lines.join('\\r\\n'), 'fulfilya-otchet-' + RpNav.since() + '-' + RpNav.until() + '.csv', 'text/csv'); } })()}}"
 
 def custom(page, name, top, bottom, html, css, js, model, height, key_seed, handler):
+    js = js + bo_i18n.translator_js() + ns['BO_WATCH']
+    model = model.replace('{{ { ', '{{ { ' + bo_i18n.MODEL_LANG + ', ', 1)
     d = {
         "animateLoading": True, "backgroundColor": "transparent", "borderColor": "transparent", "borderRadius": "0px", "borderWidth": "0",
         "boxShadow": "none", "bottomRow": bottom, "defaultModel": model,

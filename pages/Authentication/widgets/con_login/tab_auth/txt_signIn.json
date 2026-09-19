@@ -6,6 +6,9 @@
   "dynamicBindingPathList": [
     {
       "key": "borderRadius"
+    },
+    {
+      "key": "text"
     }
   ],
   "dynamicHeight": "FIXED",
@@ -34,7 +37,7 @@
     "label"
   ],
   "shouldTruncate": false,
-  "text": "Вход",
+  "text": "{{appsmith.store.bo_lang === 'en' ? \"Sign in\" : \"Вход\"}}",
   "textAlign": "LEFT",
   "textColor": "#1D1D1F",
   "topRow": 12,

@@ -5,13 +5,16 @@
   "displayName": "Text",
   "dynamicBindingPathList": [
     {
-      "key": "truncateButtonColor"
+      "key": "borderRadius"
     },
     {
       "key": "fontFamily"
     },
     {
-      "key": "borderRadius"
+      "key": "text"
+    },
+    {
+      "key": "truncateButtonColor"
     }
   ],
   "dynamicHeight": "AUTO_HEIGHT",
@@ -44,7 +47,7 @@
     "label"
   ],
   "shouldTruncate": false,
-  "text": "Въведете данните си за достъп до вашия BackOffice.",
+  "text": "{{appsmith.store.bo_lang === 'en' ? \"Enter your details to reach your BackOffice.\" : \"Въведете данните си за достъп до вашия BackOffice.\"}}",
   "textAlign": "LEFT",
   "textColor": "#6E6E73",
   "topRow": 17,

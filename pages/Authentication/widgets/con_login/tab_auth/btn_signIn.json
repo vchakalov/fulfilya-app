@@ -13,6 +13,9 @@
     },
     {
       "key": "isDisabled"
+    },
+    {
+      "key": "text"
     }
   ],
   "dynamicPropertyPathList": [
@@ -52,7 +55,7 @@
     "click",
     "submit"
   ],
-  "text": "Вход",
+  "text": "{{appsmith.store.bo_lang === 'en' ? \"Sign in\" : \"Вход\"}}",
   "topRow": 40,
   "type": "BUTTON_WIDGET",
   "version": 1,

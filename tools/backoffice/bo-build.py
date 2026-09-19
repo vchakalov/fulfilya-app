@@ -6,11 +6,14 @@ widgets, and modified copies of the existing OrdersTable / Text6 / Button6 /
 GetCustomerByEmail / AuthManager. Nothing here touches the repo; rsync does that.
 """
 import json, os, re, uuid, shutil, sys
+import os as _os, tempfile as _tempfile
+
+import bo_i18n
 
 REPO = '/Users/fulfilyaood/Documents/fulfilya/fulfilya-app/pages'
-OUT = '/private/tmp/claude-501/-Users-fulfilyaood-Documents-fulfilya/5f59735c-c391-4498-949a-cf3ef8cc5597/scratchpad/bo-build/pages'
+OUT = _os.path.join(_tempfile.gettempdir(), 'fulfilya-bo-build', 'dashboard', 'pages')
 APP = '68600ba97c31ed49d151bad2'
-MARK = open('/private/tmp/claude-501/-Users-fulfilyaood-Documents-fulfilya/5f59735c-c391-4498-949a-cf3ef8cc5597/scratchpad/mark.b64').read().strip()
+MARK = open(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)), 'mark.b64')).read().strip()
 
 CF = dict(amount='d0b5b899-6cfc-4eef-a898-ec99a23ef039', payment='79707269-ef79-4e2c-b63b-eaf76f4a3f85',
           card='38c677ff-5bd4-4087-bb0e-2f4c031153c7', dfee='ff2aaa12-8e44-4740-9680-f059d3241bba',
@@ -195,6 +198,7 @@ HEADER_CSS = TOKENS + """
 .merchant .name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .btn{border:1px solid transparent;background:transparent;border-radius:999px;padding:8px 14px;font-weight:600;cursor:pointer;color:var(--muted);flex:none}
 .btn:hover{color:var(--ink);border-color:var(--line-strong)}
+.btn.lang{font-family:var(--display);font-weight:700;font-size:11px;letter-spacing:.06em;padding:6px 10px;border-color:var(--line)}
 @media (max-width:1000px){.brand .product{display:none}.merchant{max-width:200px}.tabs{margin-left:8px}.tab{padding:0 9px;font-size:13px}}
 @media (max-width:760px){.merchant .name{display:none}.tabs{margin-left:4px}.tab{padding:0 8px}}
 """
@@ -222,13 +226,14 @@ function render() {
     tabs +
     `<span class="grow"></span>` +
     `<span class="merchant">${logo}<span class="name">${esc(m.merchant || '')}</span></span>` +
+    `<button class="btn lang" data-act="lang" data-lang="${m.lang === 'en' ? 'bg' : 'en'}" title="${m.lang === 'en' ? 'Превключи на български' : 'Switch to English'}">${m.lang === 'en' ? 'BG' : 'EN'}</button>` +
     `<button class="btn" data-act="logout">Изход</button>` +
     `</div>`;
   document.querySelectorAll('[data-act]').forEach((el) => el.addEventListener('click', (e) => {
     e.preventDefault();
     const act = el.dataset.act;
     if (act === 'nav' && el.dataset.tab === current) return;
-    appsmith.updateModel({ action: act, page: el.dataset.page || '' , tab: el.dataset.tab || '' });
+    appsmith.updateModel({ action: act, page: el.dataset.page || '' , tab: el.dataset.tab || '', lang: el.dataset.lang || '' });
     appsmith.triggerEvent('onAction');
   }));
 }
@@ -394,10 +399,28 @@ appsmith.onReady(render);
 appsmith.onModelChange(render);
 """
 
-HEADER_ON = "{{(async () => { const m = BoHeader.model || {}; if (m.action === 'logout') { return AuthManager.logout(); } if (m.action === 'new') { return showModal('CreateOrderModal'); } if (m.action === 'nav') { if (m.tab === 'orders') { return navigateTo('Dashboard', { tab: 'orders' }); } if (m.tab === 'tablo') { return navigateTo('Dashboard'); } if (m.page) { return navigateTo(m.page); } } })()}}"
+HEADER_ON = "{{(async () => { const m = BoHeader.model || {}; if (m.action === 'lang') { return storeValue('bo_lang', m.lang || 'bg'); } if (m.action === 'logout') { return AuthManager.logout(); } if (m.action === 'new') { return showModal('CreateOrderModal'); } if (m.action === 'nav') { if (m.tab === 'orders') { return navigateTo('Dashboard', { tab: 'orders' }); } if (m.tab === 'tablo') { return navigateTo('Dashboard'); } if (m.page) { return navigateTo(m.page); } } })()}}"
 TABLO_ON = "{{(async () => { const m = BoTablo.model || {}; if (m.action === 'period' && m.period) { await storeValue('bo_period', m.period); await Promise.all([BoStats.run(), BoPayment.run(), BoStatus.run()]); return; } if (m.action === 'new') { return showModal('CreateOrderModal'); } if (m.action === 'nav' && m.page) { return navigateTo(m.page); } })()}}"
 
+BO_WATCH = """
+// The widget keeps rendering Bulgarian; this re-runs the swap after every render
+// it does, without needing a hook into render() itself. boTranslate only touches
+// text containing Cyrillic, so a second pass over its own output changes nothing
+// and the observer settles.
+let boBusy = false;
+const boSweep = () => {
+  if (boBusy || boLang() !== 'en') return;
+  boBusy = true;
+  try { boTranslate(document.body); } catch (e) {} finally { boBusy = false; }
+};
+new MutationObserver(boSweep).observe(document.body, { childList: true, subtree: true, characterData: true });
+setTimeout(boSweep, 0);
+"""
+
+
 def custom(name, top, bottom, html, css, js, model, height, key_seed, visible=None, events=True):
+    js = js + bo_i18n.translator_js() + BO_WATCH
+    model = model.replace('{{ { ', '{{ { ' + bo_i18n.MODEL_LANG + ', ', 1)
     d = {
         "animateLoading": True, "backgroundColor": "transparent", "borderColor": "transparent", "borderRadius": "0px", "borderWidth": "0",
         "boxShadow": "none", "bottomRow": bottom, "defaultModel": model,

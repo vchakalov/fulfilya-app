@@ -5,13 +5,16 @@
   "displayName": "Text",
   "dynamicBindingPathList": [
     {
-      "key": "truncateButtonColor"
+      "key": "borderRadius"
     },
     {
       "key": "fontFamily"
     },
     {
-      "key": "borderRadius"
+      "key": "text"
+    },
+    {
+      "key": "truncateButtonColor"
     }
   ],
   "dynamicHeight": "AUTO_HEIGHT",
@@ -44,7 +47,7 @@
     "label"
   ],
   "shouldTruncate": false,
-  "text": "Забравена парола? Пишете на office@fulfilya.com и ще получите нова.",
+  "text": "{{appsmith.store.bo_lang === 'en' ? \"Forgotten your password? Write to office@fulfilya.com and we will send a new one.\" : \"Забравена парола? Пишете на office@fulfilya.com и ще получите нова.\"}}",
   "textAlign": "CENTER",
   "textColor": "#6E6E73",
   "topRow": 47,

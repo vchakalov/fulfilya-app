@@ -20,6 +20,8 @@ Then: commit, push, Pull in the editor.
 import json
 import os
 
+import bo_i18n
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, '..', '..', 'pages'))
 OUT = os.path.join(REPO, 'Authentication', 'widgets', 'con_login', 'BoLogin.json')
@@ -48,6 +50,8 @@ POINTS = [
 HTML = FONT_LINK + """
 <div class="panel">
   <img class="ghost" alt="" aria-hidden="true">
+
+  <button class="lang" data-lang="__OTHER__">__LABEL__</button>
 
   <a class="brand">
     <img src="data:image/png;base64,__MARK__" alt="">
@@ -94,26 +98,52 @@ li{display:flex;align-items:flex-start;gap:11px;font-size:14px;font-weight:500;l
 li i{width:24px;height:24px;border-radius:50%;background:var(--ink);display:grid;place-items:center;flex:none;margin-top:1px}
 li i svg{width:13px;height:13px;display:block}
 .foot{flex:none;font-size:12px;font-weight:500;color:#7A6528}
+.lang{position:absolute;top:22px;right:22px;z-index:2;border:1px solid rgba(138,101,0,.25);background:#FFFFFF;
+color:var(--accent-ink);border-radius:999px;padding:5px 11px;font-family:var(--display);font-weight:700;
+font-size:11px;letter-spacing:.06em;cursor:pointer}
+.lang:hover{border-color:var(--accent-ink)}
 @media (max-height:560px){h1{font-size:32px}.mid{gap:12px}ul{gap:9px}}
 """
 
 # Plain script, like bo-build.py's - a custom widget's js is not a module, so
 # `export default` here is a syntax error and the panel renders blank.
-JS = """// The panel is static: nothing to render from the model, nothing to report back.
-// The one job here is to point the oversized background mark at the image the
-// lockup already carries, so the base64 is embedded once rather than twice - the
-// widget json holds srcDoc AND uncompiledSrcDoc, so each copy costs four.
+JS = """// The panel points the oversized background mark at the image the lockup already
+// carries, so the base64 is embedded once rather than twice - the widget json holds
+// srcDoc AND uncompiledSrcDoc, so each copy costs four.
 appsmith.onReady(() => {
   const ghost = document.querySelector('.ghost');
   const mark = document.querySelector('.brand img');
   if (ghost && mark) ghost.src = mark.src;
+
+  // BG|EN, for a merchant who cannot read the form beside this panel. The page
+  // stores the choice; every BackOffice widget reads it from there.
+  const btn = document.querySelector('.lang');
+  if (!btn) return;
+  // The control offers the other language, so its own label flips with the model.
+  const face = () => {
+    const en = ((appsmith.model || {}).lang) === 'en';
+    btn.textContent = en ? 'BG' : 'EN';
+    btn.dataset.lang = en ? 'bg' : 'en';
+    btn.title = en ? 'Switch to Bulgarian' : 'Switch to English';
+  };
+  face();
+  appsmith.onModelChange(() => { face(); try { boTranslate(document.body); } catch (e) {} });
+  btn.addEventListener('click', () => {
+    appsmith.updateModel({ action: 'lang', lang: btn.dataset.lang });
+    appsmith.triggerEvent('onAction');
+  });
 });
+""" + bo_i18n.translator_js() + """
+setTimeout(() => { try { boTranslate(document.body); } catch (e) {} }, 0);
 """
+
 
 
 def build():
     points = ''.join('<li><i>%s</i><span>%s</span></li>' % (TICK, p) for p in POINTS)
     html = HTML.replace('__MARK__', MARK).replace('__POINTS__', points)
+    # rendered server-side: the panel has no model at first paint on a cold login
+    html = html.replace('__OTHER__', 'en').replace('__LABEL__', 'EN')
     src = {'html': html, 'css': CSS, 'js': JS}
 
     widget = dict(
@@ -124,10 +154,12 @@ def build():
         borderWidth=0,
         boxShadow='none',
         displayName='Custom',
-        dynamicBindingPathList=[{'key': 'theme'}],
+        defaultModel="{{ { " + bo_i18n.MODEL_LANG + " } }}",
+        dynamicBindingPathList=[{'key': 'theme'}, {'key': 'defaultModel'}],
+        dynamicTriggerPathList=[{'key': 'onAction'}],
+        onAction="{{(async () => { const m = BoLogin.model || {}; if (m.action === 'lang') { return storeValue('bo_lang', m.lang || 'bg'); } })()}}",
         dynamicHeight='FIXED',
-        dynamicTriggerPathList=[],
-        events=[],
+        events=['onAction'],
         isLoading=False,
         isVisible=True,
         maxDynamicHeight=9000,

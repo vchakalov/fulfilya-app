@@ -2,10 +2,19 @@
 """The header on the Office (admin) page - no merchant tabs, just Изход - and Appsmith's
 own navbar switched off app-wide now that every page carries the BackOffice header."""
 import json, os, glob
-S = '/private/tmp/claude-501/-Users-fulfilyaood-Documents-fulfilya/5f59735c-c391-4498-949a-cf3ef8cc5597/scratchpad'
+import os as _os, tempfile as _tempfile
+
+# Where this generator reads its siblings and writes its output. Until 2026-09-19
+# both pointed at the scratchpad of the session they were written in
+# (…/5f59735c…/scratchpad), so bo-build-reports.py was reading a copy of
+# bo-build.py frozen on 2026-09-17 - regenerating Справки would have quietly
+# reverted every header change made since. Resolved from this file instead.
+HERE = _os.path.dirname(_os.path.abspath(__file__))
+S = HERE
+BUILD = _os.path.join(_tempfile.gettempdir(), 'fulfilya-bo-build')
 REPO = '/Users/fulfilyaood/Documents/fulfilya/fulfilya-app'
-OUT = f'{S}/bo-build-office'
-ns = {'OUT': f'{S}/bo-build-scratch/pages'}
+OUT = _os.path.join(BUILD, 'office')
+ns = {'OUT': _os.path.join(BUILD, 'scratch', 'pages')}
 src = open(f'{S}/bo-build.py', encoding='utf-8').read().split('# ---------------------------------------------------------------- existing widgets, restyled')[0]
 src = src.replace("OUT = ", "OUT_UNUSED = ").replace("for n, s in (('BoStats'", "for n, s in (('__skip__'")
 exec(compile(src.replace("w('Dashboard/jsobjects/BoNav/BoNav.js', BONAV)", "").replace("w('Dashboard/jsobjects/BoNav/metadata.json'", "(lambda *a, **k: None)('x'"), 'bo-build', 'exec'), ns)
