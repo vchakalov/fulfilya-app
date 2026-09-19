@@ -5,8 +5,6 @@
   "pluginType": "API",
   "unpublishedAction": {
     "actionConfiguration": {
-      "httpMethod": "GET",
-      "path": "/int/v1/portal/payouts/{{appsmith.store.po_payout_id || ''}}",
       "encodeParamsToggle": true,
       "headers": [
         {
@@ -18,6 +16,9 @@
           "value": "application/json"
         }
       ],
+      "httpMethod": "GET",
+      "paginationType": "NONE",
+      "path": "/int/v1/portal/payouts/{{appsmith.store.po_payout_id || ''}}",
       "queryParameters": [
         {
           "key": "format",
