@@ -153,6 +153,9 @@ RULES = [
     [r'^за (\d+) дни$', '', 'over $1 days'],
     [r'^(\d+) бр\.$', '', '$1 pcs'],
     [r'^Бр\.: (.+)$', '', 'Qty: $1'],
+    [r'^Добро утро, (.+)$', '', 'Good morning, $1'],
+    [r'^Добър ден, (.+)$', '', 'Good afternoon, $1'],
+    [r'^Добър вечер, (.+)$', '', 'Good evening, $1'],
 ]
 
 
@@ -182,14 +185,18 @@ function boPhrase(s) {
   if (BO_EN[s]) return BO_EN[s];
   for (const [re, to] of BO_RULES) { if (re.test(s)) return s.replace(re, to); }
   // "Събота, 19 септември · София" - one node, three pieces.
-  const date = s.match(/^([А-Яа-я]+), (\\d+) ([а-я]+)(.*)$/);
-  if (date && BO_DAYS[date[1]] && BO_MONTHS[date[3]]) {
-    return BO_DAYS[date[1]] + ', ' + date[2] + ' ' + BO_MONTHS[date[3]] + boPhrase(date[4].trim() ? date[4].trim() : '');
+  const cap = (w) => (w ? w.charAt(0).toUpperCase() + w.slice(1) : w);
+  const day = (w) => BO_DAYS[w] || BO_DAYS[w.toLowerCase()];
+  const month = (w) => BO_MONTHS[w] || BO_MONTHS[w.toLowerCase()];
+  const date = s.match(/^([А-Яа-я]+),\\s*(\\d+)\\s+([А-Яа-я]+)(.*)$/);
+  if (date && day(date[1]) && month(date[3])) {
+    const tail = date[4].trim();
+    return cap(day(date[1])) + ', ' + date[2] + ' ' + month(date[3]) + (tail ? ' ' + boPhrase(tail) : '');
   }
-  const day = s.match(/^([А-Яа-я]+) (\\d+)$/);
-  if (day && BO_DAYS[day[1]]) return BO_DAYS[day[1]] + ' ' + day[2];
-  if (BO_DAYS[s]) return BO_DAYS[s];
-  if (BO_MONTHS[s]) return BO_MONTHS[s];
+  const dayNum = s.match(/^([А-Яа-я]+) (\\d+)$/);
+  if (dayNum && day(dayNum[1])) return cap(day(dayNum[1])) + ' ' + dayNum[2];
+  if (day(s)) return cap(day(s));
+  if (month(s)) return cap(month(s));
   return s;
 }
 
