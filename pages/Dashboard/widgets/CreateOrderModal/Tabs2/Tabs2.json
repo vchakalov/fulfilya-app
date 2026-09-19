@@ -1,5 +1,5 @@
 {
-  "accentColor": "{{appsmith.theme.colors.primaryColor}}",
+  "accentColor": "#FFC400",
   "animateLoading": true,
   "backgroundColor": "#FFFFFF",
   "borderColor": "#E0DEDE",
@@ -193,9 +193,6 @@
   ],
   "defaultTab": "Tab 1",
   "dynamicBindingPathList": [
-    {
-      "key": "accentColor"
-    },
     {
       "key": "borderRadius"
     },

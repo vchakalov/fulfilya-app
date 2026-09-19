@@ -1,5 +1,5 @@
 {
-  "accentColor": "{{appsmith.theme.colors.primaryColor}}",
+  "accentColor": "#FFC400",
   "additionalStaticProps": [
     "level",
     "levelData",
@@ -7,7 +7,7 @@
     "metaWidgetId"
   ],
   "animateLoading": true,
-  "backgroundColor": "#f8f5ff",
+  "backgroundColor": "#F7F7F8",
   "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
   "bottomRow": 41,
   "boxShadow": "{{appsmith.theme.boxShadow.appBoxShadow}}",

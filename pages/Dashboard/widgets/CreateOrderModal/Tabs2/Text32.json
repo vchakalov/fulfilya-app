@@ -47,7 +47,7 @@
   "shouldTruncate": false,
   "text": "{{(() => {\n     const method = NewPaymentMethodSelect.selectedOptionValue;\n     const amount = NewAmountInput.text || '0';\n     if (method === 'COD') {\n       return `Клиентът плаща ${amount} EUR при доставка`;\n     } else {\n       return `Поръчката е платена предварително`;\n     }\n   })()}}",
   "textAlign": "LEFT",
-  "textColor": "{{NewPaymentMethodSelect.selectedOptionValue === 'COD' ? '#F59E0B' : '#10B981'}}",
+  "textColor": "{{NewPaymentMethodSelect.selectedOptionValue === 'COD' ? '#9A5B00' : '#1E7A46'}}",
   "topRow": 4,
   "truncateButtonColor": "{{appsmith.theme.colors.primaryColor}}",
   "type": "TEXT_WIDGET",
