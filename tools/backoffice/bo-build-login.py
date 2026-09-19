@@ -74,7 +74,7 @@ body{font-family:var(--body);color:var(--ink);-webkit-font-smoothing:antialiased
 flex-direction:column;background:var(--accent-soft)}
 /* The dotted field read as texture for its own sake. One oversized mark bleeding
    off the bottom corner says the same thing and says whose page it is. */
-.ghost{position:absolute;right:-14%;bottom:-6%;width:105%;height:auto;opacity:.16;
+.ghost{position:absolute;right:-26%;bottom:-16%;width:118%;height:auto;opacity:.09;
 pointer-events:none;user-select:none}
 .panel>*:not(.ghost){position:relative}
 .brand{display:flex;align-items:center;gap:13px;flex:none;text-decoration:none}
