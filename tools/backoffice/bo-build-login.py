@@ -80,8 +80,12 @@ flex-direction:column;background:var(--accent-soft)}
    off the bottom corner says the same thing and says whose page it is. */
 .ghost{position:absolute;right:-26%;bottom:-16%;width:118%;height:auto;opacity:.09;
 pointer-events:none;user-select:none}
-.panel>*:not(.ghost){position:relative}
-.brand{display:flex;align-items:center;gap:13px;flex:none;text-decoration:none}
+/* Everything except the ghost stacks above it - but NOT the language pill, which has to
+   stay absolutely positioned. This selector is (0,2,0) and `.lang` below is (0,1,0), so
+   without the exclusion it wins, the pill re-enters the flex column, stretches the full
+   width and `top:22px` then drops it over the logo (seen 2026-09-19). */
+.panel>*:not(.ghost):not(.lang){position:relative}
+.brand{display:flex;align-items:center;gap:13px;flex:none;align-self:flex-start;text-decoration:none}
 .brand img{height:40px;width:auto;display:block}
 .brand .word{font-family:var(--display);font-weight:800;font-size:31px;letter-spacing:-.025em;color:var(--ink)}
 .brand .product{font-family:var(--display);font-weight:700;font-size:11px;letter-spacing:.08em;
