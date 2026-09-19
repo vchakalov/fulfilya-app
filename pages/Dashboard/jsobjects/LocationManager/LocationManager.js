@@ -155,28 +155,28 @@ updateNewDropoffFromGeocode: () => {
 
     // Check required fields
     if (!NewPickupAddressInput.text) {
-      errors.push("Pickup address is required");
+      errors.push("Адресът за взимане е задължителен");
     }
 
     if (!NewDropoffAddressInput.text) {
-      errors.push("Delivery address is required");
+      errors.push("Адресът за доставка е задължителен");
     }
 
     if (!ScheduledDeliveryPicker.selectedDate) {
-      errors.push("Scheduled delivery time is required");
+      errors.push("Датата и часът на доставка са задължителни");
     }
 
     // Check geocoding with Bulgaria validation
     if (!NewPickupLatHidden.text || !NewPickupLngHidden.text) {
-      errors.push("Pickup address must be geocoded - please wait or check spelling");
+      errors.push("Адресът за взимане още не е намерен — изчакайте или проверете изписването");
     } else if (!LocationManager.validateCoordinates(NewPickupLatHidden.text, NewPickupLngHidden.text)) {
-      errors.push("Pickup address must be in Bulgaria");
+      errors.push("Адресът за взимане трябва да е в България");
     }
 
     if (!NewDropoffLatHidden.text || !NewDropoffLngHidden.text) {
-      errors.push("Delivery address must be geocoded - please wait or check spelling");
+      errors.push("Адресът за доставка още не е намерен — изчакайте или проверете изписването");
     } else if (!LocationManager.validateCoordinates(NewDropoffLatHidden.text, NewDropoffLngHidden.text)) {
-      errors.push("Delivery address must be in Bulgaria");
+      errors.push("Адресът за доставка трябва да е в България");
     }
 
     return {

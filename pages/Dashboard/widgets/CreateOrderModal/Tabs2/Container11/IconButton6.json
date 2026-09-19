@@ -32,7 +32,7 @@
   "mobileRightColumn": 62,
   "mobileTopRow": 3,
   "needsErrorInfo": false,
-  "onClick": "{{(() => {\n     if (!ItemNameInput.text ) {\n       showAlert(\"Please enter item name\", \"error\");\n       return;\n     }\n     \n     const currentItems = appsmith.store.newOrderItems || [];\n     const newItem = {\n       name: ItemNameInput.text,\n       ski: parseFloat(ItemSkuInput.text),\n       quantity: parseInt(ItemQuantityInput.text) || 1\n     };\n     \n     storeValue('newOrderItems', [...currentItems, newItem]);\n     \n     // Clear inputs\n     ItemNameInput.setValue('');\n     ItemSkuInput.setValue('');\n     ItemQuantityInput.setValue('1');\n     \n     showAlert(\"Item added!\", \"success\");\n   })()}}",
+  "onClick": "{{(() => {\n     if (!ItemNameInput.text ) {\n       showAlert(\"Въведете име на артикул\", \"error\");\n       return;\n     }\n     \n     const currentItems = appsmith.store.newOrderItems || [];\n     const newItem = {\n       name: ItemNameInput.text,\n       sku: ItemSkuInput.text || \"\",\n       quantity: parseInt(ItemQuantityInput.text) || 1\n     };\n     \n     storeValue('newOrderItems', [...currentItems, newItem]);\n     \n     // Clear inputs\n     ItemNameInput.setValue('');\n     ItemSkuInput.setValue('');\n     ItemQuantityInput.setValue('1');\n     \n     showAlert(\"Артикулът е добавен\", \"success\");\n   })()}}",
   "parentColumnSpace": 9.003767013549805,
   "parentId": "k9ywthklz6",
   "parentRowSpace": 10,

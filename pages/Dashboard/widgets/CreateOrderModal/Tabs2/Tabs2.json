@@ -234,7 +234,7 @@
       "id": "tab1",
       "index": 0,
       "isVisible": true,
-      "label": "Basic Info",
+      "label": "Основни данни",
       "positioning": "vertical",
       "widgetId": "dqpf5acdio"
     },
@@ -242,14 +242,14 @@
       "id": "tab1cv2g89y77",
       "index": 3,
       "isVisible": true,
-      "label": "Items",
+      "label": "Артикули",
       "widgetId": "3c67n9dps2"
     },
     "tab2": {
       "id": "tab2",
       "index": 1,
       "isVisible": true,
-      "label": "Payment",
+      "label": "Плащане",
       "positioning": "vertical",
       "widgetId": "sv637as6mi"
     },
@@ -257,7 +257,7 @@
       "id": "tabmvy92nj13j",
       "index": 2,
       "isVisible": true,
-      "label": "Locations",
+      "label": "Адреси",
       "widgetId": "z6y81ags76"
     }
   },

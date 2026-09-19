@@ -4,7 +4,7 @@
   "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
   "bottomRow": 8,
   "boxShadow": "none",
-  "defaultOptionValue": "{\"label\": \"Cash on Delivery (COD)\", \"value\": \"COD\"}",
+  "defaultOptionValue": "{\"label\": \"Наложен платеж\", \"value\": \"COD\"}",
   "dynamicBindingPathList": [
     {
       "key": "borderRadius"
@@ -25,7 +25,7 @@
   "key": "170v5q01oe",
   "labelAlignment": "left",
   "labelPosition": "Top",
-  "labelText": "Payment Method",
+  "labelText": "Начин на плащане",
   "labelTextSize": "0.875rem",
   "labelWidth": 5,
   "leftColumn": 1,
@@ -42,12 +42,12 @@
   "parentColumnSpace": 16.1146240234375,
   "parentId": "sv637as6mi",
   "parentRowSpace": 10,
-  "placeholderText": "Select option",
+  "placeholderText": "Изберете",
   "renderMode": "CANVAS",
   "responsiveBehavior": "fill",
   "rightColumn": 21,
   "serverSideFiltering": false,
-  "sourceData": "[\n     {\"label\": \"Cash on Delivery (COD)\", \"value\": \"COD\"},\n     {\"label\": \"Pre-paid\", \"value\": \"Paid\"}\n   ]",
+  "sourceData": "[\n  {\"label\": \"Наложен платеж\", \"value\": \"COD\"},\n  {\"label\": \"Платена предварително\", \"value\": \"Paid\"}\n]",
   "topRow": 1,
   "type": "SELECT_WIDGET",
   "version": 1,

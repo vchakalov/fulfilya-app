@@ -12,11 +12,11 @@
 	// be traced back to a price.
 
 	if (!NewDropoffAddressInput.text) {
-		throw new Error("A delivery address is required");
+		throw new Error("Адресът за доставка е задължителен");
 	}
 
 	if (!OrderShippingSelect.selectedOptionValue) {
-		throw new Error("Please choose Standard or Express");
+		throw new Error("Изберете вид доставка");
 	}
 
 	const NewCustomerEmail = (CustomerEmailInput.text || "").trim();

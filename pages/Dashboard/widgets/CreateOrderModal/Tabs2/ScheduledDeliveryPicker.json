@@ -41,7 +41,7 @@
   "isRequired": false,
   "isVisible": true,
   "key": "rr3cz5jv4u",
-  "label": "Scheduled Delivery Time",
+  "label": "Дата и час на доставка",
   "labelAlignment": "left",
   "labelPosition": "Top",
   "labelTextSize": "0.875rem",

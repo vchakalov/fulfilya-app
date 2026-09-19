@@ -35,7 +35,7 @@
   "responsiveBehavior": "fill",
   "rightColumn": 34,
   "shouldTruncate": false,
-  "text": "Qty: {{currentItem.quantity}}",
+  "text": "Бр.: {{currentItem.quantity}}",
   "textAlign": "LEFT",
   "textColor": "#231F20",
   "topRow": 4,

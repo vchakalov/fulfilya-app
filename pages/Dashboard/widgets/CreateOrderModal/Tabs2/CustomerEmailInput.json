@@ -23,7 +23,7 @@
   "isRequired": false,
   "isVisible": true,
   "key": "q094w2l63u",
-  "label": "Customer Email (Optional)",
+  "label": "Имейл на клиента (незадължително)",
   "labelAlignment": "left",
   "labelPosition": "Top",
   "labelStyle": "",
