@@ -82,7 +82,7 @@ h1{margin:0;font-family:var(--display);font-weight:800;line-height:1.1;letter-sp
 /* The panel is 27 of con_login's 64 columns, so its width follows the browser:
    ~640px on a wide screen, ~430px on a 1024 laptop. A fixed 40px headline broke
    into four ragged lines down there; this keeps it to two wherever it lands. */
-font-size:clamp(26px,5.6vw,40px);text-wrap:balance}
+font-size:clamp(26px,5.6vw,40px);text-wrap:balance;max-width:min(100%,360px)}
 p{margin:0;font-size:15px;line-height:1.55;color:#5A4A1F;max-width:400px}
 ul{margin:4px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:12px}
 li{display:flex;align-items:flex-start;gap:11px;font-size:14px;font-weight:500;line-height:1.35}
