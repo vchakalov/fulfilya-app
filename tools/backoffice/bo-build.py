@@ -55,6 +55,10 @@ CANCELLED = "('canceled', 'cancelled', 'order_cancel', 'order_canceled', 'order_
 def base(period_filter=True):
     since = f" AND {LOCAL_CREATED} >= '{{{{BoNav.since()}}}}'" if period_filter else ''
     return (f"SELECT o.uuid, o.status, o.created_at, o.updated_at,\n"
+            # Whether a payout has already covered this order - App\\Services\\Payouts\\PayoutService
+            # stamps the orders it paid, so "we owe them" is the unstamped ones. Without this the
+            # tile below keeps showing money the merchant has already been sent.
+            f"       (JSON_EXTRACT(o.meta, '$.fulfilya_payout.id') <=> NULL) AS unpaid,\n"
             f"       UPPER(COALESCE({cfv('payment')}, '')) AS pm,\n"
             f"       UPPER(COALESCE({cfv('card')}, '')) AS card,\n"
             f"       {money(cfv('amount'))} AS amount,\n"
@@ -75,6 +79,8 @@ SELECT
   COALESCE(SUM(o.status IN {DELIVERED} AND {LOCAL_UPDATED} = '{{{{BoNav.today()}}}}'), 0) AS delivered_today,
   ROUND(COALESCE(SUM(CASE WHEN o.status IN {DELIVERED} AND o.pm = 'COD' THEN o.amount ELSE 0 END), 0), 2) AS cod_collected,
   ROUND(COALESCE(SUM(CASE WHEN o.status IN {DELIVERED} AND o.pm = 'COD' THEN o.amount - o.dfee - o.cfee ELSE 0 END), 0), 2) AS payout,
+  ROUND(COALESCE(SUM(CASE WHEN o.status IN {DELIVERED} AND o.pm = 'COD' AND o.unpaid THEN o.amount - o.dfee - o.cfee ELSE 0 END), 0), 2) AS payout_unpaid,
+  ROUND(COALESCE(SUM(CASE WHEN o.status IN {DELIVERED} AND o.pm = 'COD' AND NOT o.unpaid THEN o.amount - o.dfee - o.cfee ELSE 0 END), 0), 2) AS payout_paid,
   ROUND(COALESCE(SUM(CASE WHEN o.status IN {IN_TRANSIT} AND o.pm = 'COD' THEN o.amount ELSE 0 END), 0), 2) AS cod_in_transit
 FROM (
 {base()}
@@ -207,6 +213,7 @@ const TABS = [
   { id: 'tablo', label: 'Табло', page: 'Dashboard' },
   { id: 'orders', label: 'Поръчки', page: 'Dashboard' },
   { id: 'reports', label: 'Справки', page: 'Reporting' },
+  { id: 'payouts', label: 'Изплащания', page: 'Payouts' },
   { id: 'new', label: 'Нова поръчка', page: null }
 ];
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -271,6 +278,10 @@ TABLO_CSS = TOKENS + """
 .kpi.hero{background:var(--accent-soft);border-color:transparent}
 .kpi.hero h3,.kpi.hero .foot{color:var(--accent-ink)}
 .kpi.hero .delta.up{background:rgba(255,255,255,.6);color:var(--accent-ink)}
+.kpi.hero .delta.flat{background:rgba(255,255,255,.6);color:var(--accent-ink)}
+.kpi.link{cursor:pointer}
+.kpi.link:hover{box-shadow:0 1px 2px rgba(0,0,0,.06),0 16px 36px -12px rgba(29,29,31,.22)}
+.kpi.link:focus-visible{outline:2px solid var(--accent-ink);outline-offset:2px}
 .donut-wrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
 .donut{width:150px;height:150px;flex:none}
 .donut svg{width:100%;height:100%;display:block;overflow:visible}
@@ -375,7 +386,10 @@ function render() {
     `<div class="card kpi"><h3>Поръчки</h3><div class="big num">${int(total)}</div><div class="foot"><span class="delta ${Number(st.total_today) ? 'up' : 'flat'}">+${int(st.total_today)} днес</span> ${pl}</div></div>` +
     `<div class="card kpi"><h3>Доставени</h3><div class="big num">${int(delivered)} <small>${rate}%</small></div><div class="foot"><span class="delta ${Number(st.delivered_today) ? 'up' : 'flat'}">+${int(st.delivered_today)} днес</span> успешни</div></div>` +
     `<div class="card kpi"><h3>В път</h3><div class="big num">${int(st.in_transit)}</div><div class="foot"><span class="delta flat">${int(st.pending)} чакат куриер</span></div></div>` +
-    `<div class="card kpi hero"><h3>Наложен платеж събран</h3><div class="big num">${fmt(st.cod_collected)} <small>€</small></div><div class="foot"><span class="delta up">за изплащане ${fmt(st.payout)} €</span></div></div>` +
+    // Split by the payout stamp, not by the period's whole takings: until 2026-09-19 this
+    // read "за изплащане X €" whether or not the money had already been transferred, so a
+    // merchant who had just been paid was still shown the same sum as owed.
+    `<div class="card kpi hero link" data-nav="Payouts" role="button" tabindex="0"><h3>Наложен платеж събран</h3><div class="big num">${fmt(st.cod_collected)} <small>€</small></div><div class="foot"><span class="delta up">изплатено ${fmt(st.payout_paid)} €</span><span class="delta flat">предстои ${fmt(st.payout_unpaid)} €</span></div></div>` +
     `</div>` +
     `<div class="grid g3">` +
     `<div class="card"><div class="hd"><h3>Плащане</h3><span class="hint">${pl} · ${int(total)} поръчки</span></div>${donut([
@@ -394,6 +408,14 @@ function render() {
     appsmith.updateModel({ action: 'period', period: b.dataset.period });
     appsmith.triggerEvent('onAction');
   }));
+
+  // The наложен платеж tile opens the Изплащания tab, where the same money is broken
+  // down run by run. Keyboard too - the tile is a role="button", so Tab reaches it.
+  document.querySelectorAll('[data-nav]').forEach((el) => {
+    const go = () => { appsmith.updateModel({ action: 'nav', page: el.dataset.nav }); appsmith.triggerEvent('onAction'); };
+    el.addEventListener('click', go);
+    el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+  });
 }
 appsmith.onReady(render);
 appsmith.onModelChange(render);

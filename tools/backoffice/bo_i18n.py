@@ -128,6 +128,37 @@ EN = {
     'Fulfilya Logistics · София': 'Fulfilya Logistics · Sofia',
     '· София': '· Sofia',
     'по ден на доставка · София': 'by delivery day · Sofia',
+
+    # Изплащания (2026-09-19)
+    'Изплащания': 'Payouts',
+    'Предстои да получите': 'Coming to you',
+    'Изплатено общо': 'Paid out in total',
+    'Последно изплащане': 'Last payout',
+    'Изплатено': 'Paid out',
+    'изплатено': 'paid out',
+    'предстои': 'coming',
+    'няма изплащания досега': 'no payouts yet',
+    'Дата': 'Date',
+    'Събрано': 'Collected',
+    'Доставка': 'Delivery',
+    'Такса НП': 'COD fee',
+    'За вас': 'Yours',
+    'Ваша поръчка': 'Your order',
+    'в брой': 'cash',
+    'с карта': 'by card',
+    'наложен платеж, събран от нас и преведен по банков път':
+        'cash on delivery, collected by us and transferred to your bank',
+    'доставени поръчки, които още не са изплатени': 'delivered orders not yet paid out',
+    'натиснете ред, за да видите поръчките в него': 'open a row to see the orders it covers',
+    'Сумата се превежда по банков път в уговорения ден.':
+        'The amount is transferred to your bank on the agreed day.',
+    'Няма неизплатени поръчки — всичко събрано до момента е преведено.':
+        'Nothing outstanding — everything collected so far has been transferred.',
+    'Още няма направено изплащане.': 'No payout has been made yet.',
+    'Все още няма доставени поръчки с наложен платеж.':
+        'No cash-on-delivery orders have been delivered yet.',
+    'Всяка доставена поръчка с наложен платеж влиза в точно едно изплащане. „За вас" е стойността на стоката — събраното без доставката и таксата, които плаща купувачът.':
+        'Every delivered cash-on-delivery order belongs to exactly one payout. "Yours" is the value of the goods \u2014 what was collected, less the delivery and the fee, which the shopper pays.',
 }
 
 DAYS_SHORT = {'Нд': 'Sun', 'Пн': 'Mon', 'Вт': 'Tue', 'Ср': 'Wed', 'Чт': 'Thu', 'Пт': 'Fri', 'Сб': 'Sat'}
@@ -157,6 +188,15 @@ RULES = [
     [r'^Добър ден, (.+)$', '', 'Good afternoon, $1'],
     [r'^Добър вечер, (.+)$', '', 'Good evening, $1'],
     [r'^(.+) · по ден на доставка$', '', '$1 · by delivery day'],
+    [r'^изплатено (.+)$', '', 'paid out $1'],
+    [r'^предстои (.+)$', '', 'coming $1'],
+    [r'^(\d+) изплащания$', '', '$1 payouts'],
+    [r'^1 изплащане$', '', '1 payout'],
+    [r'^1 поръчка$', '', '1 order'],
+    [r'^(\d+) доставени поръчки$', '', '$1 delivered orders'],
+    [r'^1 доставена поръчка$', '', '1 delivered order'],
+    [r'^за (\d+) поръчки$', '', 'for $1 orders'],
+    [r'^за 1 поръчка$', '', 'for 1 order'],
 ]
 
 

@@ -1,0 +1,11 @@
+{
+  "gitSyncId": "68600ba97c31ed49d151bad2_9d175330-8549-5a2f-a6b9-6b549f825e45",
+  "id": "Payouts_AuthManager",
+  "unpublishedCollection": {
+    "name": "AuthManager",
+    "pageId": "Payouts",
+    "pluginId": "js-plugin",
+    "pluginType": "JS",
+    "variables": []
+  }
+}

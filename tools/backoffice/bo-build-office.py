@@ -14,7 +14,10 @@ S = HERE
 BUILD = _os.path.join(_tempfile.gettempdir(), 'fulfilya-bo-build')
 REPO = '/Users/fulfilyaood/Documents/fulfilya/fulfilya-app'
 OUT = _os.path.join(BUILD, 'office')
-ns = {'OUT': _os.path.join(BUILD, 'scratch', 'pages')}
+# __file__ so the exec'd generator can still find mark.b64 beside itself - without it
+# bo-build.py's own `_os.path.abspath(__file__)` raises NameError and this script dies
+# before writing anything (found 2026-09-19).
+ns = {'OUT': _os.path.join(BUILD, 'scratch', 'pages'), '__file__': _os.path.join(HERE, 'bo-build.py')}
 src = open(f'{S}/bo-build.py', encoding='utf-8').read().split('# ---------------------------------------------------------------- existing widgets, restyled')[0]
 src = src.replace("OUT = ", "OUT_UNUSED = ").replace("for n, s in (('BoStats'", "for n, s in (('__skip__'")
 exec(compile(src.replace("w('Dashboard/jsobjects/BoNav/BoNav.js', BONAV)", "").replace("w('Dashboard/jsobjects/BoNav/metadata.json'", "(lambda *a, **k: None)('x'"), 'bo-build', 'exec'), ns)

@@ -10,9 +10,12 @@ SELECT
   COALESCE(SUM(o.status IN ('completed', 'order_completed', 'delivered', 'order_delivered') AND DATE(DATE_ADD(o.updated_at, INTERVAL {{BoNav.tz()}} HOUR)) = '{{BoNav.today()}}'), 0) AS delivered_today,
   ROUND(COALESCE(SUM(CASE WHEN o.status IN ('completed', 'order_completed', 'delivered', 'order_delivered') AND o.pm = 'COD' THEN o.amount ELSE 0 END), 0), 2) AS cod_collected,
   ROUND(COALESCE(SUM(CASE WHEN o.status IN ('completed', 'order_completed', 'delivered', 'order_delivered') AND o.pm = 'COD' THEN o.amount - o.dfee - o.cfee ELSE 0 END), 0), 2) AS payout,
+  ROUND(COALESCE(SUM(CASE WHEN o.status IN ('completed', 'order_completed', 'delivered', 'order_delivered') AND o.pm = 'COD' AND o.unpaid THEN o.amount - o.dfee - o.cfee ELSE 0 END), 0), 2) AS payout_unpaid,
+  ROUND(COALESCE(SUM(CASE WHEN o.status IN ('completed', 'order_completed', 'delivered', 'order_delivered') AND o.pm = 'COD' AND NOT o.unpaid THEN o.amount - o.dfee - o.cfee ELSE 0 END), 0), 2) AS payout_paid,
   ROUND(COALESCE(SUM(CASE WHEN o.status IN ('dispatched', 'started', 'enroute', 'delivery_attempted', 'returning', 'in_transit') AND o.pm = 'COD' THEN o.amount ELSE 0 END), 0), 2) AS cod_in_transit
 FROM (
 SELECT o.uuid, o.status, o.created_at, o.updated_at,
+       (JSON_EXTRACT(o.meta, '$.fulfilya_payout.id') <=> NULL) AS unpaid,
        UPPER(COALESCE((SELECT v.value FROM custom_field_values v WHERE v.subject_uuid = o.uuid AND v.custom_field_uuid = '79707269-ef79-4e2c-b63b-eaf76f4a3f85' AND v.deleted_at <=> NULL ORDER BY v.created_at DESC LIMIT 1), '')) AS pm,
        UPPER(COALESCE((SELECT v.value FROM custom_field_values v WHERE v.subject_uuid = o.uuid AND v.custom_field_uuid = '38c677ff-5bd4-4087-bb0e-2f4c031153c7' AND v.deleted_at <=> NULL ORDER BY v.created_at DESC LIMIT 1), '')) AS card,
        CAST(COALESCE(REPLACE(REPLACE((SELECT v.value FROM custom_field_values v WHERE v.subject_uuid = o.uuid AND v.custom_field_uuid = 'd0b5b899-6cfc-4eef-a898-ec99a23ef039' AND v.deleted_at <=> NULL ORDER BY v.created_at DESC LIMIT 1), '$', ''), ',', ''), '0') AS DECIMAL(12,2)) AS amount,
