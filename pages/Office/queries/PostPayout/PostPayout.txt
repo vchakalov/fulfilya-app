@@ -1,0 +1,4 @@
+{
+  "merchant": "{{MerchantSelect.selectedOptionValue}}",
+  "note": "{{appsmith.store.payout_note || ''}}"
+}

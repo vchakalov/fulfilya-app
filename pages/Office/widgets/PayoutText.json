@@ -1,0 +1,61 @@
+{
+  "animateLoading": true,
+  "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
+  "bottomRow": 82,
+  "dynamicBindingPathList": [
+    {
+      "key": "truncateButtonColor"
+    },
+    {
+      "key": "fontFamily"
+    },
+    {
+      "key": "borderRadius"
+    },
+    {
+      "key": "text"
+    }
+  ],
+  "dynamicHeight": "AUTO_HEIGHT",
+  "dynamicPropertyPathList": [
+    {
+      "key": "text"
+    }
+  ],
+  "dynamicTriggerPathList": [],
+  "flexVerticalAlignment": "start",
+  "fontFamily": "{{appsmith.theme.fontFamily.appFont}}",
+  "fontSize": "1rem",
+  "fontStyle": "",
+  "isLoading": false,
+  "isVisible": true,
+  "key": "7gj6snnko0",
+  "leftColumn": 30,
+  "maxDynamicHeight": 9000,
+  "minDynamicHeight": 4,
+  "minWidth": 450,
+  "mobileBottomRow": 82,
+  "mobileLeftColumn": 30,
+  "mobileRightColumn": 64,
+  "mobileTopRow": 73,
+  "needsErrorInfo": false,
+  "originalBottomRow": 82,
+  "originalTopRow": 73,
+  "overflow": "NONE",
+  "parentColumnSpace": 19.125,
+  "parentId": "0",
+  "parentRowSpace": 10,
+  "renderMode": "CANVAS",
+  "responsiveBehavior": "fill",
+  "rightColumn": 64,
+  "shouldTruncate": false,
+  "text": "{{(() => {\n  const who = MerchantSelect.selectedOptionValue && MerchantSelect.selectedOptionValue !== 'all' ? (MerchantSelect.selectedOptionLabel || '') : null;\n  const e = (n) => (Number(n) || 0).toFixed(2) + ' €';\n  const last = appsmith.store.last_payout_id ? `\\nПоследно изплащане: ${appsmith.store.last_payout_id}` : '';\n  if (!who) return 'Изплащане: избери клиент, за да видиш какво му дължим.';\n  const p = GetPendingPayout.data;\n  if (!p || !p.totals) return `Изплащане на ${who}: изчислява се…`;\n  const t = p.totals;\n  if (!t.orders) return `Няма неизплатени поръчки за ${who}.${last}`;\n  return `Дължим на ${who}: ${e(t.owed)} по ${t.orders} ${t.orders === 1 ? 'поръчка' : 'поръчки'}\nСъбрано ${e(t.collected)} (в брой ${e(t.cash)}, с карта ${e(t.card)}) − наши ${e(t.revenue)}${last}`;\n})()}}",
+  "textAlign": "RIGHT",
+  "textColor": "#6b7280",
+  "topRow": 73,
+  "truncateButtonColor": "{{appsmith.theme.colors.primaryColor}}",
+  "type": "TEXT_WIDGET",
+  "version": 1,
+  "widgetId": "kyh1r9l5vt",
+  "widgetName": "PayoutText"
+}
