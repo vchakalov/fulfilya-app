@@ -466,14 +466,23 @@ def load(rel): return json.load(open(os.path.join(REPO, rel), encoding='utf-8'))
 # Text6 (the old list title) is gone - BoTitle above replaces it.
 b6 = load('Dashboard/widgets/Button6.json'); b6.update(text='+ Нова поръчка', buttonColor='#FFC400', topRow=60, bottomRow=64, originalTopRow=60, originalBottomRow=64, mobileTopRow=60, mobileBottomRow=64); w('Dashboard/widgets/Button6.json', b6)
 
+def bi(bg, en=None):
+    """A native-widget label that follows appsmith.store.bo_lang."""
+    en = en or bo_i18n.EN.get(bg, bg)
+    return "{{appsmith.store.bo_lang === 'en' ? %s : %s}}" % (json.dumps(en, ensure_ascii=False), json.dumps(bg, ensure_ascii=False))
+
+
 tb = load('Dashboard/widgets/OrdersTable.json')
 tb.update(topRow=66, bottomRow=116, originalTopRow=66, originalBottomRow=116, mobileTopRow=66, mobileBottomRow=116,
           accentColor='#FFC400', boxShadow='0 1px 2px rgba(0,0,0,.04), 0 12px 32px -12px rgba(29,29,31,.14)', borderRadius='18px')
 cols = tb['primaryColumns']
 labels = dict(order_id='Поръчка', status='Статус', created_date='Създадена', delivery_address='Адрес', customer_name='Получател',
               total_amount='Сума', customColumn4='Плащане', external_order_id='№ в магазина', customColumn2='Възраст')
+binds = {e['key'] for e in tb.get('dynamicBindingPathList', [])}
 for k, l in labels.items():
-    if k in cols: cols[k]['label'] = l
+    if k in cols:
+        cols[k]['label'] = bi(l)
+        binds.add('primaryColumns.%s.label' % k)
 cols['customColumn2']['isVisible'] = False
 # The merchant's list: shop order number first, the recipient and where the parcel goes,
 # nothing about the merchant themselves (it is their own portal), no pickup, no tracking.
@@ -517,7 +526,9 @@ for cid, c in cols.items():
         key = f'primaryColumns.{cid}.{prop}'
         for lst in (tb['dynamicBindingPathList'], tb['dynamicPropertyPathList']):
             lst[:] = [x for x in lst if x.get('key') != key]
-cols['customColumn1']['buttonLabel'] = 'Детайли'; cols['customColumn1']['buttonColor'] = '#FFC400'
+cols['customColumn1']['buttonLabel'] = bi('Детайли'); cols['customColumn1']['buttonColor'] = '#FFC400'
+binds.add('primaryColumns.customColumn1.buttonLabel')
+tb['dynamicBindingPathList'] = [{'key': k} for k in sorted(binds)]
 PILL = r"""(() => {
       const s = currentRow.status_display;
       const map = {
@@ -531,13 +542,18 @@ PILL = r"""(() => {
         'cancelled': ['Отказана', '#B42318', '#FBE9E7']
       };
       const c = map[s] || [s, '#6E6E73', '#EEF2F7'];
-      return `<span style="display:inline-flex;align-items:center;gap:6px;background:${c[2]};color:${c[1]};padding:3px 10px;border-radius:999px;font-weight:600;font-size:12px;white-space:nowrap"><span style="width:6px;height:6px;border-radius:50%;background:${c[1]}"></span>${c[0]}</span>`;
+      // status_display arrives in English from the SQL, so English needs no second
+      // dictionary - only a capital on the one key that comes through lower case.
+      const en = appsmith.store.bo_lang === 'en';
+      const word = en ? String(s).charAt(0).toUpperCase() + String(s).slice(1) : c[0];
+      return `<span style="display:inline-flex;align-items:center;gap:6px;background:${c[2]};color:${c[1]};padding:3px 10px;border-radius:999px;font-weight:600;font-size:12px;white-space:nowrap"><span style="width:6px;height:6px;border-radius:50%;background:${c[1]}"></span>${word}</span>`;
     })()"""
 cols['status']['computedValue'] = "{{(() => { const tableData = OrdersTable.processedTableData || []; return tableData.length > 0 ? tableData.map((currentRow, currentIndex) => (" + PILL + ")) : " + PILL + " })()}}"
 PAY = r"""(() => {
       const method = String(currentRow.payment_method || '').toUpperCase();
-      if (method === 'COD') return 'Наложен платеж';
-      if (method === 'CARD' || method === 'PAID') return 'Платена онлайн';
+      const en = appsmith.store.bo_lang === 'en';
+      if (method === 'COD') return en ? 'Cash on delivery' : 'Наложен платеж';
+      if (method === 'CARD' || method === 'PAID') return en ? 'Paid online' : 'Платена онлайн';
       return '—';
     })()"""
 cols['customColumn4']['computedValue'] = "{{(() => { const tableData = OrdersTable.processedTableData || []; return tableData.length > 0 ? tableData.map((currentRow, currentIndex) => (" + PAY + ")) : " + PAY + " })()}}"
