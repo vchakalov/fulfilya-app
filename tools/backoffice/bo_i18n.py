@@ -156,6 +156,13 @@ EN = {
         'Nothing outstanding — everything collected so far has been transferred.',
     'Още няма направено изплащане.': 'No payout has been made yet.',
     'Разписка': 'Statement',
+    'Име на получателя': 'Recipient name',
+    'Телефон на получателя': 'Recipient phone',
+    'Търси': 'Search',
+    'Въведете адрес преди да търсите': 'Enter an address before searching',
+    'Въведете име на получателя': 'Enter the recipient\u2019s name',
+    'Въведете телефон на получателя': 'Enter the recipient\u2019s phone',
+    'Търсенето на адреса не мина. Опитайте пак.': 'The address search failed. Please try again.',
     'Разписката не дойде от сървъра.': 'The statement did not come back from the server.',
     'Все още няма доставени поръчки с наложен платеж.':
         'No cash-on-delivery orders have been delivered yet.',

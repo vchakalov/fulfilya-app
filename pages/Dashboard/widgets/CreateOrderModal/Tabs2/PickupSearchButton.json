@@ -1,0 +1,59 @@
+{
+  "animateLoading": true,
+  "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
+  "bottomRow": 13,
+  "boxShadow": "none",
+  "buttonColor": "#FFC400",
+  "buttonStyle": "SECONDARY_BUTTON",
+  "buttonVariant": "SECONDARY",
+  "disabledWhenInvalid": false,
+  "dynamicBindingPathList": [
+    {
+      "key": "isDisabled"
+    },
+    {
+      "key": "borderRadius"
+    }
+  ],
+  "dynamicPropertyPathList": [
+    {
+      "key": "isDisabled"
+    },
+    {
+      "key": "onClick"
+    }
+  ],
+  "dynamicTriggerPathList": [
+    {
+      "key": "onClick"
+    }
+  ],
+  "isDefaultClickDisabled": true,
+  "isDisabled": "{{GeocodeNewPickupAddress.isLoading}}",
+  "isLoading": false,
+  "isVisible": true,
+  "key": "pcksrchk01",
+  "leftColumn": 22,
+  "minWidth": 60,
+  "mobileBottomRow": 13,
+  "mobileLeftColumn": 22,
+  "mobileRightColumn": 28,
+  "mobileTopRow": 9,
+  "needsErrorInfo": false,
+  "onClick": "{{(() => {\n     const address = (NewPickupAddressInput.text || \"\").trim();\n     if (address.length < 4) {\n       showAlert(\"Въведете адрес преди да търсите\", \"warning\");\n       return;\n     }\n     GeocodeNewPickupAddress.run()\n       .then(() => {\n         if (GeocodeNewPickupAddress.data?.results?.length > 0) {\n           LocationManager.updateNewPickupFromGeocode();\n         } else {\n           showAlert(\"Адресът не е намерен — проверете изписването\", \"warning\");\n         }\n       })\n       .catch(() => showAlert(\"Търсенето на адреса не мина. Опитайте пак.\", \"error\"));\n   })()}}",
+  "originalBottomRow": 13,
+  "originalTopRow": 9,
+  "parentId": "z6y81ags76",
+  "placement": "CENTER",
+  "recaptchaType": "V3",
+  "renderMode": "CANVAS",
+  "resetFormOnClick": false,
+  "responsiveBehavior": "hug",
+  "rightColumn": 28,
+  "text": "Търси",
+  "topRow": 9,
+  "type": "BUTTON_WIDGET",
+  "version": 1,
+  "widgetId": "pcksrch0001",
+  "widgetName": "PickupSearchButton"
+}

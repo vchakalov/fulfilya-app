@@ -19,6 +19,21 @@
 		throw new Error("Изберете вид доставка");
 	}
 
+	// The recipient. Until 2026-09-19 this form had no field for either, so every order it
+	// created reached the driver with a pin and nobody to ring at the door - the shop
+	// webhook has always sent both. Refused here rather than left blank: a courier cannot
+	// work an address without a phone.
+	const NewRecipientName = (RecipientNameInput.text || "").trim();
+	const NewRecipientPhone = (RecipientPhoneInput.text || "").trim();
+
+	if (!NewRecipientName) {
+		throw new Error("Въведете име на получателя");
+	}
+
+	if (!NewRecipientPhone) {
+		throw new Error("Въведете телефон на получателя");
+	}
+
 	const NewCustomerEmail = (CustomerEmailInput.text || "").trim();
 
 	return {
@@ -27,6 +42,8 @@
 		// formatted string that Fleetbase silently dropped.
 		"dropoff": {
 			"address": NewDropoffAddressInput.text,
+			"name": NewRecipientName,
+			"phone": NewRecipientPhone,
 			// The shopper's own email, so the office can write to them about the
 			// delivery. Optional, and left out entirely when blank rather than sent
 			// empty - the server validates it as an address when it arrives.

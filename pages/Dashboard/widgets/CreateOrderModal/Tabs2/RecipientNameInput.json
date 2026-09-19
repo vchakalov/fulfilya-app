@@ -1,20 +1,12 @@
 {
   "accentColor": "{{appsmith.theme.colors.primaryColor}}",
   "animateLoading": true,
+  "autoFocus": false,
   "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
-  "bottomRow": 26,
+  "bottomRow": 17,
   "boxShadow": "none",
-  "closeOnSelection": true,
-  "dateFormat": "DD/MM/YYYY HH:mm",
-  "datePickerType": "DATE_PICKER",
-  "defaultDate": "{{moment().add(1,'days').startOf('day').add(9, \"hours\");}}",
+  "defaultText": "",
   "dynamicBindingPathList": [
-    {
-      "key": "defaultDate"
-    },
-    {
-      "key": "minDate"
-    },
     {
       "key": "accentColor"
     },
@@ -23,51 +15,41 @@
     }
   ],
   "dynamicHeight": "FIXED",
-  "dynamicPropertyPathList": [
-    {
-      "key": "dateFormat"
-    },
-    {
-      "key": "minDate"
-    },
-    {
-      "key": "defaultDate"
-    }
-  ],
   "dynamicTriggerPathList": [],
-  "firstDayOfWeek": 0,
+  "iconAlign": "left",
+  "inputType": "TEXT",
   "isDisabled": false,
   "isLoading": false,
-  "isRequired": false,
+  "isRequired": true,
   "isVisible": true,
-  "key": "rr3cz5jv4u",
-  "label": "Дата и час на доставка",
+  "key": "rcpnamek01",
+  "label": "Име на получателя",
   "labelAlignment": "left",
   "labelPosition": "Top",
+  "labelStyle": "",
   "labelTextSize": "0.875rem",
   "labelWidth": 5,
   "leftColumn": 1,
-  "maxDate": "2121-12-31T18:29:00.000Z",
   "maxDynamicHeight": 9000,
-  "minDate": "{{moment().add(1,'days').startOf('day').add(9, \"hours\");}}",
   "minDynamicHeight": 4,
   "minWidth": 450,
-  "mobileBottomRow": 28,
+  "mobileBottomRow": 18,
   "mobileLeftColumn": 1,
   "mobileRightColumn": 21,
-  "mobileTopRow": 21,
+  "mobileTopRow": 10,
   "needsErrorInfo": false,
   "parentColumnSpace": 16.1146240234375,
   "parentId": "dqpf5acdio",
   "parentRowSpace": 10,
+  "placeholderText": "напр. Мария Петрова",
   "renderMode": "CANVAS",
+  "resetOnSubmit": true,
   "responsiveBehavior": "fill",
   "rightColumn": 21,
-  "shortcuts": false,
-  "timePrecision": "minute",
-  "topRow": 19,
-  "type": "DATE_PICKER_WIDGET2",
+  "showStepArrows": false,
+  "topRow": 10,
+  "type": "INPUT_WIDGET_V2",
   "version": 2,
-  "widgetId": "3fnwqepwtu",
-  "widgetName": "ScheduledDeliveryPicker"
+  "widgetId": "rcpname0001",
+  "widgetName": "RecipientNameInput"
 }

@@ -22,6 +22,9 @@
   ],
   "dynamicTriggerPathList": [
     {
+      "key": "onSubmit"
+    },
+    {
       "key": "onTextChanged"
     }
   ],
@@ -47,7 +50,7 @@
   "mobileRightColumn": 21,
   "mobileTopRow": 5,
   "needsErrorInfo": false,
-  "onTextChanged": "{{(() => {\n     // Clear existing timeout\n     clearInterval(appsmith.store.newPickupGeoTimeout);\n\n     if (NewPickupAddressInput.text && NewPickupAddressInput.text.length > 2) {\n       // Create new timeout\n       const timeoutId = setInterval(() => {\n         GeocodeNewPickupAddress.run().then(() => {\n           if (GeocodeNewPickupAddress.data?.results?.length > 0) {\n             LocationManager.updateNewPickupFromGeocode();\n           }\n         });\n         // Clear after running once\n         clearInterval(appsmith.store.newPickupGeoTimeout);\n       }, 1500);\n\n       // Store timeout ID\n       storeValue('newPickupGeoTimeout', timeoutId);\n     }\n   })()}}",
+  "onTextChanged": "{{(() => {\n     // Typing invalidates whatever was found for the previous text. The search itself\n     // is the \"Търси\" button beside this field (or Enter) - see 2026-09-19.\n     if (NewPickupLatHidden.text || NewPickupLngHidden.text) {\n       NewPickupLatHidden.setValue(\"\");\n       NewPickupLngHidden.setValue(\"\");\n     }\n   })()}}",
   "originalBottomRow": 13,
   "originalTopRow": 6,
   "parentColumnSpace": 16.1146240234375,
@@ -57,11 +60,12 @@
   "renderMode": "CANVAS",
   "resetOnSubmit": true,
   "responsiveBehavior": "fill",
-  "rightColumn": 27,
+  "rightColumn": 21,
   "showStepArrows": false,
   "topRow": 6,
   "type": "INPUT_WIDGET_V2",
   "version": 2,
   "widgetId": "2dxqat7w43",
-  "widgetName": "NewPickupAddressInput"
+  "widgetName": "NewPickupAddressInput",
+  "onSubmit": "{{(() => {\n     const address = (NewPickupAddressInput.text || \"\").trim();\n     if (address.length < 4) {\n       showAlert(\"Въведете адрес преди да търсите\", \"warning\");\n       return;\n     }\n     GeocodeNewPickupAddress.run()\n       .then(() => {\n         if (GeocodeNewPickupAddress.data?.results?.length > 0) {\n           LocationManager.updateNewPickupFromGeocode();\n         } else {\n           showAlert(\"Адресът не е намерен — проверете изписването\", \"warning\");\n         }\n       })\n       .catch(() => showAlert(\"Търсенето на адреса не мина. Опитайте пак.\", \"error\"));\n   })()}}"
 }

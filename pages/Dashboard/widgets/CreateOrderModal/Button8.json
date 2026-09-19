@@ -29,7 +29,7 @@
     }
   ],
   "isDefaultClickDisabled": true,
-  "isDisabled": "{{!NewPickupAddressInput.isValid || !NewDropoffAddressInput.isValid || !ScheduledDeliveryPicker.selectedDate}}",
+  "isDisabled": "{{!NewPickupAddressInput.isValid || !NewDropoffAddressInput.isValid || !RecipientNameInput.isValid || !RecipientPhoneInput.isValid || !ScheduledDeliveryPicker.selectedDate}}",
   "isLoading": false,
   "isVisible": true,
   "key": "v8dutca5gf",
