@@ -198,9 +198,11 @@ function render() {
       `<div class="hd" style="padding:14px 18px 0;margin:0"><h3 style="text-transform:none;font-size:15px;color:var(--ink)">По клиенти</h3>` +
         `<span class="hint">${esc(r.period ? r.period.label : '')} · ${esc(who)} · ${plural(num(t.orders), 'поръчка', 'поръчки')}</span></div>` +
       `<div class="tablewrap" style="padding:10px 8px 6px">` +
+      // Her column names, verbatim from the page she reconciles against today
+      // (Ico, 2026-09-21: "this is mandatory to have"). Do not shorten them again.
       `<table><thead><tr><th>Клиент</th><th class="r">Поръчки</th>` +
-      `<th class="r">А в брой</th><th class="r">А с карта</th><th class="r">Група А</th>` +
-      `<th class="r">Б в брой</th><th class="r">Б с карта</th><th class="r">Група Б</th></tr></thead><tbody class="num">` +
+      `<th class="r">Група А в брой</th><th class="r">Група А с карта</th><th class="r">Група А общо</th>` +
+      `<th class="r">Група Б в брой</th><th class="r">Група Б с карта</th><th class="r">Група Б общо</th></tr></thead><tbody class="num">` +
       (rows.length
         ? rows.map((x) =>
             `<tr><td><strong>${esc(x.name)}</strong></td><td class="r">${num(x.orders)}</td>` +
@@ -236,7 +238,7 @@ function render() {
       `<div class="empty">Няма неизплатени поръчки.${owes ? ` Дължи ни <strong class="held">${eur(owes)}</strong> за върнати пратки — удържа се от следващото изплащане.` : ''}</div></div>`;
   } else {
     pay = `<div class="card pay">` +
-      `<div><h3>Преведи на ${esc(who)}</h3><div class="amt num">${fmt(net)} <small style="font-size:17px;color:var(--accent-ink)">€</small></div></div>` +
+      `<div><h3>За превод към ${esc(who)}</h3><div class="amt num">${fmt(net)} <small style="font-size:17px;color:var(--accent-ink)">€</small></div></div>` +
       `<div class="break">Наложен платеж <strong>${eur(pt.owed)}</strong> по ${plural(num(pt.orders), 'поръчка', 'поръчки')}` +
         (withheld ? `<br><span class="held">− ${eur(withheld)}</span> удържани за ${plural(num(ret.count), 'върната пратка', 'върнати пратки')}` : '') +
         (num(ret.carried) ? `<br><span class="note">още ${eur(ret.carried)} остават за следващо изплащане</span>` : '') +
