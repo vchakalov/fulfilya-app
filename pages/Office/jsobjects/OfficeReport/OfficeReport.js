@@ -11,10 +11,13 @@ export default {
     return OfficeReport.run();
   },
 
-  useRange: async () => {
+  // The two dates come from the BoOffice widget now, not from native date pickers - see
+  // TODO 37. Called with both or not at all; the handler refuses an incomplete range
+  // before it gets here.
+  useRange: async (from, to) => {
     await storeValue('office_period', 'range');
-    await storeValue('office_date', FromDate.formattedDate);
-    await storeValue('office_to', ToDate.formattedDate);
+    await storeValue('office_date', from || '');
+    await storeValue('office_to', to || '');
     return OfficeReport.run();
   },
 
@@ -37,7 +40,7 @@ export default {
   // money is in the account by the time the office presses this (Ico, 2026-09-19). The
   // query itself asks for confirmation first; this only refuses the cases that cannot work.
   payout: async () => {
-    const merchant = MerchantSelect.selectedOptionValue;
+    const merchant = appsmith.store.office_merchant;
     if (!merchant || merchant === 'all') {
       showAlert('Избери клиент, на когото изплащаш.', 'warning');
       return;
