@@ -172,6 +172,10 @@ function render() {
   // green when it holds and red when it does not - not a line of prose to be read past.
   const ab = t ? num(t.goods) + num(t.revenue) : 0;
   const balances = t ? Math.abs(ab - num(t.total)) < 0.005 : true;
+  // An empty period has nothing to reconcile, so the tile stays neutral rather than
+  // announcing "отчетът е верен" over four zeros - reassurance about nothing teaches
+  // the eye to ignore the tile on the day it matters.
+  const nothingYet = !t || !num(t.orders);
 
   const bar =
     `<div class="card bar">` +
@@ -200,9 +204,9 @@ function render() {
         `<div class="foot">в брой ${eur(t.goods_cash)} · с карта ${eur(t.goods_card)}</div></div>` +
       `<div class="card kpi"><h3>Група Б · приходи</h3><div class="big num">${fmt(t.revenue)} <small>€</small></div>` +
         `<div class="foot">доставки ${eur(t.delivery)} · такса НП ${eur(t.fee)}</div></div>` +
-      `<div class="card kpi ${balances ? 'ok' : 'bad'}"><h3>А + Б${balances ? ' = събраното' : ' ≠ събраното'}</h3>` +
+      `<div class="card kpi ${nothingYet ? '' : (balances ? 'ok' : 'bad')}"><h3>А + Б${nothingYet ? '' : (balances ? ' = събраното' : ' ≠ събраното')}</h3>` +
         `<div class="big num">${fmt(ab)} <small>€</small></div>` +
-        `<div class="foot">${balances ? 'съвпада — отчетът е верен' : 'разминаване ' + eur(Math.abs(ab - num(t.total))) + ' — провери'}</div></div>` +
+        `<div class="foot">${nothingYet ? 'няма поръчки за този период' : (balances ? 'съвпада — отчетът е верен' : 'разминаване ' + eur(Math.abs(ab - num(t.total))) + ' — провери')}</div></div>` +
       `</div>`
     : '';
 

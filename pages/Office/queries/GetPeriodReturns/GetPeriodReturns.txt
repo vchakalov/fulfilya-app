@@ -34,6 +34,11 @@ FROM (
   LEFT JOIN places d ON d.uuid = p.dropoff_uuid
   WHERE o.deleted_at <=> NULL
     AND o.status = 'order_returned'
+    -- Scoped to the client chosen above, like every other figure on the page. Without
+    -- this, picking Tartiflette showed Artsyzone's returned parcel (found on the live
+    -- page, 2026-09-21).
+    AND ('{{appsmith.store.office_merchant || 'all'}}' = 'all'
+         OR o.customer_uuid = '{{appsmith.store.office_merchant || 'all'}}')
 ) z
 WHERE z.delivery > 0
   AND DATE(DATE_ADD(z.returned_at, INTERVAL {{moment().tz('Europe/Sofia').utcOffset() / 60}} HOUR)) >= '{{GetCodReport.data.period.from || '1970-01-01'}}'
