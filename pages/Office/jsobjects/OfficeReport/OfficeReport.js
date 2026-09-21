@@ -55,7 +55,17 @@ export default {
         return;
       }
       await storeValue('last_payout_id', r.payout?.id || '');
-      showAlert(`Изплатени ${Number(r.totals?.owed || 0).toFixed(2)} € по ${r.totals?.orders || 0} поръчки.`, 'success');
+      // `net`, never `owed`: the run withholds return charges, so owed is what the
+      // orders were worth and net is what actually gets transferred. The toast is the
+      // number the office types into the bank, so it has to be the second one.
+      const paid = Number(r.totals?.net ?? r.totals?.owed ?? 0);
+      const held = Number(r.returns?.totals?.withheld || 0);
+      showAlert(
+        held
+          ? `Изплатени ${paid.toFixed(2)} € по ${r.totals?.orders || 0} поръчки (удържани ${held.toFixed(2)} € за върнати пратки).`
+          : `Изплатени ${paid.toFixed(2)} € по ${r.totals?.orders || 0} поръчки.`,
+        'success'
+      );
       // Both views move: what is still owed, and the report's paid/unpaid split.
       await GetPendingPayout.run();
       await OfficeReport.run();
