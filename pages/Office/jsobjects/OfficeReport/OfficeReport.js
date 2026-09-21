@@ -11,10 +11,13 @@ export default {
     return OfficeReport.run();
   },
 
-  useRange: async () => {
+  // The two dates come from the BoOffice widget now, not from native date pickers - see
+  // TODO 37. Called with both or not at all; the handler refuses an incomplete range
+  // before it gets here.
+  useRange: async (from, to) => {
     await storeValue('office_period', 'range');
-    await storeValue('office_date', FromDate.formattedDate);
-    await storeValue('office_to', ToDate.formattedDate);
+    await storeValue('office_date', from || '');
+    await storeValue('office_to', to || '');
     return OfficeReport.run();
   },
 
@@ -37,7 +40,7 @@ export default {
   // money is in the account by the time the office presses this (Ico, 2026-09-19). The
   // query itself asks for confirmation first; this only refuses the cases that cannot work.
   payout: async () => {
-    const merchant = MerchantSelect.selectedOptionValue;
+    const merchant = appsmith.store.office_merchant;
     if (!merchant || merchant === 'all') {
       showAlert('Избери клиент, на когото изплащаш.', 'warning');
       return;
@@ -76,8 +79,11 @@ export default {
   },
 
   // The statement for the last payout made on this screen - what goes with the transfer.
+  // Either the run just made, or one picked from the history table - the office had no
+  // way to reprint an older statement before TODO 37 (the button only ever knew about
+  // a payout made in the same browser session).
   payoutPdf: async () => {
-    if (!appsmith.store.last_payout_id) {
+    if (!appsmith.store.receipt_payout_id && !appsmith.store.last_payout_id) {
       showAlert('Няма изплащане за разписка — първо направи изплащане.', 'warning');
       return;
     }

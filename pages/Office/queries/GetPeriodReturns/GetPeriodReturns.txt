@@ -1,0 +1,42 @@
+-- Върнати пратки за периода: какво се е върнало и какво дължи клиентът за обратния курс
+-- 150% от доставката (Общи условия VI 2Е + VII 5) - същото число, което смята
+-- App\Services\Payouts\ReturnChargeService. Ако двете се разминат, офисът вижда едно,
+-- а от изплащането излиза друго.
+-- Смяната лято/зима: офсетът се смята в биндинга, не се пише 3 - иначе всяка зима
+-- пратките около полунощ падат в грешния ден. Същото прави PoNav.tz() в портала.
+-- Периодът идва от самия отчет (GetCodReport решава границите на сървъра, софийско време),
+-- за да не се разминат двете таблици на екрана.
+SELECT
+  z.public_id,
+  z.merchant,
+  z.source_id,
+  z.recipient,
+  DATE_FORMAT(DATE_ADD(z.returned_at, INTERVAL {{moment().tz('Europe/Sofia').utcOffset() / 60}} HOUR), '%Y-%m-%d %H:%i') AS returned_at,
+  z.charge_id,
+  ROUND(z.delivery, 2) AS delivery,
+  ROUND(z.delivery * 1.5, 2) AS charge
+FROM (
+  SELECT
+    o.public_id,
+    c.name AS merchant,
+    COALESCE(NULLIF(o.internal_id, ''), o.public_id) AS source_id,
+    COALESCE(d.name, '') AS recipient,
+    COALESCE(
+      JSON_UNQUOTE(JSON_EXTRACT(o.meta, '$.fulfilya_returned_at')),
+      (SELECT a.created_at FROM activity a WHERE a.subject_id = o.uuid AND JSON_EXTRACT(a.properties, '$.attributes.status') = 'order_returned' ORDER BY a.created_at DESC LIMIT 1),
+      o.updated_at
+    ) AS returned_at,
+    JSON_UNQUOTE(JSON_EXTRACT(o.meta, '$.fulfilya_return_charge.id')) AS charge_id,
+    COALESCE(CAST(NULLIF(JSON_UNQUOTE(JSON_EXTRACT((SELECT sq.meta FROM service_quotes sq WHERE sq.payload_uuid = o.payload_uuid AND sq.deleted_at <=> NULL ORDER BY sq.created_at DESC LIMIT 1), '$.delivery_amount')), 'null') AS DECIMAL(14,2)) / 100, 0) AS delivery
+  FROM orders o
+  JOIN contacts c ON c.uuid = o.customer_uuid
+  LEFT JOIN payloads p ON p.uuid = o.payload_uuid
+  LEFT JOIN places d ON d.uuid = p.dropoff_uuid
+  WHERE o.deleted_at <=> NULL
+    AND o.status = 'order_returned'
+) z
+WHERE z.delivery > 0
+  AND DATE(DATE_ADD(z.returned_at, INTERVAL {{moment().tz('Europe/Sofia').utcOffset() / 60}} HOUR)) >= '{{GetCodReport.data.period.from || '1970-01-01'}}'
+  AND DATE(DATE_ADD(z.returned_at, INTERVAL {{moment().tz('Europe/Sofia').utcOffset() / 60}} HOUR)) <= '{{GetCodReport.data.period.to || '2999-12-31'}}'
+ORDER BY z.returned_at DESC
+LIMIT 500;

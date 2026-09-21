@@ -34,7 +34,7 @@
       "queryParameters": [
         {
           "key": "merchant",
-          "value": "{{MerchantSelect.selectedOptionValue || 'all'}}"
+          "value": "{{appsmith.store.office_merchant || 'all'}}"
         }
       ],
       "timeoutInMillisecond": 30000
