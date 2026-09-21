@@ -79,8 +79,11 @@ export default {
   },
 
   // The statement for the last payout made on this screen - what goes with the transfer.
+  // Either the run just made, or one picked from the history table - the office had no
+  // way to reprint an older statement before TODO 37 (the button only ever knew about
+  // a payout made in the same browser session).
   payoutPdf: async () => {
-    if (!appsmith.store.last_payout_id) {
+    if (!appsmith.store.receipt_payout_id && !appsmith.store.last_payout_id) {
       showAlert('Няма изплащане за разписка — първо направи изплащане.', 'warning');
       return;
     }

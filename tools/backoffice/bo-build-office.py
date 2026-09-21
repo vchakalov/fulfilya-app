@@ -124,6 +124,20 @@ tfoot td{font-weight:700;border-top:2px solid var(--line-strong);border-bottom:0
 .held{color:var(--bad);font-weight:700}
 .note{color:var(--faint);font-size:12px}
 .empty{color:var(--faint);font-size:13px;padding:22px 0;text-align:center}
+/* Friday's queue: names, not a count - the office used to work from memory */
+.queue .qrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.qchip{display:inline-flex;align-items:center;gap:9px;border:1px solid var(--line-strong);background:var(--card);
+color:var(--ink);border-radius:999px;padding:7px 13px;font:inherit;font-size:13px;font-weight:500;cursor:pointer;line-height:1}
+.qchip strong{font-weight:800;font-variant-numeric:tabular-nums}
+.qchip:hover{border-color:var(--ink);background:var(--ground)}
+.qchip:focus-visible{outline:2px solid var(--accent-ink);outline-offset:2px}
+.pdf{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-strong);background:var(--card);
+color:var(--ink);border-radius:999px;padding:5px 11px;font:inherit;font-size:12px;font-weight:600;cursor:pointer;
+line-height:1;white-space:nowrap}
+.pdf:hover{border-color:var(--ink)}
+.pdf:focus-visible{outline:2px solid var(--accent-ink);outline-offset:2px}
+.pill{border-radius:999px;padding:2px 9px;font-size:11px;font-weight:600;background:var(--warn-soft);color:var(--warn)}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
 """
 
 OFFICE_JS = r"""
@@ -250,11 +264,62 @@ function render() {
       `</div></div>`;
   }
 
+  // Who else is waiting. The office used to work Friday from memory, one client at a
+  // time; this is the queue, and it stays visible whoever is selected above.
+  const queue = ((m.queue && m.queue.by_merchant) || []).filter((x) => num(x.owed) > 0);
+  const others = queue.filter((x) => x.uuid !== sel);
+  const queueLine = others.length
+    ? `<div class="card queue"><h3>Чакат изплащане</h3><div class="qrow">` +
+      others.map((x) =>
+        `<button type="button" class="qchip" data-merchant="${esc(x.uuid)}">${esc(x.name)}` +
+        `<strong>${eur(x.owed)}</strong></button>`).join('') +
+      `</div><div class="note" style="margin-top:8px">Общо ${eur(queue.reduce((a, x) => a + num(x.owed), 0))} ` +
+      `към ${plural(queue.length, 'клиент', 'клиента')} · натиснете име, за да го отворите</div></div>`
+    : '';
+
+  // The runs already made - the office had no history at all, so a statement could only
+  // be reprinted for a payout made in the same browser session.
+  const runs = (m.history && m.history.payouts) || [];
+  const history = runs.length
+    ? `<div class="card" style="padding:0">` +
+      `<div class="hd" style="padding:14px 18px 0;margin:0"><h3 style="text-transform:none;font-size:15px;color:var(--ink)">Направени изплащания</h3>` +
+      `<span class="hint">${oneMerchant ? esc(who) : 'всички клиенти'} · последните ${runs.length}</span></div>` +
+      `<div class="tablewrap" style="padding:10px 8px 6px"><table><thead><tr>` +
+      `<th>Дата</th><th>Клиент</th><th class="r">Поръчки</th><th class="r">Изплатено</th><th class="r"></th>` +
+      `</tr></thead><tbody class="num">` +
+      runs.map((x) =>
+        `<tr><td>${esc(x.at || '')}</td><td>${esc((x.merchant && x.merchant.name) || '')}</td>` +
+        `<td class="r">${num(x.orders)}</td><td class="r"><strong>${eur(x.amount)}</strong></td>` +
+        `<td class="r"><button type="button" class="pdf" data-receipt="${esc(x.id)}">Разписка</button></td></tr>`).join('') +
+      `</tbody></table></div></div>`
+    : '';
+
+  // Върнати пратки за периода - its own block, deliberately OUTSIDE the А/Б table:
+  // a returned parcel collected nothing, so a column there would break А + Б = събраното.
+  const rets = Array.isArray(m.returns) ? m.returns : [];
+  const returns = rets.length
+    ? `<div class="card" style="padding:0">` +
+      `<div class="hd" style="padding:14px 18px 0;margin:0"><h3 style="text-transform:none;font-size:15px;color:var(--ink)">Върнати пратки за периода</h3>` +
+      `<span class="hint">${plural(rets.length, 'пратка', 'пратки')} · ${eur(rets.reduce((a, x) => a + num(x.charge), 0))} за обратен курс</span></div>` +
+      `<div class="tablewrap" style="padding:10px 8px 6px"><table><thead><tr>` +
+      `<th>Върната</th><th>Клиент</th><th>Поръчка</th><th>Получател</th>` +
+      `<th class="r">Доставка</th><th class="r">Дължи се</th><th>Удържано</th>` +
+      `</tr></thead><tbody class="num">` +
+      rets.map((x) =>
+        `<tr><td>${esc(x.returned_at || '')}</td><td>${esc(x.merchant)}</td><td><strong>${esc(x.source_id)}</strong></td>` +
+        `<td>${esc(x.recipient)}</td><td class="r">${eur(x.delivery)}</td>` +
+        `<td class="r held">${eur(x.charge)}</td>` +
+        `<td>${x.charge_id ? '<span class="pill ok">удържано</span>' : '<span class="pill">предстои</span>'}</td></tr>`).join('') +
+      `</tbody></table></div>` +
+      `<div class="note" style="padding:0 18px 14px">Не влиза в Група А и Група Б — при върната пратка не се събира нищо. ` +
+      `Дължимото е цената на доставката плюс 50% за обратния курс (Общи условия, раздел VI, т. 2Е).</div></div>`
+    : '';
+
   document.getElementById('bo-office').innerHTML =
     `<div class="wrap">` +
     `<div class="row"><div><h2>Наложен платеж</h2>` +
     `<div class="sub">отчет за периода и изплащане към клиента</div></div></div>` +
-    bar + tiles + table + pay +
+    bar + tiles + table + returns + pay + queueLine + history +
     `<div class="note">Група А е стойността на стоката, Група Б са нашите приходи — доставката и таксата наложен платеж. ` +
     `Сборът им е точно това, което шофьорите са събрали; затова плочката вдясно е зелена само когато двете съвпадат.</div>` +
     `</div>`;
@@ -267,7 +332,11 @@ function render() {
   on('of-show', () => send({ action: 'range', from: (document.getElementById('of-from') || {}).value || '', to: (document.getElementById('of-to') || {}).value || '' }));
   on('of-pdf', () => send({ action: 'pdf' }));
   on('of-pay', () => send({ action: 'payout' }));
-  on('of-receipt', () => send({ action: 'receipt' }));
+  on('of-receipt', () => send({ action: 'receipt', id: '' }));
+  document.querySelectorAll('.qchip[data-merchant]').forEach((b) =>
+    b.addEventListener('click', () => send({ action: 'merchant', merchant: b.dataset.merchant })));
+  document.querySelectorAll('.pdf[data-receipt]').forEach((b) =>
+    b.addEventListener('click', () => send({ action: 'receipt', id: b.dataset.receipt })));
 }
 appsmith.onReady(render);
 appsmith.onModelChange(render);
@@ -277,16 +346,18 @@ appsmith.onModelChange(render);
 # functions. Nothing about the money is re-implemented here - the widget is a surface.
 OFFICE_ON = ("{{(async () => { const m = BoOffice.model || {}; "
              "if (m.action === 'merchant') { await storeValue('office_merchant', m.merchant || 'all'); "
-             "await Promise.all([OfficeReport.run(), GetPendingPayout.run()]); return; } "
+             "await Promise.all([OfficeReport.run(), GetPendingPayout.run(), GetPayoutHistory.run()]); return; } "
              "if (m.action === 'period') { await OfficeReport.setPeriod(m.period || 'day'); return GetPendingPayout.run(); } "
              "if (m.action === 'range') { if (!m.from || !m.to) { return showAlert('Избери начална и крайна дата.', 'warning'); } "
              "if (m.from > m.to) { return showAlert('Началната дата е след крайната.', 'warning'); } "
              "await OfficeReport.useRange(m.from, m.to); return GetPendingPayout.run(); } "
              "if (m.action === 'pdf') { return OfficeReport.downloadPdf(); } "
              "if (m.action === 'payout') { return OfficeReport.payout(); } "
-             "if (m.action === 'receipt') { return OfficeReport.payoutPdf(); } })()}}")
+             "if (m.action === 'receipt') { await storeValue('receipt_payout_id', m.id || ''); "
+             "return OfficeReport.payoutPdf(); } })()}}")
 
 OFFICE_MODEL = ("{{ { report: GetCodReport.data, pending: GetPendingPayout.data, merchants: ListMerchants.data, "
+                "queue: GetPendingAll.data, history: GetPayoutHistory.data, returns: GetPeriodReturns.data, "
                 "sel: appsmith.store.office_merchant || 'all', period: appsmith.store.office_period || 'day', "
                 "from: appsmith.store.office_date || '', to: appsmith.store.office_to || '', "
                 "lastPayout: appsmith.store.last_payout_id || '' } }}")
