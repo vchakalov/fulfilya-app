@@ -154,7 +154,49 @@ def query(name, sql):
             "name": name, "pageId": PAGE, "runBehaviour": "ON_PAGE_LOAD", "userSetOnLoad": True}})
 
 
+SQL_RETURNS = f"""-- Върнати пратки: какво дължи клиентът за обратния курс, и кое вече е удържано
+-- Общи условия, раздел VI т. 2Е: таксата за обратния курс е 50% от цената на доставката,
+-- а раздел VII т. 5 я начислява ДОПЪЛНИТЕЛНО към самата доставка - оттам 150%.
+-- Същото число, което смята App\\Services\\Payouts\\ReturnChargeService; ако двете се
+-- разминат, клиентът вижда едно, а по сметката му влиза друго.
+SELECT
+  y.public_id,
+  y.source_id,
+  y.recipient,
+  DATE_FORMAT(DATE_ADD(y.returned_at, INTERVAL {TZ} HOUR), '%Y-%m-%d %H:%i') AS returned_at,
+  y.charge_id,
+  y.charge_at,
+  ROUND(y.delivery, 2) AS delivery,
+  ROUND(y.delivery * 1.5, 2) AS charge
+FROM (
+  SELECT
+    o.public_id,
+    COALESCE(NULLIF(o.internal_id, ''), o.public_id) AS source_id,
+    COALESCE(d.name, '') AS recipient,
+    COALESCE(
+      JSON_UNQUOTE(JSON_EXTRACT(o.meta, '$.fulfilya_returned_at')),
+      (SELECT a.created_at FROM activity a WHERE a.subject_id = o.uuid AND JSON_EXTRACT(a.properties, '$.attributes.status') = 'order_returned' ORDER BY a.created_at DESC LIMIT 1),
+      o.updated_at
+    ) AS returned_at,
+    JSON_UNQUOTE(JSON_EXTRACT(o.meta, '$.fulfilya_return_charge.id')) AS charge_id,
+    JSON_UNQUOTE(JSON_EXTRACT(o.meta, '$.fulfilya_return_charge.at')) AS charge_at,
+    -- От офертата, не през "Amount:" - върната пратка не е събрала нищо, а карта
+    -- изобщо няма cod_amount. Без оферта няма защитима цена, значи няма и такса.
+    COALESCE(CAST(NULLIF(JSON_UNQUOTE(JSON_EXTRACT({QUOTE}, '$.delivery_amount')), 'null') AS DECIMAL(14,2)) / 100, 0) AS delivery
+  FROM orders o
+  LEFT JOIN payloads p ON p.uuid = o.payload_uuid
+  LEFT JOIN places d ON d.uuid = p.dropoff_uuid
+  WHERE o.customer_uuid = '{{{{appsmith.store.customer_uuid}}}}'
+    AND o.deleted_at <=> NULL
+    AND o.status = 'order_returned'
+) y
+WHERE y.delivery > 0
+ORDER BY y.returned_at DESC
+LIMIT 1000;"""
+
+
 query('PoLines', SQL_LINES)
+query('PoReturns', SQL_RETURNS)
 
 
 def rest_query(name, method, path, params):
@@ -317,6 +359,17 @@ function linesTable(rows) {
     `</tbody></table></div>`;
 }
 
+function returnsTable(rows) {
+  return `<div class="tablewrap"><table>` +
+    `<thead><tr><th>Върната</th><th>Ваша поръчка</th><th>Получател</th>` +
+    `<th class="r">Доставка</th><th class="r">Удържано</th></tr></thead>` +
+    `<tbody class="num">` + rows.map((r) =>
+      `<tr><td>${shortWhen(r.returned_at)}</td><td><strong>${esc(r.source_id)}</strong></td><td>${esc(r.recipient)}</td>` +
+      `<td class="r">${fmt(r.delivery)} €</td>` +
+      `<td class="r"><strong>− ${fmt(r.charge)} €</strong></td></tr>`).join('') +
+    `</tbody></table></div>`;
+}
+
 function render() {
   const m = appsmith.model || {};
   document.documentElement.dataset.theme = 'light';
@@ -346,19 +399,35 @@ function render() {
   });
   runs.sort((a, b) => String(b.at || '').localeCompare(String(a.at || '')));
 
-  const paidTotal = runs.reduce((a, r) => a + r.goods, 0);
-  const pendingTotal = pending.reduce((a, r) => a + num(r, 'goods'), 0);
+  // Върнати пратки. A returned parcel owes us the delivery plus the return leg (150%);
+  // it comes off the next transfer rather than being invoiced, so an outstanding one has
+  // to be visible here or the "предстои да получите" figure promises money we will keep.
+  const returns = Array.isArray(m.returns) ? m.returns : [];
+  const owedReturns = returns.filter((r) => !r.charge_id);
+  const owedReturnsTotal = owedReturns.reduce((a, r) => a + num(r, 'charge'), 0);
+  returns.forEach((r) => {
+    if (!r.charge_id) { return; }
+    const run = byId[r.charge_id];
+    if (run) { run.withheld = (run.withheld || 0) + num(r, 'charge'); (run.returns = run.returns || []).push(r); }
+  });
+
+  const paidTotal = runs.reduce((a, r) => a + r.goods - (r.withheld || 0), 0);
+  const pendingGoods = pending.reduce((a, r) => a + num(r, 'goods'), 0);
+  // Never a negative promise: a debt bigger than the money waiting stays a debt, exactly
+  // as ReturnChargeService::allocate() carries it to a payout that can cover it.
+  const pendingTotal = Math.max(0, pendingGoods - owedReturnsTotal);
   const last = runs[0];
   const lastWhen = last ? whenParts(last.at) : null;
 
   const tiles =
     `<div class="grid g3">` +
     `<div class="card kpi hero"><h3>Предстои да получите</h3><div class="big num">${fmt(pendingTotal)} <small>€</small></div>` +
-    `<div class="foot"><span class="delta">${plural(pending.length, 'доставена поръчка', 'доставени поръчки')}</span></div></div>` +
+    `<div class="foot"><span class="delta">${plural(pending.length, 'доставена поръчка', 'доставени поръчки')}</span>` +
+    (owedReturnsTotal ? ` · <span class="delta">− ${fmt(owedReturnsTotal)} € за върнати</span>` : '') + `</div></div>` +
     `<div class="card kpi"><h3>Изплатено общо</h3><div class="big num">${fmt(paidTotal)} <small>€</small></div>` +
     `<div class="foot"><span class="delta ok">${plural(runs.length, 'изплащане', 'изплащания')}</span></div></div>` +
     `<div class="card kpi"><h3>Последно изплащане</h3><div class="big">${lastWhen ? lastWhen.date : '—'}</div>` +
-    `<div class="foot">${last ? `<span class="delta ok">${fmt(last.goods)} €</span> за ${plural(last.rows.length, 'поръчка', 'поръчки')}` : 'няма изплащания досега'}</div></div>` +
+    `<div class="foot">${last ? `<span class="delta ok">${fmt(last.goods - (last.withheld || 0))} €</span> за ${plural(last.rows.length, 'поръчка', 'поръчки')}` : 'няма изплащания досега'}</div></div>` +
     `</div>`;
 
   const pendingCard = pending.length
@@ -368,6 +437,15 @@ function render() {
     // "everything has been transferred" is a claim about their money, so it is only made
     // when there was something to transfer.
     : `<div class="card"><div class="hd"><h3>Предстои да получите</h3></div><div class="empty">${lines.length ? 'Няма неизплатени поръчки — всичко събрано до момента е преведено.' : 'Все още няма доставени поръчки с наложен платеж.'}</div></div>`;
+
+  // Only when there is something to say: a merchant with no returns should never meet the
+  // word, and most never will.
+  const returnsCard = owedReturns.length
+    ? `<div class="card"><div class="hd"><h3>Върнати пратки</h3><span class="hint">удържат се от следващото изплащане</span></div>` +
+      returnsTable(owedReturns) +
+      `<div class="note">При неуспешна доставка наложеният платеж не се събира и пратката се връща на вас. ` +
+      `Съгласно Общите условия (раздел VI, т. 2Е) се дължи цената на доставката и такса за обратния курс в размер на 50% от нея.</div></div>`
+    : '';
 
   const runsCard = runs.length
     ? `<div class="card"><div class="hd"><h3>Изплащания</h3><span class="hint">натиснете ред, за да видите поръчките в него</span></div>` +
@@ -380,9 +458,16 @@ function render() {
           `<td><div class="when">${w.date}</div><div class="sub">${w.time}</div></td>` +
           `<td><span class="caret">${CARET}${plural(r.rows.length, 'поръчка', 'поръчки')}</span></td>` +
           `<td class="r">${fmt(r.collected)} €</td><td class="r">${fmt(r.delivery)} €</td><td class="r">${fmt(r.fee)} €</td>` +
-          `<td class="r paid">${fmt(r.goods)} €</td>` +
+          `<td class="r paid">${fmt(r.goods - (r.withheld || 0))}${r.withheld ? '*' : ''} €</td>` +
           `<td class="r"><button type="button" class="pdf" data-pdf="${esc(r.id)}">${DOWNLOAD}Разписка</button></td></tr>` +
-          (on ? `<tr><td class="lines" colspan="7">${linesTable(r.rows)}</td></tr>` : '');
+          // No extra column for the deduction: most runs withhold nothing and an empty
+          // column on every row would cost more than it tells. It lives in the detail,
+          // under the orders it was taken from.
+          (on ? `<tr><td class="lines" colspan="7">${linesTable(r.rows)}` +
+                (r.returns && r.returns.length
+                  ? `<div class="note">Удържано за върнати пратки: − ${fmt(r.withheld)} €</div>` + returnsTable(r.returns)
+                  : '') +
+                `</td></tr>` : '');
       }).join('') +
       `</tbody>` +
       // A total under a single row is just the row again.
@@ -400,8 +485,10 @@ function render() {
     `<div class="wrap">` +
     `<div class="row"><div><h2 style="color:${INK}">Изплащания</h2>` +
     `<div class="sub">наложен платеж, събран от нас и преведен по банков път</div></div></div>` +
-    tiles + pendingCard + runsCard +
-    `<div class="note">Всяка доставена поръчка с наложен платеж влиза в точно едно изплащане. „За вас" е стойността на стоката — събраното без доставката и таксата, които плаща купувачът.</div>` +
+    tiles + pendingCard + returnsCard + runsCard +
+    `<div class="note">Всяка доставена поръчка с наложен платеж влиза в точно едно изплащане. „За вас" е стойността на стоката — събраното без доставката и таксата, които плаща купувачът.` +
+    (runs.some((r) => r.withheld) ? ' Звездичка (*) означава изплащане, от което е удържано за върната пратка.' : '') +
+    `</div>` +
     `</div>`;
 
   document.querySelectorAll('.runrow[data-run]').forEach((el) => el.addEventListener('click', () => {
@@ -460,7 +547,7 @@ PO_ON = ("{{(async () => { const m = BoPayouts.model || {}; if (m.action !== 'pd
          "return showAlert('Разписката не можа да се свали: ' + (b.error || e.message || ''), 'error'); } })()}}")
 
 custom('BoPayouts', 9, 78, PAYOUTS_HTML, PAYOUTS_CSS, PAYOUTS_JS,
-       "{{ { lines: PoLines.data } }}",
+       "{{ { lines: PoLines.data, returns: PoReturns.data } }}",
        "poutz4k7m2", PO_ON, height='AUTO_HEIGHT')
 
 # ---------------------------------------------------------------- the page itself
