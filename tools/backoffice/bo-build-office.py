@@ -289,7 +289,12 @@ function render() {
       `</tr></thead><tbody class="num">` +
       runs.map((x) =>
         `<tr><td>${esc(x.at || '')}</td><td>${esc((x.merchant && x.merchant.name) || '')}</td>` +
-        `<td class="r">${num(x.orders)}</td><td class="r"><strong>${eur(x.amount)}</strong></td>` +
+        `<td class="r">${num(x.orders)}</td>` +
+        // `amount` is what left the account. When a run withheld a return charge the
+        // goods figure is shown beside it, so the arithmetic is visible rather than a
+        // number the office has to take on trust.
+        `<td class="r"><strong>${eur(x.amount)}</strong>` +
+        (num(x.withheld) ? `<div class="note">${eur(x.goods)} − ${eur(x.withheld)} за върнати</div>` : '') + `</td>` +
         `<td class="r"><button type="button" class="pdf" data-receipt="${esc(x.id)}">Разписка</button></td></tr>`).join('') +
       `</tbody></table></div></div>`
     : '';
