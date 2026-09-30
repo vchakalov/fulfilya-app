@@ -214,7 +214,8 @@ const TABS = [
   { id: 'orders', label: 'Поръчки', page: 'Dashboard' },
   { id: 'reports', label: 'Справки', page: 'Reporting' },
   { id: 'payouts', label: 'Изплащания', page: 'Payouts' },
-  { id: 'new', label: 'Нова поръчка', page: null }
+  { id: 'new', label: 'Нова поръчка', page: null },
+  { id: 'import', label: 'Качи поръчки', page: 'Import' }
 ];
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const initials = (name) => String(name || '').split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0].toUpperCase()).join('') || 'F';

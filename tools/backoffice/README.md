@@ -11,10 +11,16 @@ over `pages/`, commit, and Ico pulls in the Appsmith editor (Discard & pull) and
 - `bo-build-payouts.py` — **Изплащания** (Payouts), a whole page of its own: the page manifest,
   header, BoPayouts widget, PoLines, and per-page copies of AuthManager/PageGuard (JS objects do
   not cross pages). A new page also needs its entry in `application.json`.
+- `bo-build-import.py` — **Качи поръчки** (Import, 2026-09-30), a page of its own like Изплащания: the
+  merchant uploads an Excel/CSV order export, checks the rows, and each chosen row is created through
+  `POST int/v1/portal/orders` (the ImportOrder query, run one at a time by the ImportJS object). All
+  of the file reading is `import-parse.js`, inlined into the widget and tested with
+  `node import-parse.test.js` — add a shop's column names to its `FIELDS` when a new export arrives.
+  Relies on the backend's duplicate guard (409 `duplicate`) so the same file uploaded twice creates nothing twice.
 - `bo-build-office.py` — Office header, shifts the Office widgets, switches Appsmith's navbar off.
 
 `bo_i18n.py` is shared: every widget embeds the whole dictionary, so adding one phrase rewrites
-**every** widget JSON. That is expected — rerun all four generators together, never one alone.
+**every** widget JSON. That is expected — rerun all the generators together, never one alone.
 
 Paths resolve from the script's own folder (fixed 2026-09-19; they used to point at the
 scratchpad of the session that wrote them, so a rerun could silently revert later changes).
