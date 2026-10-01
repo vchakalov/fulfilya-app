@@ -43,7 +43,10 @@
   JOIN payloads p ON e.payload_uuid = p.uuid
   JOIN orders o ON o.payload_uuid = p.uuid
   LEFT JOIN tracking_numbers tn ON e.uuid = tn.owner_uuid AND tn.owner_type = 'Fleetbase\\FleetOps\\Models\\Entity'
-  WHERE o.public_id = {{OrdersTable.selectedRow.order_id}}
+  -- Quoted by hand: with prepared statements off the binding is pasted in as raw text, and
+  -- unquoted it read  o.public_id = order_xxx  - an unknown column, so the Детайли items
+  -- tab was empty for every order from 2026-09-15 to 2026-10-01 (found in testing).
+  WHERE o.public_id = '{{OrdersTable.selectedRow.order_id}}'
     AND e.deleted_at <=> NULL
   GROUP BY
     CASE

@@ -104,23 +104,21 @@ export default {
   if (loc && loc.lat && loc.lng) {
     // Validate coordinates are in Bulgaria
     if (!LocationManager.validateCoordinates(loc.lat, loc.lng)) {
-      showAlert("Location found outside Bulgaria - please enter a Bulgarian address", "warning");
+      showAlert("Адресът е извън България — въведете адрес в София", "warning");
       return;
     }
 
-    // Get fully resolved address from API response
-    const resolvedAddress = LocationManager.getResolvedAddress(geoResult);
-
-    // Update address input with resolved address
-    NewPickupAddressInput.setValue(resolvedAddress.fullAddress);
-
-    // Update hidden coordinate fields
+    // The merchant's own words stay in the field; the search only places the pin.
+    // Overwriting them with Google's formatted line lost the housing complex on every
+    // ж.к. address: "ж.к. Младост 1, бл. 15" came back as "Bl. 15, Mladost 1Mladost, ..."
+    // and the order was stored as "Bl. 15" (found in testing, 2026-10-01). The server
+    // geocodes this same text again when the order is created.
     NewPickupLatHidden.setValue(loc.lat);
     NewPickupLngHidden.setValue(loc.lng);
 
-    showAlert(`Pickup location found: ${resolvedAddress.shortName}`, "success");
+    showAlert("✓ Адресът за взимане е намерен на картата", "success");
   } else {
-    showAlert("Address not found - please check spelling", "warning");
+    showAlert("Адресът не е намерен — проверете изписването", "warning");
   }
 },
 
@@ -130,23 +128,21 @@ updateNewDropoffFromGeocode: () => {
   if (loc && loc.lat && loc.lng) {
     // Validate coordinates are in Bulgaria
     if (!LocationManager.validateCoordinates(loc.lat, loc.lng)) {
-      showAlert("Location found outside Bulgaria - please enter a Bulgarian address", "warning");
+      showAlert("Адресът е извън България — въведете адрес в София", "warning");
       return;
     }
 
-    // Get fully resolved address from API response
-    const resolvedAddress = LocationManager.getResolvedAddress(geoResult);
-
-    // Update address input with resolved address
-    NewDropoffAddressInput.setValue(resolvedAddress.fullAddress);
-
-    // Update hidden coordinate fields
+    // The merchant's own words stay in the field; the search only places the pin.
+    // Overwriting them with Google's formatted line lost the housing complex on every
+    // ж.к. address: "ж.к. Младост 1, бл. 15" came back as "Bl. 15, Mladost 1Mladost, ..."
+    // and the order was stored as "Bl. 15" (found in testing, 2026-10-01). The server
+    // geocodes this same text again when the order is created.
     NewDropoffLatHidden.setValue(loc.lat);
     NewDropoffLngHidden.setValue(loc.lng);
 
-    showAlert(`Delivery location found: ${resolvedAddress.shortName}`, "success");
+    showAlert("✓ Адресът за доставка е намерен на картата", "success");
   } else {
-    showAlert("Address not found - please check spelling", "warning");
+    showAlert("Адресът не е намерен — проверете изписването", "warning");
   }
 },
 
