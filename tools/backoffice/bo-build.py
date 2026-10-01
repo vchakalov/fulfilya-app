@@ -502,14 +502,16 @@ TITLE_HTML = FONT_LINK + '<div id="bo-title"></div>'
 # one button for every order still waiting to be collected. It sits left of "+ Нова
 # поръчка" (Button6, columns 51-64), hence the title stops at column 50.
 TITLE_CSS = TOKENS + """html,body{overflow:hidden}
-.t{display:flex;align-items:center;justify-content:space-between;gap:12px;height:40px;font-family:var(--body)}
+.t{display:flex;align-items:center;justify-content:space-between;gap:12px;height:36px;font-family:var(--body)}
 .t h2{font-family:var(--display);font-size:22px;font-weight:800;margin:0;white-space:nowrap}
 .wb{display:flex;align-items:center;gap:8px;min-width:0}
 .wb .lbl{font-size:13px;color:var(--muted);white-space:nowrap}
 .seg{display:inline-flex;background:var(--ground);border:1px solid var(--line);border-radius:999px;padding:2px}
-.seg button{font:600 12px var(--body);border:0;background:transparent;color:var(--muted);padding:5px 11px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.seg button{font:600 12px/16px var(--body);border:0;background:transparent;color:var(--muted);padding:4px 10px;border-radius:999px;cursor:pointer;white-space:nowrap}
 .seg button.on{background:var(--ink);color:#fff}
-.all{font:600 13px var(--body);border:1px solid var(--ink);background:#fff;color:var(--ink);padding:7px 14px;border-radius:999px;cursor:pointer;white-space:nowrap}
+/* 28px tall at most: the widget's row is 40px and Appsmith pads the frame, so a taller pill
+   lost its bottom edge in the published app (Ico's screenshot, 2026-10-01). */
+.all{font:600 13px/16px var(--body);border:1px solid var(--ink);background:#fff;color:var(--ink);padding:5px 14px;border-radius:999px;cursor:pointer;white-space:nowrap}
 .all:hover{background:var(--ink);color:#fff}
 /* The editor and a small laptop give this widget ~650px: the caption goes first, then the
    title shrinks, so the print-all button is never cut off (seen in the editor 2026-10-01). */
