@@ -48,7 +48,8 @@
     GROUP BY cfv.subject_uuid
   ) cfd ON cfd.subject_uuid = o.uuid
 
-  WHERE o.customer_uuid = '{{appsmith.store.customer_uuid || "21816565-c4a5-40f4-a617-c97119105bc5"}}'
+  WHERE o.customer_uuid = '{{appsmith.store.customer_uuid || "none"}}'
+    AND o.deleted_at <=> NULL
     AND o.created_at >= '{{StartDatePicker.selectedDate || "2025-06-01"}}'
     AND o.created_at <= '{{EndDatePicker.selectedDate || "2025-07-31"}} 23:59:59'
   GROUP BY DATE(o.created_at), DAYNAME(DATE(o.created_at))

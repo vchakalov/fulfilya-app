@@ -34,5 +34,6 @@
       FROM orders o
       WHERE o.created_at >= DATE_FORMAT(NOW(), '%Y-%m-01')
         AND o.customer_uuid = '{{appsmith.store.customer_uuid}}'
+        AND o.deleted_at <=> NULL
   ) as status_data
   GROUP BY status_label

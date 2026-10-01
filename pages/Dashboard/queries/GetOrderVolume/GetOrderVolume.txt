@@ -6,5 +6,6 @@
    FROM orders 
    WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
 	 AND orders.customer_uuid = '{{appsmith.store.customer_uuid}}'
+	 AND orders.deleted_at <=> NULL
    GROUP BY DATE(created_at)
    ORDER BY order_date;

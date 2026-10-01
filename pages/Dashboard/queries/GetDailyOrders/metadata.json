@@ -5,7 +5,7 @@
   "pluginType": "DB",
   "unpublishedAction": {
     "actionConfiguration": {
-      "body": "  SELECT\n      DATE(created_at) as order_date,\n      COUNT(*) as order_count,\n      COUNT(CASE WHEN status IN ('delivered', 'completed') THEN 1 END) as delivered_count,\n      COUNT(CASE WHEN status IN ('dispatched', 'in_transit') THEN 1 END) as in_transit_count\n  FROM orders\n  WHERE created_at >= DATE_FORMAT(NOW(), '%Y-%m-01') \n  AND orders.customer_uuid = '{{appsmith.store.customer_uuid}}'\n  GROUP BY DATE(created_at)\n  ORDER BY order_date;",
+      "body": "  SELECT\n      DATE(created_at) as order_date,\n      COUNT(*) as order_count,\n      COUNT(CASE WHEN status IN ('delivered', 'completed') THEN 1 END) as delivered_count,\n      COUNT(CASE WHEN status IN ('dispatched', 'in_transit') THEN 1 END) as in_transit_count\n  FROM orders\n  WHERE created_at >= DATE_FORMAT(NOW(), '%Y-%m-01') \n  AND orders.customer_uuid = '{{appsmith.store.customer_uuid}}'\n  AND orders.deleted_at <=> NULL\n  GROUP BY DATE(created_at)\n  ORDER BY order_date;",
       "encodeParamsToggle": true,
       "paginationType": "NONE",
       "pluginSpecifiedTemplates": [

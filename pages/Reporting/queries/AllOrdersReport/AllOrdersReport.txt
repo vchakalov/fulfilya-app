@@ -52,7 +52,8 @@
   LEFT JOIN tracking_numbers tn ON o.tracking_number_uuid = tn.uuid
   LEFT JOIN custom_field_values cfv ON o.uuid = cfv.subject_uuid AND cfv.subject_type = 'Fleetbase\\FleetOps\\Models\\Order'
   LEFT JOIN custom_fields cf ON cfv.custom_field_uuid = cf.uuid
-  WHERE o.customer_uuid = '{{appsmith.store.customer_uuid || "21816565-c4a5-40f4-a617-c97119105bc5"}}'
+  WHERE o.customer_uuid = '{{appsmith.store.customer_uuid || "none"}}'
+    AND o.deleted_at <=> NULL
     AND DATE(o.created_at) >= COALESCE(DATE('{{StartDatePicker.formattedDate}}'), DATE(NOW()) - INTERVAL 30 DAY)
     AND DATE(o.created_at) <= COALESCE(DATE('{{EndDatePicker.formattedDate}}'), DATE(NOW()))
   GROUP BY

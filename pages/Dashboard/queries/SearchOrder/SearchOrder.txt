@@ -13,7 +13,9 @@
        ELSE status
      END as status_display
    FROM orders 
-   WHERE (
+   WHERE customer_uuid = '{{appsmith.store.customer_uuid || "none"}}'
+     AND deleted_at <=> NULL
+     AND (
        public_id LIKE CONCAT('%', {{SearchInput.text || ''}}, '%')
        OR JSON_UNQUOTE(JSON_EXTRACT(meta, '$.recipient_name')) LIKE CONCAT('%', {{SearchInput.text || ''}}, '%')
      )

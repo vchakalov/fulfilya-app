@@ -66,5 +66,6 @@
     GROUP BY o2.uuid
   ) payment_data ON o.uuid = payment_data.uuid
    WHERE o.customer_uuid = '{{appsmith.store.customer_uuid}}'
+    AND o.deleted_at <=> NULL
     AND DATE(o.created_at) >= '{{moment(StartDatePicker.selectedDate).format("YYYY-MM-DD")}}'
     AND DATE(o.created_at) <= '{{moment(EndDatePicker.selectedDate).format("YYYY-MM-DD")}}'

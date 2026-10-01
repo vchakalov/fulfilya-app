@@ -90,6 +90,7 @@
   LEFT JOIN places dropoff ON p.dropoff_uuid = dropoff.uuid
 
   WHERE o.customer_uuid = '{{appsmith.store.customer_uuid}}'
+    AND o.deleted_at <=> NULL
     AND DATE(o.created_at) >= COALESCE(
       NULLIF('{{StartDatePicker.formattedDate}}', ''),
       DATE(NOW()) - INTERVAL 30 DAY
