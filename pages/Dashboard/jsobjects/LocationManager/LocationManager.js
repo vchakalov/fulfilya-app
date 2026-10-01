@@ -210,7 +210,6 @@ updateNewDropoffFromGeocode: () => {
     ItemSkuInput.setValue('');
     ItemQuantityInput.setValue('1');
     DeliveryNotesInput.setValue('');
-    OrderSourceIdInput.setValue('');
     CustomerEmailInput.setValue('');
     // The recipient, added 2026-09-19. Without these two the next order opens carrying
     // the last customer's name and phone, which is how a parcel gets rung through to the
@@ -221,7 +220,6 @@ updateNewDropoffFromGeocode: () => {
     storeValue('newOrderItems', []);
 
     // Reset selects to defaults
-    StoreTypeSelect.setSelectedOption('Shopify');
     NewPaymentMethodSelect.setSelectedOption('COD');
   }
   }

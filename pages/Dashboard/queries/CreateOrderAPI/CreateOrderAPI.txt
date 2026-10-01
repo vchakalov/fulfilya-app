@@ -58,8 +58,10 @@
 		"service_rate_uuid": OrderShippingSelect.selectedOptionValue,
 		"payment_method": NewPaymentMethodSelect.selectedOptionValue,
 		"amount": NewAmountInput.text,
-		"store_type": StoreTypeSelect.selectedOptionValue,
-		"order_source_id": OrderSourceIdInput.text || "",
+		// Always a hand-typed order. "Тип магазин" and "Номер от магазина" left the form on
+		// 2026-10-01 (Ico): the type is always this, and the select was being reset to
+		// Shopify after every order. A shop's own number still arrives with the Excel upload.
+		"store_type": "Internal",
 		"scheduled_at": ScheduledDeliveryPicker.selectedDate,
 		"notes": DeliveryNotesInput.text || "",
 		"items": (appsmith.store.newOrderItems || []).map(item => ({
