@@ -425,6 +425,26 @@ appsmith.onModelChange(render);
 HEADER_ON = "{{(async () => { const m = BoHeader.model || {}; if (m.action === 'lang') { return storeValue('bo_lang', m.lang || 'bg'); } if (m.action === 'logout') { return AuthManager.logout(); } if (m.action === 'new') { return showModal('CreateOrderModal'); } if (m.action === 'nav') { if (m.tab === 'orders') { return navigateTo('Dashboard', { tab: 'orders' }); } if (m.tab === 'tablo') { return navigateTo('Dashboard'); } if (m.page) { return navigateTo(m.page); } } })()}}"
 TABLO_ON = "{{(async () => { const m = BoTablo.model || {}; if (m.action === 'period' && m.period) { await storeValue('bo_period', m.period); await Promise.all([BoStats.run(), BoPayment.run(), BoStatus.run()]); return; } if (m.action === 'new') { return showModal('CreateOrderModal'); } if (m.action === 'nav' && m.page) { return navigateTo(m.page); } })()}}"
 
+# ---------------------------------------------------------------- товарителница (TODO 42)
+# "Генерирай товарителница": the backend builds the PDF from the merchant's own orders only
+# (PortalWaybillController, scoped by the login token) and hands back base64, because
+# download() takes a data: URI and Appsmith cannot stream a file. The paper size is the
+# merchant's choice, remembered in appsmith.store.wb_size: 'label' = 100x150 mm (default),
+# 'a4' = four to a sheet. A failure shows the server's own sentence when there is one -
+# "Няма поръчки, чакащи вземане." is an answer, not an error.
+def wb_js(args):
+    return ("(async () => { const en = appsmith.store.bo_lang === 'en'; "
+            "const size = appsmith.store.wb_size === 'a4' ? 'a4' : 'label'; "
+            "try { await WaybillPDF.run(Object.assign({ size: size }, " + args + ")); const f = WaybillPDF.data || {}; "
+            "if (!f.base64) { return showAlert(en ? 'The waybill did not arrive from the server.' : 'Товарителницата не дойде от сървъра.', 'error'); } "
+            "return download('data:application/pdf;base64,' + f.base64, f.filename || 'tovaritelnica.pdf', 'application/pdf'); } "
+            "catch (e) { const b = WaybillPDF.data || {}; "
+            "return showAlert(b.error || ((en ? 'Could not create the waybill: ' : 'Товарителницата не можа да се създаде: ') + (e.message || '')), 'warning'); } })()")
+
+TITLE_ON = ("{{(async () => { const m = BoTitle.model || {}; "
+            "if (m.action === 'wbsize') { return storeValue('wb_size', m.size === 'a4' ? 'a4' : 'label'); } "
+            "if (m.action === 'wball') { return " + wb_js("{ waiting: 1 }") + "; } })()}}")
+
 BO_WATCH = """
 // The widget keeps rendering Bulgarian; this re-runs the swap after every render
 // it does, without needing a hook into render() itself. boTranslate only touches
@@ -441,7 +461,7 @@ setTimeout(boSweep, 0);
 """
 
 
-def custom(name, top, bottom, html, css, js, model, height, key_seed, visible=None, events=True):
+def custom(name, top, bottom, html, css, js, model, height, key_seed, visible=None, events=True, on=None, right=None):
     js = js + bo_i18n.translator_js() + BO_WATCH
     model = model.replace('{{ { ', '{{ { ' + bo_i18n.MODEL_LANG + ', ', 1)
     d = {
@@ -449,7 +469,7 @@ def custom(name, top, bottom, html, css, js, model, height, key_seed, visible=No
         "boxShadow": "none", "bottomRow": bottom, "defaultModel": model,
         "dynamicBindingPathList": [{"key": "theme"}, {"key": "defaultModel"}],
         "dynamicHeight": height, "dynamicTriggerPathList": [{"key": "onAction"}],
-        "events": ["onAction"], "onAction": HEADER_ON if name == "BoHeader" else TABLO_ON,
+        "events": ["onAction"], "onAction": on or (HEADER_ON if name == "BoHeader" else TABLO_ON),
         "isLoading": False, "isVisible": True, "key": key_seed, "leftColumn": 0,
         "maxDynamicHeight": 9000, "minDynamicHeight": 4, "minWidth": 450,
         "mobileBottomRow": bottom, "mobileLeftColumn": 0, "mobileRightColumn": 64, "mobileTopRow": top,
@@ -466,6 +486,8 @@ def custom(name, top, bottom, html, css, js, model, height, key_seed, visible=No
     if not events:
         d['events'] = []; d.pop('onAction', None); d['dynamicTriggerPathList'] = []
         d['rightColumn'] = 40; d['mobileRightColumn'] = 40; d['minWidth'] = 200
+    if right is not None:
+        d['rightColumn'] = right; d['mobileRightColumn'] = right; d['minWidth'] = 200
     w(f'Dashboard/widgets/{name}.json', d)
 
 custom('BoHeader', 0, 8, HEADER_HTML, HEADER_CSS, HEADER_JS,
@@ -476,12 +498,70 @@ custom('BoTablo', 9, 58, TABLO_HTML, TABLO_CSS, TABLO_JS,
        "FIXED", "tblz9x8c7v", visible="{{!(appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders')}}")
 
 TITLE_HTML = FONT_LINK + '<div id="bo-title"></div>'
-TITLE_CSS = TOKENS + 'html,body{overflow:hidden}.t{display:flex;align-items:center;height:40px}.t h2{font-size:22px;font-weight:800}'
-TITLE_JS = r"""function render(){ const m = appsmith.model || {}; document.documentElement.dataset.theme = 'light'; const INK = '#1D1D1F'; document.body.style.color = INK; document.getElementById('bo-title').innerHTML = '<div class="t"><h2 style="color:' + INK + '">' + String(m.title || '').replace(/[&<>]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[c]) + '</h2></div>'; }
+# Beside the list's name: the waybill paper size, which the per-row button uses too, and
+# one button for every order still waiting to be collected. It sits left of "+ Нова
+# поръчка" (Button6, columns 51-64), hence the title stops at column 50.
+TITLE_CSS = TOKENS + """html,body{overflow:hidden}
+.t{display:flex;align-items:center;justify-content:space-between;gap:12px;height:40px;font-family:var(--body)}
+.t h2{font-family:var(--display);font-size:22px;font-weight:800;margin:0;white-space:nowrap}
+.wb{display:flex;align-items:center;gap:8px;min-width:0}
+.wb .lbl{font-size:13px;color:var(--muted);white-space:nowrap}
+.seg{display:inline-flex;background:var(--ground);border:1px solid var(--line);border-radius:999px;padding:2px}
+.seg button{font:600 12px var(--body);border:0;background:transparent;color:var(--muted);padding:5px 11px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.seg button.on{background:var(--ink);color:#fff}
+.all{font:600 13px var(--body);border:1px solid var(--ink);background:#fff;color:var(--ink);padding:7px 14px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.all:hover{background:var(--ink);color:#fff}"""
+TITLE_JS = r"""const esc = (v) => String(v == null ? '' : v).replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
+function render(){
+  const m = appsmith.model || {};
+  document.documentElement.dataset.theme = 'light';
+  const size = m.size === 'a4' ? 'a4' : 'label';
+  document.getElementById('bo-title').innerHTML =
+    '<div class="t"><h2 style="color:#1D1D1F">' + esc(m.title) + '</h2>' +
+    '<div class="wb"><span class="lbl">Товарителници</span>' +
+    '<span class="seg"><button data-size="label" class="' + (size === 'label' ? 'on' : '') + '">Етикет 100×150</button>' +
+    '<button data-size="a4" class="' + (size === 'a4' ? 'on' : '') + '">A4</button></span>' +
+    '<button class="all" data-act="wball">Принтирай всички чакащи</button></div></div>';
+}
+document.addEventListener('click', (ev) => {
+  const sz = ev.target.closest('[data-size]');
+  if (sz) { appsmith.updateModel({ action: 'wbsize', size: sz.dataset.size }); appsmith.triggerEvent('onAction'); return; }
+  const all = ev.target.closest('[data-act="wball"]');
+  if (all) { appsmith.updateModel({ action: 'wball' }); appsmith.triggerEvent('onAction'); }
+});
 appsmith.onReady(render); appsmith.onModelChange(render);"""
 custom('BoTitle', 60, 64, TITLE_HTML, TITLE_CSS, TITLE_JS,
-       "{{ { title: (appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders') ? 'Поръчки' : 'Последни поръчки' } }}",
-       "FIXED", "ttl5r6t7y8", events=False)
+       "{{ { title: (appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders') ? 'Поръчки' : 'Последни поръчки', size: appsmith.store.wb_size || 'label' } }}",
+       "FIXED", "ttl5r6t7y8", on=TITLE_ON, right=50)
+
+# The query both buttons run. this.params carries the orders / waiting flag and the size,
+# so one query serves the row button and the print-all button. The MERCHANT's own token,
+# never the shared one: the endpoint decides whose orders to print from it.
+w('Dashboard/queries/WaybillPDF/metadata.json', {
+    "gitSyncId": gid('Dashboard/WaybillPDF'), "id": "Dashboard_WaybillPDF", "pluginId": "restapi-plugin", "pluginType": "API",
+    "unpublishedAction": {
+        "actionConfiguration": {
+            "encodeParamsToggle": True,
+            "headers": [
+                {"key": "Authorization", "value": "Bearer {{appsmith.store.authToken}}"},
+                # Without it Laravel answers a 422 with a 302, which Appsmith reports as a 405.
+                {"key": "Accept", "value": "application/json"},
+            ],
+            "httpMethod": "GET", "paginationType": "NONE", "path": "/int/v1/portal/waybills",
+            "queryParameters": [
+                {"key": "orders", "value": "{{this.params.orders || ''}}"},
+                {"key": "waiting", "value": "{{this.params.waiting ? '1' : ''}}"},
+                {"key": "size", "value": "{{this.params.size || 'label'}}"},
+                {"key": "format", "value": "pdf-base64"},
+            ],
+            "timeoutInMillisecond": 60000,
+        },
+        "confirmBeforeExecute": False,
+        "datasource": {"datasourceConfiguration": {"url": "https://api.operations.fulfilya.com"},
+                       "isAutoGenerated": False, "name": "DEFAULT_REST_DATASOURCE", "pluginId": "restapi-plugin"},
+        "dynamicBindingPathList": [{"key": "headers[0].value"}, {"key": "queryParameters[0].value"},
+                                   {"key": "queryParameters[1].value"}, {"key": "queryParameters[2].value"}],
+        "name": "WaybillPDF", "pageId": "Dashboard", "runBehaviour": "MANUAL", "userSetOnLoad": False}})
 
 # ---------------------------------------------------------------- existing widgets, restyled
 def load(rel): return json.load(open(os.path.join(REPO, rel), encoding='utf-8'))
@@ -534,7 +614,18 @@ for hidden_id in ('cod_amount', 'goods_amount', 'delivery_amount', 'cod_fee', 'r
         cols[hidden_id] = c
         tb['dynamicBindingPathList'].append({"key": f"primaryColumns.{hidden_id}.computedValue"})
     cols[hidden_id]['isVisible'] = False
-tb['columnOrder'] = ['customColumn1', 'internal_reference', 'status', 'created_date', 'delivery_address', 'recipient_phone', 'delivery_full_address', 'total_amount', 'customColumn4', 'order_id', 'customer_name', 'external_order_id', 'customColumn2', 'customer_email', 'customer_phone', 'pickup_location', 'driver_name', 'tracking_number', 'payment_method', 'store_type', 'status_display', 'cod_amount', 'goods_amount', 'delivery_amount', 'cod_fee', 'recipient_notes', 'shop_order_id']
+# "Генерирай товарителница" on every row (Ico, 2026-10-01), a copy of the Детайли button
+# column so it carries the same per-row bindings. Rebuilt from customColumn1 on every run.
+wbc = copy.deepcopy(cols['customColumn1'])
+wbc.update(id='waybill', originalId='waybill', alias='', label='', width=230, buttonColor='#1D1D1F', labelColor='#FFFFFF',
+           buttonLabel=bi('Генерирай товарителница'),
+           onClick='{{' + wb_js('{ orders: currentRow.order_id }') + '}}')
+cols['waybill'] = wbc
+for e in list(tb.get('dynamicBindingPathList', [])):
+    if e['key'].startswith('primaryColumns.customColumn1.') and not e['key'].endswith(('.buttonLabel', '.onClick')):
+        tb['dynamicBindingPathList'].append({'key': e['key'].replace('customColumn1', 'waybill')})
+tb['dynamicTriggerPathList'] = [x for x in tb.get('dynamicTriggerPathList', []) if x.get('key') != 'primaryColumns.waybill.onClick'] + [{'key': 'primaryColumns.waybill.onClick'}]
+tb['columnOrder'] = ['customColumn1', 'waybill', 'internal_reference', 'status', 'created_date', 'delivery_address', 'recipient_phone', 'delivery_full_address', 'total_amount', 'customColumn4', 'order_id', 'customer_name', 'external_order_id', 'customColumn2', 'customer_email', 'customer_phone', 'pickup_location', 'driver_name', 'tracking_number', 'payment_method', 'store_type', 'status_display', 'cod_amount', 'goods_amount', 'delivery_amount', 'cod_fee', 'recipient_notes', 'shop_order_id']
 for i, k in enumerate(tb['columnOrder']):
     if k in cols: cols[k]['index'] = i
 # A viewer's browser remembers a table's column order (localStorage tableWidgetColumnOrder)

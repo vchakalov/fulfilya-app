@@ -6,6 +6,10 @@ over `pages/`, commit, and Ico pulls in the Appsmith editor (Discard & pull) and
 
 - `bo-build.py` — Dashboard: BoHeader + BoTablo custom widgets, Bo* queries, BoNav, the
   relabelled OrdersTable, the merchant-logo lookup at login.
+  Also the **товарителница** (TODO 42, 2026-10-01): a "Генерирай товарителница" button column
+  on OrdersTable, and in BoTitle the paper size (`appsmith.store.wb_size`, label | a4) plus
+  "Принтирай всички чакащи". Both run the WaybillPDF query (`int/v1/portal/waybills`, merchant
+  token, pdf-base64) through `wb_js()` and hand the bytes to `download()`.
 - `bo-build-reports.py` — Reporting: header + BoReports, Rp* queries, RpNav; imports the header
   from bo-build.py.
 - `bo-build-payouts.py` — **Изплащания** (Payouts), a whole page of its own: the page manifest,
