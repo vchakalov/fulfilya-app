@@ -191,10 +191,19 @@ updateNewDropoffFromGeocode: () => {
     clearInterval(appsmith.store.newDropoffGeoTimeout);
 
     // Reset all form inputs
-    NewPickupAddressInput.setValue('');
+    // The next order's pickup is the warehouse again, coordinates and all (2026-10-01).
+    const w = (BoWarehouse.data || [])[0];
+    if (w && w.address) {
+      NewPickupAddressInput.setValue(w.address).then(() => {
+        NewPickupLatHidden.setValue(String(w.lat));
+        NewPickupLngHidden.setValue(String(w.lng));
+      });
+    } else {
+      NewPickupAddressInput.setValue('');
+      NewPickupLatHidden.setValue('');
+      NewPickupLngHidden.setValue('');
+    }
     NewDropoffAddressInput.setValue('');
-    NewPickupLatHidden.setValue('');
-    NewPickupLngHidden.setValue('');
     NewDropoffLatHidden.setValue('');
     NewDropoffLngHidden.setValue('');
     ItemNameInput.setValue('');

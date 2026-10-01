@@ -45,7 +45,7 @@
   "responsiveBehavior": "fill",
   "rightColumn": 28,
   "shouldTruncate": false,
-  "text": "{{(() => {\n     if (GeocodeNewPickupAddress.isLoading) return \"Търсим адреса...\";\n     if (NewPickupLatHidden.text && NewPickupLngHidden.text) return \"✓ Адресът е намерен\";\n     if (NewPickupAddressInput.text?.length > 3 && !GeocodeNewPickupAddress.isLoading) return \"✗ Адресът не е намерен — проверете изписването\";\n     return \"Въведете адрес\";\n   })()}}",
+  "text": "{{(() => {\n     if (GeocodeNewPickupAddress.isLoading) return \"Търсим адреса...\";\n     const w = (BoWarehouse.data || [])[0];\n     if (w && w.address && NewPickupAddressInput.text === w.address) return \"✓ Вашият склад\";\n     if (NewPickupLatHidden.text && NewPickupLngHidden.text) return \"✓ Адресът е намерен\";\n     if (NewPickupAddressInput.text?.length > 3 && !GeocodeNewPickupAddress.isLoading) return \"✗ Адресът не е намерен — проверете изписването\";\n     return \"Въведете адрес\";\n   })()}}",
   "textAlign": "LEFT",
   "textColor": "{{(() => {\n     if (GeocodeNewPickupAddress.isLoading) return \"#F59E0B\";\n     if (NewPickupLatHidden.text && NewPickupLngHidden.text) return \"#10B981\";\n     if (NewPickupAddressInput.text?.length > 3) return \"#EF4444\";\n     return \"#6B7280\";\n   })()}}",
   "topRow": 0,

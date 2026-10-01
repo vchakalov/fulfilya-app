@@ -136,6 +136,22 @@ def query(name, sql):
 for n, s in (('BoStats', SQL_STATS), ('BoPayment', SQL_PAYMENT), ('BoStatus', SQL_STATUS), ('BoDays', SQL_DAYS)):
     query(n, s)
 
+# The merchant's warehouse, which "+ Нова поръчка" puts in "Адрес за взимане" (Ico,
+# 2026-10-01: filled in, not fixed - they may overwrite it). The line is street, then city,
+# exactly what PortalPickup::addressLine() builds on the server, so an untouched field is
+# recognised there as the warehouse without a geocode. SRID 0: ST_X is the longitude.
+# No prose comments in the SQL: a semicolon there turns the query into an update count.
+SQL_WAREHOUSE = """SELECT
+  CONCAT_WS(', ', NULLIF(TRIM(p.street1), ''), NULLIF(TRIM(p.city), '')) AS address,
+  ST_Y(p.location) AS lat,
+  ST_X(p.location) AS lng
+FROM contacts c
+JOIN places p ON p.uuid = c.place_uuid AND p.deleted_at <=> NULL
+WHERE c.uuid = '{{appsmith.store.customer_uuid}}'
+  AND c.deleted_at <=> NULL
+LIMIT 1"""
+query('BoWarehouse', SQL_WAREHOUSE)
+
 # ---------------------------------------------------------------- JS object
 BONAV = r"""export default {
   // Sofia time, whatever the browser is set to. The SQL shifts created_at by this many

@@ -37,6 +37,12 @@
 	const NewCustomerEmail = (CustomerEmailInput.text || "").trim();
 
 	return {
+		// Where we collect from. The field opens as the merchant's warehouse and may be
+		// overwritten; the server keeps the warehouse unless this clearly names somewhere
+		// else (PortalPickup, 2026-10-01). Until then the field was ignored.
+		"pickup": {
+			"address": (NewPickupAddressInput.text || "").trim()
+		},
 		// A single line the server geocodes against Bulgaria, which is what gives the
 		// driver a real street, city and postcode. The old call sent coordinates and a
 		// formatted string that Fleetbase silently dropped.

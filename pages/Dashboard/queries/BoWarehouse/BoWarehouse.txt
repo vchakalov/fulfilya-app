@@ -1,0 +1,9 @@
+SELECT
+  CONCAT_WS(', ', NULLIF(TRIM(p.street1), ''), NULLIF(TRIM(p.city), '')) AS address,
+  ST_Y(p.location) AS lat,
+  ST_X(p.location) AS lng
+FROM contacts c
+JOIN places p ON p.uuid = c.place_uuid AND p.deleted_at <=> NULL
+WHERE c.uuid = '{{appsmith.store.customer_uuid}}'
+  AND c.deleted_at <=> NULL
+LIMIT 1
