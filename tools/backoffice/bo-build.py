@@ -510,7 +510,11 @@ TITLE_CSS = TOKENS + """html,body{overflow:hidden}
 .seg button{font:600 12px var(--body);border:0;background:transparent;color:var(--muted);padding:5px 11px;border-radius:999px;cursor:pointer;white-space:nowrap}
 .seg button.on{background:var(--ink);color:#fff}
 .all{font:600 13px var(--body);border:1px solid var(--ink);background:#fff;color:var(--ink);padding:7px 14px;border-radius:999px;cursor:pointer;white-space:nowrap}
-.all:hover{background:var(--ink);color:#fff}"""
+.all:hover{background:var(--ink);color:#fff}
+/* The editor and a small laptop give this widget ~650px: the caption goes first, then the
+   title shrinks, so the print-all button is never cut off (seen in the editor 2026-10-01). */
+@media (max-width:760px){.wb .lbl{display:none}.t h2{font-size:19px}}
+@media (max-width:560px){.t h2{display:none}.t{justify-content:flex-end}}"""
 TITLE_JS = r"""const esc = (v) => String(v == null ? '' : v).replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
 function render(){
   const m = appsmith.model || {};
