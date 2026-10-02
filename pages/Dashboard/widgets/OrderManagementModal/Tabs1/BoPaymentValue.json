@@ -37,7 +37,7 @@
   "responsiveBehavior": "fill",
   "rightColumn": 43,
   "shouldTruncate": false,
-  "text": "{{(() => {\n  const en = appsmith.store.bo_lang === 'en';\n  const d = GetOrderDetails.data[0] || {};\n  const payerBg = { all: 'Клиентът плаща всичко', fees: 'Клиентът плаща само таксите', nothing: 'Клиентът не плаща нищо' };\n  const payerEn = { all: 'Customer pays everything', fees: 'Customer pays our fees only', nothing: 'Customer pays nothing' };\n  if (d.payer) return (en ? payerEn : payerBg)[d.payer] || d.payer;\n  const bg = { COD: 'Наложен платеж', CARD: 'Платена предварително', Paid: 'Платена предварително' };\n  const eng = { COD: 'Cash on delivery', CARD: 'Prepaid', Paid: 'Prepaid' };\n  return (en ? eng : bg)[d.payment_method] || d.payment_method || '-';\n})()}}",
+  "text": "{{(() => {\n  const en = appsmith.store.bo_lang === 'en';\n  const d = GetOrderDetails.data[0] || {};\n  const payerBg = { all: 'Получателят плаща всичко', fees: 'Получателят плаща само таксите', nothing: 'Получателят не плаща нищо' };\n  const payerEn = { all: 'Recipient pays everything', fees: 'Recipient pays our fees only', nothing: 'Recipient pays nothing' };\n  if (d.payer) return (en ? payerEn : payerBg)[d.payer] || d.payer;\n  const bg = { COD: 'Наложен платеж', CARD: 'Платена предварително', Paid: 'Платена предварително' };\n  const eng = { COD: 'Cash on delivery', CARD: 'Prepaid', Paid: 'Prepaid' };\n  return (en ? eng : bg)[d.payment_method] || d.payment_method || '-';\n})()}}",
   "textAlign": "LEFT",
   "textColor": "#1D1D1F",
   "topRow": 10,

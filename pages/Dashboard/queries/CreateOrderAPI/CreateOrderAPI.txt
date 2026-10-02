@@ -58,6 +58,13 @@
 		throw new Error("Въведете наложения платеж - стойността на стоката");
 	}
 
+	// "Обявена стойност" (0,25 %), optional in any option; at most 5 112,92 EUR (2026-10-02).
+	const withDeclared = DeclaredValueSelect.selectedOptionValue === "yes";
+	const NewDeclared = String(DeclaredValueInput.text || "").trim().replace(",", ".");
+	if (withDeclared && !(Number(NewDeclared) > 0 && Number(NewDeclared) <= 5112.92)) {
+		throw new Error("Въведете обявена стойност до 5 112,92 €");
+	}
+
 	return {
 		// Where we collect from. The field opens as the merchant's warehouse and may be
 		// overwritten; the server keeps the warehouse unless this clearly names somewhere
@@ -81,6 +88,7 @@
 		"payer": payer,
 		// "Клиентът не плаща нищо" has no наложен платеж - nothing to send (2026-10-02).
 		...(payer !== "nothing" ? { "cod_amount": NewCodAmount } : {}),
+		...(withDeclared ? { "declared_value": NewDeclared } : {}),
 		// Always a hand-typed order. "Тип магазин" and "Номер от магазина" left the form on
 		// 2026-10-01 (Ico): the type is always this, and the select was being reset to
 		// Shopify after every order. A shop's own number still arrives with the Excel upload.
