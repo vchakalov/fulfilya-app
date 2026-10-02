@@ -132,6 +132,22 @@ updateNewDropoffFromGeocode: () => {
       return;
     }
 
+    // Google answers an address it cannot read with the whole country or the whole city -
+    // "asdfgh qwerty" came back as "found", pinned near Shipka (tester finding, 2026-10-02).
+    // Only a street, a building or a neighbourhood counts, and only in and around Sofia;
+    // the server applies the same two rules when the order is created.
+    const coarse = ["country", "administrative_area_level_1", "administrative_area_level_2",
+      "administrative_area_level_3", "colloquial_area", "political", "locality", "postal_code", "postal_town"];
+    const types = geoResult.types || [];
+    const onlyTown = types.length > 0 && types.every((t) => coarse.includes(t));
+    const inSofia = loc.lat >= 42.55 && loc.lat <= 42.86 && loc.lng >= 23.10 && loc.lng <= 23.62;
+    if (onlyTown || !inSofia) {
+      NewDropoffLatHidden.setValue("");
+      NewDropoffLngHidden.setValue("");
+      showAlert("Адресът не е намерен в София — проверете улицата и номера (напр. ул. Витоша 15, София)", "warning");
+      return;
+    }
+
     // The merchant's own words stay in the field; the search only places the pin.
     // Overwriting them with Google's formatted line lost the housing complex on every
     // ж.к. address: "ж.к. Младост 1, бл. 15" came back as "Bl. 15, Mladost 1Mladost, ..."

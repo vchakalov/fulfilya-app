@@ -36,6 +36,16 @@
 
 	const NewCustomerEmail = (CustomerEmailInput.text || "").trim();
 
+	// What the shopper pays at the door. A prepaid order collects nothing, and the form
+	// greys the box out - so it used to arrive empty and the server refused every prepaid
+	// order with "The amount field is required" (tester finding, 2026-10-02). Cash on
+	// delivery needs a real amount; the server works the goods out of it.
+	const isCod = NewPaymentMethodSelect.selectedOptionValue === "COD";
+	const NewAmount = isCod ? String(NewAmountInput.text || "").trim().replace(",", ".") : "0";
+	if (isCod && !(Number(NewAmount) > 0)) {
+		throw new Error("Въведете сумата, която куриерът да събере при доставка");
+	}
+
 	return {
 		// Where we collect from. The field opens as the merchant's warehouse and may be
 		// overwritten; the server keeps the warehouse unless this clearly names somewhere
@@ -57,7 +67,7 @@
 		},
 		"service_rate_uuid": OrderShippingSelect.selectedOptionValue,
 		"payment_method": NewPaymentMethodSelect.selectedOptionValue,
-		"amount": NewAmountInput.text,
+		"amount": NewAmount,
 		// Always a hand-typed order. "Тип магазин" and "Номер от магазина" left the form on
 		// 2026-10-01 (Ico): the type is always this, and the select was being reset to
 		// Shopify after every order. A shop's own number still arrives with the Excel upload.
