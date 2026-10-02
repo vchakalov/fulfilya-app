@@ -49,7 +49,7 @@
   "leftColumn": 1,
   "maxDate": "2121-12-31T18:29:00.000Z",
   "maxDynamicHeight": 9000,
-  "minDate": "{{moment().add(1,'days').startOf('day').add(9, \"hours\");}}",
+  "minDate": "{{moment().startOf('minute').toISOString()}}",
   "minDynamicHeight": 4,
   "minWidth": 450,
   "mobileBottomRow": 28,
