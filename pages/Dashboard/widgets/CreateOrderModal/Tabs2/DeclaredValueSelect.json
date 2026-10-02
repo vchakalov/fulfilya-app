@@ -4,7 +4,7 @@
   "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
   "bottomRow": 17,
   "boxShadow": "none",
-  "defaultOptionValue": "{\"label\": \"Без обявена стойност\", \"value\": \"no\"}",
+  "defaultOptionValue": "{\"label\": \"Не\", \"value\": \"no\"}",
   "dynamicBindingPathList": [
     {
       "key": "borderRadius"
@@ -29,7 +29,7 @@
   "key": "8t58wha2fs",
   "labelAlignment": "left",
   "labelPosition": "Top",
-  "labelText": "Обявена стойност (0,25%)",
+  "labelText": "Обявена стойност",
   "labelTextSize": "0.875rem",
   "labelWidth": 5,
   "leftColumn": 22,
@@ -51,7 +51,7 @@
   "responsiveBehavior": "fill",
   "rightColumn": 33,
   "serverSideFiltering": false,
-  "sourceData": "[\n  {\"label\": \"Без обявена стойност\", \"value\": \"no\"},\n  {\"label\": \"С обявена стойност\", \"value\": \"yes\"}\n]",
+  "sourceData": "[\n  {\"label\": \"Не\", \"value\": \"no\"},\n  {\"label\": \"Да (0,25%)\", \"value\": \"yes\"}\n]",
   "topRow": 10,
   "type": "SELECT_WIDGET",
   "version": 1,
