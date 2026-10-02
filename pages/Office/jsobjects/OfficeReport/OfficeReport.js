@@ -27,11 +27,14 @@ export default {
       await storeValue('office_date', OfficeReport.today());
       await storeValue('office_to', '');
     }
+    // Messages follow the BG|EN switch (they stayed Bulgarian in English until 2026-10-02).
+    // Inline rather than a helper: a new function on this object needs its own metadata entry.
+    const en = appsmith.store.bo_lang === 'en';
     try {
       await GetCodReport.run();
     } catch (e) {
       const body = GetCodReport.data || {};
-      showAlert('Отчетът не можа да се зареди: ' + (body.error || e.message || ''), 'error');
+      showAlert((en ? 'The report could not be loaded: ' : 'Отчетът не можа да се зареди: ') + (body.error || e.message || ''), 'error');
     }
   },
 
@@ -40,21 +43,22 @@ export default {
   // money is in the account by the time the office presses this (Ico, 2026-09-19). The
   // query itself asks for confirmation first; this only refuses the cases that cannot work.
   payout: async () => {
+    const en = appsmith.store.bo_lang === 'en';
     const merchant = appsmith.store.office_merchant;
     if (!merchant || merchant === 'all') {
-      showAlert('Избери клиент, на когото изплащаш.', 'warning');
+      showAlert(en ? 'Pick the client you are paying.' : 'Избери клиент, на когото изплащаш.', 'warning');
       return;
     }
     const owed = Number(GetPendingPayout.data?.totals?.owed || 0);
     if (!owed) {
-      showAlert('Няма неизплатени поръчки за този клиент.', 'info');
+      showAlert(en ? 'This client has no unpaid orders.' : 'Няма неизплатени поръчки за този клиент.', 'info');
       return;
     }
     try {
       await PostPayout.run();
       const r = PostPayout.data || {};
       if (!r.paid) {
-        showAlert('Изплащането не мина: ' + (r.error || ''), 'error');
+        showAlert((en ? 'The payout did not go through: ' : 'Изплащането не мина: ') + (r.error || ''), 'error');
         return;
       }
       await storeValue('last_payout_id', r.payout?.id || '');
@@ -63,18 +67,22 @@ export default {
       // number the office types into the bank, so it has to be the second one.
       const paid = Number(r.totals?.net ?? r.totals?.owed ?? 0);
       const held = Number(r.returns?.totals?.withheld || 0);
+      const n = r.totals?.orders || 0;
       showAlert(
-        held
-          ? `Изплатени ${paid.toFixed(2)} € по ${r.totals?.orders || 0} поръчки (удържани ${held.toFixed(2)} € за върнати пратки).`
-          : `Изплатени ${paid.toFixed(2)} € по ${r.totals?.orders || 0} поръчки.`,
+        en
+          ? (held ? `Paid out ${paid.toFixed(2)} € for ${n} orders (${held.toFixed(2)} € withheld for returned parcels).` : `Paid out ${paid.toFixed(2)} € for ${n} orders.`)
+          : (held ? `Изплатени ${paid.toFixed(2)} € по ${n} поръчки (удържани ${held.toFixed(2)} € за върнати пратки).` : `Изплатени ${paid.toFixed(2)} € по ${n} поръчки.`),
         'success'
       );
-      // Both views move: what is still owed, and the report's paid/unpaid split.
+      // Every view moves: what is still owed, the report's paid/unpaid split, and the
+      // history - which the payout box reads for its "Разписка от" button, so without it
+      // the button kept offering the previous payout's statement (2026-10-02).
       await GetPendingPayout.run();
+      await GetPayoutHistory.run();
       await OfficeReport.run();
     } catch (e) {
       const body = PostPayout.data || {};
-      showAlert('Изплащането не мина: ' + (body.error || e.message || ''), 'error');
+      showAlert((en ? 'The payout did not go through: ' : 'Изплащането не мина: ') + (body.error || e.message || ''), 'error');
     }
   },
 
@@ -83,30 +91,32 @@ export default {
   // way to reprint an older statement before TODO 37 (the button only ever knew about
   // a payout made in the same browser session).
   payoutPdf: async () => {
+    const en = appsmith.store.bo_lang === 'en';
     if (!appsmith.store.receipt_payout_id && !appsmith.store.last_payout_id) {
-      showAlert('Няма изплащане за разписка — първо направи изплащане.', 'warning');
+      showAlert(en ? 'No payout to print a statement for - make a payout first.' : 'Няма изплащане за разписка — първо направи изплащане.', 'warning');
       return;
     }
     try {
       await GetPayoutPdf.run();
       const f = GetPayoutPdf.data || {};
-      if (!f.base64) { showAlert('Разписката не дойде от сървъра.', 'error'); return; }
+      if (!f.base64) { showAlert(en ? 'The statement did not arrive from the server.' : 'Разписката не дойде от сървъра.', 'error'); return; }
       await download('data:application/pdf;base64,' + f.base64, f.filename || 'izplashtane.pdf', 'application/pdf');
     } catch (e) {
       const body = GetPayoutPdf.data || {};
-      showAlert('Разписката не можа да се създаде: ' + (body.error || e.message || ''), 'error');
+      showAlert((en ? 'The statement could not be created: ' : 'Разписката не можа да се създаде: ') + (body.error || e.message || ''), 'error');
     }
   },
 
   downloadPdf: async () => {
+    const en = appsmith.store.bo_lang === 'en';
     try {
       await GetCodReportPdf.run();
       const f = GetCodReportPdf.data || {};
-      if (!f.base64) { showAlert('PDF файлът не дойде от сървъра.', 'error'); return; }
+      if (!f.base64) { showAlert(en ? 'The PDF did not arrive from the server.' : 'PDF файлът не дойде от сървъра.', 'error'); return; }
       await download('data:application/pdf;base64,' + f.base64, f.filename || 'nalozhen-platezh.pdf', 'application/pdf');
     } catch (e) {
       const body = GetCodReportPdf.data || {};
-      showAlert('PDF файлът не можа да се създаде: ' + (body.error || e.message || ''), 'error');
+      showAlert((en ? 'The PDF could not be created: ' : 'PDF файлът не можа да се създаде: ') + (body.error || e.message || ''), 'error');
     }
   }
 }

@@ -320,6 +320,7 @@ RULES = [
     [r'^удържани за (\d+) върнати пратки$', '', 'withheld for $1 returned parcels'],
     [r'^още (.+) остават за следващо изплащане$', '', '$1 more left for the next payout'],
     [r'^Изплати (.+)$', '', 'Pay out $1'],
+    [r'^Разписка от (.+)$', '', 'Statement of $1'],
     [r'^Общо (.+) към 1 клиент · натиснете име, за да го отворите$', '', 'Total $1 to 1 client · click a name to open it'],
     [r'^Общо (.+) към (\d+) клиента · натиснете име, за да го отворите$', '', 'Total $1 to $2 clients · click a name to open it'],
     [r'^последните (\d+)$', '', 'the last $1'],

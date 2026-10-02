@@ -199,8 +199,8 @@ function render() {
       `<button type="button" class="chip${period === 'week' ? ' on' : ''}" data-period="week">Тази седмица</button>` +
       `<button type="button" class="chip${period === 'month' ? ' on' : ''}" data-period="month">Този месец</button>` +
       `<span class="sep"></span>` +
-      `<label for="of-from">от</label><input type="date" id="of-from" value="${esc(shownFrom)}">` +
-      `<label for="of-to">до</label><input type="date" id="of-to" value="${esc(shownTo)}">` +
+      `<label for="of-from">от</label><input type="date" id="of-from" min="2026-01-01" max="2099-12-31" value="${esc(shownFrom)}">` +
+      `<label for="of-to">до</label><input type="date" id="of-to" min="2026-01-01" max="2099-12-31" value="${esc(shownTo)}">` +
       `<button type="button" class="btn go" id="of-show">Покажи периода</button>` +
       `<span class="spacer" style="flex:1 1 auto"></span>` +
       `<button type="button" class="btn" id="of-pdf">Свали PDF</button>` +
@@ -255,6 +255,16 @@ function render() {
 
   // The payout block. It leads with what gets typed into the bank - totals.net, never
   // totals.owed, which is what the orders were worth BEFORE return charges come off.
+  // The statement offered beside a merchant's payout is THAT merchant's last one, named by
+  // its date. It used to be "the last payout made in this browser", whoever it was for -
+  // pay TheBasket, open Tartiflette, press Разписка PDF and you got TheBasket's statement
+  // (tester finding, 2026-10-02). The history is scoped to the selected merchant and
+  // newest first, so its first run for them is the one.
+  const runsAll = (m.history && m.history.payouts) || [];
+  const lastRun = oneMerchant ? runsAll.find((x) => x.merchant && x.merchant.uuid === sel) : null;
+  const receiptBtn = lastRun
+    ? `<button type="button" class="btn" data-receipt="${esc(lastRun.id)}">Разписка от ${esc(String(lastRun.at || '').slice(0, 10).split('-').reverse().join('.'))}</button>`
+    : '';
   const withheld = num(ret.withheld);
   const net = pt.net === undefined ? num(pt.owed) : num(pt.net);
   let pay;
@@ -263,7 +273,8 @@ function render() {
   } else if (!num(pt.orders)) {
     const owes = withheld + num(ret.carried);
     pay = `<div class="card"><h3><span>Изплащане</span> · ${esc(who)}</h3>` +
-      `<div class="empty"><span>Няма неизплатени поръчки.</span>${owes ? ` <span>Дължи ни</span> <strong class="held">${eur(owes)}</strong> <span>за върнати пратки — удържа се от следващото изплащане.</span>` : ''}</div></div>`;
+      `<div class="empty"><span>Няма неизплатени поръчки.</span>${owes ? ` <span>Дължи ни</span> <strong class="held">${eur(owes)}</strong> <span>за върнати пратки — удържа се от следващото изплащане.</span>` : ''}</div>` +
+      (receiptBtn ? `<div class="actions" style="justify-content:center">${receiptBtn}</div>` : '') + `</div>`;
   } else {
     pay = `<div class="card pay">` +
       // Everything unpaid, whatever dates are picked above - a payout covers every
@@ -276,10 +287,11 @@ function render() {
         (withheld ? `<br><span class="held">− ${eur(withheld)}</span> удържани за ${plural(num(ret.count), 'върната пратка', 'върнати пратки')}` : '') +
         (num(ret.carried) ? `<br><span class="note">още ${eur(ret.carried)} остават за следващо изплащане</span>` : '') +
       `</div>` +
-      `<div class="spacer"></div>` +
+      // Left, beside the figures: the right edge is where Appsmith pins its "Built on
+      // appsmith" badge, and it sat over this button at some scroll positions (2026-10-02).
       `<div class="actions">` +
-        `<button type="button" class="btn" id="of-receipt"${m.lastPayout ? '' : ' disabled style="opacity:.5;cursor:not-allowed"'}>Разписка PDF</button>` +
         `<button type="button" class="btn go" id="of-pay">Изплати ${eur(net)}</button>` +
+        receiptBtn +
       `</div></div>`;
   }
 
@@ -356,7 +368,8 @@ function render() {
   on('of-show', () => send({ action: 'range', from: (document.getElementById('of-from') || {}).value || '', to: (document.getElementById('of-to') || {}).value || '' }));
   on('of-pdf', () => send({ action: 'pdf' }));
   on('of-pay', () => send({ action: 'payout' }));
-  on('of-receipt', () => send({ action: 'receipt', id: '' }));
+  document.querySelectorAll('.btn[data-receipt]').forEach((b) =>
+    b.addEventListener('click', () => send({ action: 'receipt', id: b.dataset.receipt })));
   document.querySelectorAll('.qchip[data-merchant]').forEach((b) =>
     b.addEventListener('click', () => send({ action: 'merchant', merchant: b.dataset.merchant })));
   document.querySelectorAll('.pdf[data-receipt]').forEach((b) =>
@@ -372,8 +385,14 @@ OFFICE_ON = ("{{(async () => { const m = BoOffice.model || {}; "
              "if (m.action === 'merchant') { await storeValue('office_merchant', m.merchant || 'all'); "
              "await Promise.all([OfficeReport.run(), GetPendingPayout.run(), GetPayoutHistory.run()]); return; } "
              "if (m.action === 'period') { await OfficeReport.setPeriod(m.period || 'day'); return GetPendingPayout.run(); } "
-             "if (m.action === 'range') { if (!m.from || !m.to) { return showAlert('Избери начална и крайна дата.', 'warning'); } "
-             "if (m.from > m.to) { return showAlert('Началната дата е след крайната.', 'warning'); } "
+             # A date box accepts 02.01.92026, and the server answered that with Laravel's
+             # English and an empty report (tester finding, 2026-10-02) - so a date is checked
+             # here as a real YYYY-MM-DD from 2026 before anything is asked.
+             "const en = appsmith.store.bo_lang === 'en'; "
+             "const okDate = (d) => /^20[2-9][0-9]-[01][0-9]-[0-3][0-9]$/.test(d || '') && d >= '2026-01-01'; "
+             "if (m.action === 'range') { if (!m.from || !m.to) { return showAlert(en ? 'Pick a start and an end date.' : 'Избери начална и крайна дата.', 'warning'); } "
+             "if (!okDate(m.from) || !okDate(m.to)) { return showAlert(en ? 'Check the dates - the year has to be four digits, from 2026 on.' : 'Провери датите - годината трябва да е с четири цифри, от 2026 нататък.', 'warning'); } "
+             "if (m.from > m.to) { return showAlert(en ? 'The start date is after the end date.' : 'Началната дата е след крайната.', 'warning'); } "
              "await OfficeReport.useRange(m.from, m.to); return GetPendingPayout.run(); } "
              "if (m.action === 'pdf') { return OfficeReport.downloadPdf(); } "
              "if (m.action === 'payout') { return OfficeReport.payout(); } "

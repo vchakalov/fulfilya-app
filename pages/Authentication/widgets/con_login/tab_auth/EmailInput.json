@@ -16,6 +16,9 @@
     },
     {
       "key": "label"
+    },
+    {
+      "key": "errorMessage"
     }
   ],
   "dynamicHeight": "FIXED",
@@ -58,5 +61,6 @@
   "type": "INPUT_WIDGET_V2",
   "version": 2,
   "widgetId": "nckbq8kovr",
-  "widgetName": "EmailInput"
+  "widgetName": "EmailInput",
+  "errorMessage": "{{appsmith.store.bo_lang === 'en' ? 'Enter a valid email, e.g. name@shop.bg' : 'Въведете валиден имейл, напр. name@shop.bg'}}"
 }
