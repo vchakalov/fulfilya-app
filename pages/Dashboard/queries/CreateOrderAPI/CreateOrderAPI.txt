@@ -36,6 +36,19 @@
 
 	const NewCustomerEmail = (CustomerEmailInput.text || "").trim();
 
+	// When it may be delivered (Ico, 2026-10-02): Standard from tomorrow on - never the
+	// day it is created; Express from now on, today included; never in the past. The
+	// date sits on the first tab and the service on the second, so the picker alone
+	// cannot enforce it. The server checks the same rule.
+	const when = ScheduledDeliveryPicker.selectedDate ? moment(ScheduledDeliveryPicker.selectedDate) : null;
+	const isExpress = /express/i.test(OrderShippingSelect.selectedOptionLabel || "");
+	if (when && when.isBefore(moment().subtract(15, "minutes"))) {
+		throw new Error("Датата и часът на доставка са в миналото. Изберете бъдещ момент.");
+	}
+	if (when && !isExpress && when.isBefore(moment().add(1, "days").startOf("day"))) {
+		throw new Error("Стандартната доставка е от утре нататък. За доставка днес изберете Експресна.");
+	}
+
 	// What the shopper pays at the door. A prepaid order collects nothing, and the form
 	// greys the box out - so it used to arrive empty and the server refused every prepaid
 	// order with "The amount field is required" (tester finding, 2026-10-02). Cash on
