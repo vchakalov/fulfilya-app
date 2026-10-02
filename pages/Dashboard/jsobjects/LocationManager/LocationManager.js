@@ -115,6 +115,10 @@ export default {
     // geocodes this same text again when the order is created.
     NewPickupLatHidden.setValue(loc.lat);
     NewPickupLngHidden.setValue(loc.lng);
+    // The text this pin belongs to. The field's text-change handler runs a moment after
+    // the last keystroke, so on a quick type-and-search it could land AFTER this and wipe
+    // the pin it had just been given - "found", then "още не е намерен" on Създай (2026-10-02).
+    storeValue("newPickupSearchedText", (NewPickupAddressInput.text || "").trim(), false);
 
     showAlert("✓ Адресът за взимане е намерен на картата", "success");
   } else {
@@ -155,6 +159,10 @@ updateNewDropoffFromGeocode: () => {
     // geocodes this same text again when the order is created.
     NewDropoffLatHidden.setValue(loc.lat);
     NewDropoffLngHidden.setValue(loc.lng);
+    // The text this pin belongs to. The field's text-change handler runs a moment after
+    // the last keystroke, so on a quick type-and-search it could land AFTER this and wipe
+    // the pin it had just been given - "found", then "още не е намерен" on Създай (2026-10-02).
+    storeValue("newDropoffSearchedText", (NewDropoffAddressInput.text || "").trim(), false);
 
     showAlert("✓ Адресът за доставка е намерен на картата", "success");
   } else {
