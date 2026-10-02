@@ -226,7 +226,7 @@ updateNewDropoffFromGeocode: () => {
     }
     storeValue('newOrderItems', []);
     storeValue('newOrderUUIDs', {});
-    NewPaymentMethodSelect.setSelectedOption('COD');
+    NewPaymentMethodSelect.setSelectedOption('all');
     // The pickup opens as the merchant's warehouse (2026-10-01): filled in, not fixed.
     if (!NewPickupAddressInput.text) {
       await BoWarehouse.run();
@@ -275,6 +275,6 @@ updateNewDropoffFromGeocode: () => {
     storeValue('newOrderItems', []);
 
     // Reset selects to defaults
-    NewPaymentMethodSelect.setSelectedOption('COD');
+    NewPaymentMethodSelect.setSelectedOption('all');
   }
   }

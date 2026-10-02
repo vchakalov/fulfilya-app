@@ -12,6 +12,9 @@
     },
     {
       "key": "borderRadius"
+    },
+    {
+      "key": "label"
     }
   ],
   "dynamicHeight": "FIXED",
@@ -21,13 +24,13 @@
     }
   ],
   "iconAlign": "left",
-  "inputType": "NUMBER",
+  "inputType": "TEXT",
   "isDisabled": false,
   "isLoading": false,
   "isRequired": false,
   "isVisible": true,
   "key": "gnxtfpd5ih",
-  "label": "Сума (EUR)",
+  "label": "{{appsmith.store.bo_lang === 'en' ? \"COD amount - goods value (EUR)\" : \"Наложен платеж - стойност на стоката (EUR)\"}}",
   "labelAlignment": "left",
   "labelPosition": "Top",
   "labelStyle": "",
@@ -45,7 +48,7 @@
   "parentColumnSpace": 16.1146240234375,
   "parentId": "sv637as6mi",
   "parentRowSpace": 10,
-  "placeholderText": "0.00",
+  "placeholderText": "напр. 43,14",
   "renderMode": "CANVAS",
   "resetOnSubmit": true,
   "responsiveBehavior": "fill",

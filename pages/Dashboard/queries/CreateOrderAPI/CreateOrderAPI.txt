@@ -49,14 +49,13 @@
 		throw new Error("Стандартната доставка е от утре нататък. За доставка днес изберете Експресна.");
 	}
 
-	// What the shopper pays at the door. A prepaid order collects nothing, and the form
-	// greys the box out - so it used to arrive empty and the server refused every prepaid
-	// order with "The amount field is required" (tester finding, 2026-10-02). Cash on
-	// delivery needs a real amount; the server works the goods out of it.
-	const isCod = NewPaymentMethodSelect.selectedOptionValue === "COD";
-	const NewAmount = isCod ? String(NewAmountInput.text || "").trim().replace(",", ".") : "0";
-	if (isCod && !(Number(NewAmount) > 0)) {
-		throw new Error("Въведете сумата, която куриерът да събере при доставка");
+	// The COD amount - the goods value the merchant typed - and who pays (Ico, 2026-10-02):
+	// "all" / "fees" / "nothing". The server adds our fees on top and works out what the
+	// driver collects; every percentage fee is charged on this amount. Required in all three.
+	const payer = NewPaymentMethodSelect.selectedOptionValue || "all";
+	const NewCodAmount = String(NewAmountInput.text || "").trim().replace(",", ".");
+	if (!(Number(NewCodAmount) > 0)) {
+		throw new Error("Въведете наложения платеж - стойността на стоката");
 	}
 
 	return {
@@ -79,8 +78,8 @@
 			...(NewCustomerEmail ? { "email": NewCustomerEmail } : {})
 		},
 		"service_rate_uuid": OrderShippingSelect.selectedOptionValue,
-		"payment_method": NewPaymentMethodSelect.selectedOptionValue,
-		"amount": NewAmount,
+		"payer": payer,
+		"cod_amount": NewCodAmount,
 		// Always a hand-typed order. "Тип магазин" and "Номер от магазина" left the form on
 		// 2026-10-01 (Ico): the type is always this, and the select was being reset to
 		// Shopify after every order. A shop's own number still arrives with the Excel upload.

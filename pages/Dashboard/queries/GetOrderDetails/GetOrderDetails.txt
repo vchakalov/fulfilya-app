@@ -70,6 +70,11 @@
        JOIN custom_fields cf ON cfv.custom_field_uuid = cf.uuid
        WHERE cfv.subject_uuid = o.uuid AND cf.name = 'store-type' LIMIT 1) as store_type,
 
+      -- Who pays at the door, from the order's quote (the portal's three options, 2026-10-02)
+      (SELECT JSON_UNQUOTE(JSON_EXTRACT(sq.meta, '$.payer')) FROM service_quotes sq
+       WHERE sq.payload_uuid = o.payload_uuid AND sq.deleted_at <=> NULL
+       ORDER BY sq.created_at DESC LIMIT 1) as payer,
+
       -- The two fee lines the console box reads, latest value (2026-10-02)
       (SELECT cfv.value FROM custom_field_values cfv
        JOIN custom_fields cf ON cfv.custom_field_uuid = cf.uuid
