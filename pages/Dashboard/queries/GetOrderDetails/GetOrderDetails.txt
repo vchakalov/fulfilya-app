@@ -70,6 +70,17 @@
        JOIN custom_fields cf ON cfv.custom_field_uuid = cf.uuid
        WHERE cfv.subject_uuid = o.uuid AND cf.name = 'store-type' LIMIT 1) as store_type,
 
+      -- The two fee lines the console box reads, latest value (2026-10-02)
+      (SELECT cfv.value FROM custom_field_values cfv
+       JOIN custom_fields cf ON cfv.custom_field_uuid = cf.uuid
+       WHERE cfv.subject_uuid IN (o.uuid, o.public_id) AND cf.name = 'delivery-fee' AND cfv.deleted_at <=> NULL
+       ORDER BY cfv.created_at DESC LIMIT 1) as delivery_fee,
+
+      (SELECT cfv.value FROM custom_field_values cfv
+       JOIN custom_fields cf ON cfv.custom_field_uuid = cf.uuid
+       WHERE cfv.subject_uuid IN (o.uuid, o.public_id) AND cf.name = 'cod-fee' AND cfv.deleted_at <=> NULL
+       ORDER BY cfv.created_at DESC LIMIT 1) as cod_fee,
+
       (SELECT cfv.value FROM custom_field_values cfv
        JOIN custom_fields cf ON cfv.custom_field_uuid = cf.uuid
        WHERE cfv.subject_uuid = o.uuid AND cf.name = 'order-source-id' LIMIT 1) as order_source_id,

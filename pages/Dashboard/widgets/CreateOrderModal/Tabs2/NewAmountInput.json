@@ -15,7 +15,11 @@
     }
   ],
   "dynamicHeight": "FIXED",
-  "dynamicTriggerPathList": [],
+  "dynamicTriggerPathList": [
+    {
+      "key": "onTextChanged"
+    }
+  ],
   "iconAlign": "left",
   "inputType": "NUMBER",
   "isDisabled": false,
@@ -52,5 +56,6 @@
   "type": "INPUT_WIDGET_V2",
   "version": 2,
   "widgetId": "5l1c1n9u41",
-  "widgetName": "NewAmountInput"
+  "widgetName": "NewAmountInput",
+  "onTextChanged": "{{OrderShippingSelect.selectedOptionValue ? PortalQuote.run() : null}}"
 }

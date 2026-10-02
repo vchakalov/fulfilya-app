@@ -1,0 +1,7 @@
+{{ {
+	// What this order will settle at, before Създай - the same four lines as the
+	// console's order box (2026-10-02). Read-only on the server.
+	"amount": NewPaymentMethodSelect.selectedOptionValue === "COD" ? (String(NewAmountInput.text || "0").trim().replace(",", ".") || "0") : "0",
+	"payment_method": NewPaymentMethodSelect.selectedOptionValue || "COD",
+	"service_rate_uuid": OrderShippingSelect.selectedOptionValue || ""
+} }}

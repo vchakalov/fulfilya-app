@@ -16,7 +16,11 @@
       "key": "sourceData"
     }
   ],
-  "dynamicTriggerPathList": [],
+  "dynamicTriggerPathList": [
+    {
+      "key": "onOptionChange"
+    }
+  ],
   "isDisabled": false,
   "isFilterable": true,
   "isLoading": false,
@@ -52,5 +56,6 @@
   "type": "SELECT_WIDGET",
   "version": 1,
   "widgetId": "u4tkzxupuv",
-  "widgetName": "NewPaymentMethodSelect"
+  "widgetName": "NewPaymentMethodSelect",
+  "onOptionChange": "{{OrderShippingSelect.selectedOptionValue ? PortalQuote.run() : null}}"
 }
