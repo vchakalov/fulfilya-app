@@ -75,6 +75,11 @@
        WHERE sq.payload_uuid = o.payload_uuid AND sq.deleted_at <=> NULL
        ORDER BY sq.created_at DESC LIMIT 1) as payer,
 
+      -- "Обявена стойност": the declared value in cents, kept also at a 0 % rate (2026-10-02)
+      (SELECT JSON_UNQUOTE(JSON_EXTRACT(sq.meta, '$.declared_value')) FROM service_quotes sq
+       WHERE sq.payload_uuid = o.payload_uuid AND sq.deleted_at <=> NULL
+       ORDER BY sq.created_at DESC LIMIT 1) as declared_value,
+
       -- The two fee lines the console box reads, latest value (2026-10-02)
       (SELECT cfv.value FROM custom_field_values cfv
        JOIN custom_fields cf ON cfv.custom_field_uuid = cf.uuid
