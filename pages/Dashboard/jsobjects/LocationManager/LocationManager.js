@@ -205,6 +205,41 @@ updateNewDropoffFromGeocode: () => {
     };
   },
 
+  // Opens "Нова поръчка" - the one way in, from the button, the header, the Табло and
+  // ?new=1 alike. A draft belongs to one merchant: Appsmith keeps every box's content
+  // across a logout and login in the same tab, so after switching accounts the form opened
+  // with the PREVIOUS merchant's warehouse as the pickup - TheBasket's form showed
+  // Artsyzone's address (2026-10-02). A different merchant gets an empty form and their own
+  // warehouse; the same merchant keeps what they typed, as before.
+  openNewOrder: async () => {
+    const me = appsmith.store.customer_uuid || '';
+    if (appsmith.store.newOrderDraftFor !== me) {
+      await Promise.all([
+        NewPickupAddressInput.setValue(''), NewPickupLatHidden.setValue(''), NewPickupLngHidden.setValue(''),
+        NewDropoffAddressInput.setValue(''), NewDropoffLatHidden.setValue(''), NewDropoffLngHidden.setValue(''),
+        RecipientNameInput.setValue(''), RecipientPhoneInput.setValue(''), CustomerEmailInput.setValue(''),
+        DeliveryNotesInput.setValue(''), NewAmountInput.setValue(''),
+        ItemNameInput.setValue(''), ItemSkuInput.setValue(''), ItemQuantityInput.setValue('1'),
+        ItemWeightInput.setValue(''), ItemLengthInput.setValue(''), ItemWidthInput.setValue(''), ItemHeightInput.setValue('')
+      ]);
+      await storeValue('newOrderDraftFor', me, false);
+    }
+    storeValue('newOrderItems', []);
+    storeValue('newOrderUUIDs', {});
+    NewPaymentMethodSelect.setSelectedOption('COD');
+    // The pickup opens as the merchant's warehouse (2026-10-01): filled in, not fixed.
+    if (!NewPickupAddressInput.text) {
+      await BoWarehouse.run();
+      const w = (BoWarehouse.data || [])[0];
+      if (w && w.address && !NewPickupAddressInput.text) {
+        await NewPickupAddressInput.setValue(w.address);
+        NewPickupLatHidden.setValue(String(w.lat));
+        NewPickupLngHidden.setValue(String(w.lng));
+      }
+    }
+    showModal('CreateOrderModal');
+  },
+
   resetOrderForm: () => {
     // Clear geocoding timeouts
     clearInterval(appsmith.store.newPickupGeoTimeout);
