@@ -5,6 +5,9 @@
   "dynamicBindingPathList": [
     {
       "key": "fontFamily"
+    },
+    {
+      "key": "text"
     }
   ],
   "dynamicHeight": "FIXED",
@@ -33,7 +36,7 @@
   "responsiveBehavior": "fill",
   "rightColumn": 64,
   "shouldTruncate": false,
-  "text": "Shipping",
+  "text": "{{appsmith.store.bo_lang === 'en' ? \"Delivery type\" : \"Вид доставка\"}}",
   "textAlign": "LEFT",
   "textColor": "#6E6E73",
   "topRow": 7,

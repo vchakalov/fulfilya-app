@@ -37,7 +37,7 @@
   "responsiveBehavior": "fill",
   "rightColumn": 63,
   "shouldTruncate": false,
-  "text": "🔒 Live Tracking - {{OrdersTable.selectedRow.order_id}}",
+  "text": "{{(appsmith.store.bo_lang === 'en' ? '🔒 Live tracking - ' : '🔒 Проследяване на живо - ') + (OrdersTable.selectedRow.internal_reference || OrdersTable.selectedRow.order_id || '')}}",
   "textAlign": "LEFT",
   "textColor": "#231F20",
   "topRow": 8,

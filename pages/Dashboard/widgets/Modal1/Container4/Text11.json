@@ -37,7 +37,7 @@
   "responsiveBehavior": "fill",
   "rightColumn": 61,
   "shouldTruncate": false,
-  "text": "{{(() => {\n     const status = GetOrderTracking.data[0]?.order_status;\n     const statusMap = {\n       'created': '📦 Order Created',\n       'dispatched': '🚚 Order Dispatched',\n       'in_transit': '🚚 In Transit',\n       'delivered': '✅ Delivered',\n\t\t\t        'completed': '✅ Delivered',\n       'cancelled': '❌ Cancelled'\n     };\n     return statusMap[status] || '⏳ Processing';\n   })()}}",
+  "text": "{{(() => {\n     const en = appsmith.store.bo_lang === 'en';\n     const s = GetOrderTracking.data[0]?.order_status;\n     const bg = { created: '📦 Поръчката е създадена', dispatched: '🚚 Възложена на шофьор', started: '🚚 В път', enroute: '🚚 В път', in_transit: '🚚 В път',\n       delivered: '✅ Доставена', completed: '✅ Доставена', canceled: '❌ Отказана', cancelled: '❌ Отказана', order_returned: '↩️ Върната' };\n     const eng = { created: '📦 Order created', dispatched: '🚚 Dispatched', started: '🚚 In transit', enroute: '🚚 In transit', in_transit: '🚚 In transit',\n       delivered: '✅ Delivered', completed: '✅ Delivered', canceled: '❌ Cancelled', cancelled: '❌ Cancelled', order_returned: '↩️ Returned' };\n     return (en ? eng : bg)[s] || (en ? '⏳ Processing' : '⏳ Обработва се');\n   })()}}",
   "textAlign": "LEFT",
   "textColor": "#231F20",
   "topRow": 0,

@@ -35,7 +35,7 @@
   "responsiveBehavior": "fill",
   "rightColumn": 62,
   "shouldTruncate": false,
-  "text": "Qty: {{currentItem.quantity}}",
+  "text": "{{(() => {\n  const en = appsmith.store.bo_lang === 'en';\n  const n = (x) => { const v = Number(String(x ?? '').replace(',', '.')); return v > 0 ? v : null; };\n  const f = (v) => String(Math.round(v * 1000) / 1000).replace('.', ',');\n  const parts = [(en ? 'Qty: ' : 'Бр.: ') + currentItem.quantity];\n  if (n(currentItem.weight) !== null) parts.push(f(n(currentItem.weight)) + (en ? ' kg' : ' кг'));\n  if (n(currentItem.length) !== null && n(currentItem.width) !== null && n(currentItem.height) !== null) {\n    parts.push([currentItem.length, currentItem.width, currentItem.height].map((x) => f(n(x))).join('×') + (en ? ' cm' : ' см'));\n  }\n  return parts.join(' · ');\n})()}}",
   "textAlign": "CENTER",
   "textColor": "#6b7280",
   "topRow": 0,

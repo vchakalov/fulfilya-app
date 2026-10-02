@@ -5,6 +5,9 @@
   "dynamicBindingPathList": [
     {
       "key": "fontFamily"
+    },
+    {
+      "key": "text"
     }
   ],
   "dynamicHeight": "AUTO_HEIGHT",
@@ -34,7 +37,7 @@
   "responsiveBehavior": "fill",
   "rightColumn": 28,
   "shouldTruncate": false,
-  "text": "📋 Order Summary",
+  "text": "{{appsmith.store.bo_lang === 'en' ? \"📋 Summary\" : \"📋 Обобщение\"}}",
   "textAlign": "LEFT",
   "textColor": "#231F20",
   "topRow": 0,

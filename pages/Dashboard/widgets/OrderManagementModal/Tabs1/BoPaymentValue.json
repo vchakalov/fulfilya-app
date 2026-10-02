@@ -37,7 +37,7 @@
   "responsiveBehavior": "fill",
   "rightColumn": 43,
   "shouldTruncate": false,
-  "text": "{{({COD: 'Cash on Delivery', CARD: 'Pre-paid (card)', Paid: 'Pre-paid'})[GetOrderDetails.data[0]?.payment_method] || GetOrderDetails.data[0]?.payment_method || '-'}}",
+  "text": "{{(() => { const en = appsmith.store.bo_lang === 'en'; const m = GetOrderDetails.data[0]?.payment_method; const bg = {COD: 'Наложен платеж', CARD: 'Платена предварително', Paid: 'Платена предварително'}; const eng = {COD: 'Cash on delivery', CARD: 'Prepaid', Paid: 'Prepaid'}; return (en ? eng : bg)[m] || m || '-'; })()}}",
   "textAlign": "LEFT",
   "textColor": "#1D1D1F",
   "topRow": 10,

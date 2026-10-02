@@ -30,6 +30,10 @@
       1
     )) as quantity,
     MIN(e.weight) as weight,
+    -- The sides of one unit in cm, for the Детайли items tab (2026-10-02)
+    MIN(e.length) as length,
+    MIN(e.width) as width,
+    MIN(e.height) as height,
     e.dimensions_unit,
     e.weight_unit,
     e.sku,

@@ -5,6 +5,9 @@
   "dynamicBindingPathList": [
     {
       "key": "fontFamily"
+    },
+    {
+      "key": "text"
     }
   ],
   "dynamicHeight": "FIXED",
@@ -33,7 +36,7 @@
   "responsiveBehavior": "fill",
   "rightColumn": 56,
   "shouldTruncate": false,
-  "text": "📍 Pickup",
+  "text": "{{appsmith.store.bo_lang === 'en' ? \"📍 Pickup\" : \"📍 Взимане\"}}",
   "textAlign": "LEFT",
   "textColor": "#6E6E73",
   "topRow": 5,

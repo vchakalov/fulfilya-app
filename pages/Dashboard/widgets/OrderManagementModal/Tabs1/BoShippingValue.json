@@ -37,7 +37,7 @@
   "responsiveBehavior": "fill",
   "rightColumn": 64,
   "shouldTruncate": false,
-  "text": "{{GetAvailableServiceRates.data?.find(r => r.service_rate_uuid === GetOrderDetails.data[0]?.service_rate_uuid)?.display_name || GetOrderDetails.data[0]?.service_rate_name || '-'}}",
+  "text": "{{(() => { const en = appsmith.store.bo_lang === 'en'; const n = GetAvailableServiceRates.data?.find(r => r.service_rate_uuid === GetOrderDetails.data[0]?.service_rate_uuid)?.display_name || GetOrderDetails.data[0]?.service_rate_name || ''; if (/express/i.test(n)) return en ? 'Express' : 'Експресна'; if (/standard/i.test(n)) return en ? 'Standard' : 'Стандартна'; return n || '-'; })()}}",
   "textAlign": "LEFT",
   "textColor": "#1D1D1F",
   "topRow": 10,

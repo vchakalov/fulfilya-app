@@ -37,7 +37,7 @@
   "responsiveBehavior": "fill",
   "rightColumn": 63,
   "shouldTruncate": false,
-  "text": "📍 From: {{GetOrderTracking.data[0]?.pickup_name || 'Pickup Location'}}",
+  "text": "{{(appsmith.store.bo_lang === 'en' ? '📍 From: ' : '📍 От: ') + (GetOrderTracking.data[0]?.pickup_name || (appsmith.store.bo_lang === 'en' ? 'Pickup' : 'Място на взимане'))}}",
   "textAlign": "LEFT",
   "textColor": "#231F20",
   "topRow": 13,

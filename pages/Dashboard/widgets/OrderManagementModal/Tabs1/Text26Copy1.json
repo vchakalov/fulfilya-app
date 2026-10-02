@@ -37,7 +37,7 @@
   "responsiveBehavior": "fill",
   "rightColumn": 17,
   "shouldTruncate": false,
-  "text": "Status: {{GetOrderDetails.data[0]?.status}}",
+  "text": "{{(() => {\n  const en = appsmith.store.bo_lang === 'en';\n  const s = String(GetOrderDetails.data[0]?.status || '');\n  const bg = { created: '🟡 Чака куриер', dispatched: '🔵 Възложена', started: '🚚 В път', enroute: '🚚 В път', in_transit: '🚚 В път',\n    delivery_attempted: '🟠 2-ри опит', returning: '↩️ Връща се', order_returned: '↩️ Върната', delivered: '✅ Доставена', order_delivered: '✅ Доставена',\n    completed: '✅ Доставена', canceled: '❌ Отказана', cancelled: '❌ Отказана', order_cancel: '❌ Отказана' };\n  const eng = { created: '🟡 Awaiting courier', dispatched: '🔵 Dispatched', started: '🚚 In transit', enroute: '🚚 In transit', in_transit: '🚚 In transit',\n    delivery_attempted: '🟠 2nd attempt', returning: '↩️ Returning', order_returned: '↩️ Returned', delivered: '✅ Delivered', order_delivered: '✅ Delivered',\n    completed: '✅ Delivered', canceled: '❌ Cancelled', cancelled: '❌ Cancelled', order_cancel: '❌ Cancelled' };\n  const word = ((en ? eng : bg)[s] || s).replace(/^\\S+\\s/, '');\n  return (en ? 'Status: ' : 'Статус: ') + word;\n})()}}",
   "textAlign": "LEFT",
   "textColor": "#231F20",
   "topRow": 1,

@@ -9,6 +9,9 @@
   "dynamicBindingPathList": [
     {
       "key": "borderRadius"
+    },
+    {
+      "key": "text"
     }
   ],
   "dynamicPropertyPathList": [
@@ -46,7 +49,7 @@
   "resetFormOnClick": false,
   "responsiveBehavior": "hug",
   "rightColumn": 16,
-  "text": "Cancel Order",
+  "text": "{{appsmith.store.bo_lang === 'en' ? \"Cancel order\" : \"Откажи поръчката\"}}",
   "topRow": 39,
   "type": "BUTTON_WIDGET",
   "version": 1,

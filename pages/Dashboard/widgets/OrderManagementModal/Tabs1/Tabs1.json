@@ -182,7 +182,7 @@
       "id": "tab2",
       "index": 0,
       "isVisible": true,
-      "label": "Payment",
+      "label": "Плащане",
       "positioning": "vertical",
       "widgetId": "9wdjgi2xsh"
     },
@@ -190,14 +190,14 @@
       "id": "tablx7erf5ijn",
       "index": 1,
       "isVisible": true,
-      "label": "Location",
+      "label": "Адреси",
       "widgetId": "imxgvif03d"
     },
     "tabud4r894am0": {
       "id": "tabud4r894am0",
       "index": 2,
       "isVisible": true,
-      "label": "Items",
+      "label": "Артикули",
       "widgetId": "ns7vyr8q8v"
     }
   },

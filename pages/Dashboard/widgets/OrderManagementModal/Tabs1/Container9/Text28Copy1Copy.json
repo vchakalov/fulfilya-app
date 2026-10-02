@@ -37,7 +37,7 @@
   "responsiveBehavior": "fill",
   "rightColumn": 55,
   "shouldTruncate": false,
-  "text": "Total Items: {{(() => {\n              const items = GetOrderItems.data || [];\n              return items.reduce((sum, item) => sum + (item.quantity || 0), 0);\n            })()}}",
+  "text": "{{(() => {\n  const en = appsmith.store.bo_lang === 'en';\n  const items = GetOrderItems.data || [];\n  const n = (x) => { const v = Number(String(x ?? '').replace(',', '.')); return v > 0 ? v : null; };\n  const f = (v, d) => String(Math.round(v * Math.pow(10, d)) / Math.pow(10, d)).replace('.', ',');\n  const pieces = items.reduce((s, i) => s + (Number(i.quantity) || 0), 0);\n  const lines = [(en ? 'Pieces: ' : 'Общо бройки: ') + pieces];\n  const weighed = items.length > 0 && items.every((i) => n(i.weight) !== null);\n  if (weighed) {\n    const kg = items.reduce((s, i) => s + n(i.weight) * (Number(i.quantity) || 1), 0);\n    lines.push((en ? 'Total weight: ' : 'Общо тегло: ') + f(kg, 3) + (en ? ' kg' : ' кг'));\n  }\n  const sized = items.length > 0 && items.every((i) => n(i.length) !== null && n(i.width) !== null && n(i.height) !== null);\n  if (sized) {\n    let vol = 0, big = null, bigVol = -1;\n    items.forEach((i) => {\n      const u = n(i.length) * n(i.width) * n(i.height);\n      vol += u * (Number(i.quantity) || 1);\n      if (u > bigVol) { bigVol = u; big = [i.length, i.width, i.height].map((x) => f(n(x), 1)).join('×'); }\n    });\n    lines.push((en ? 'Total volume: ' : 'Общ обем: ') + f(Math.max(0.001, vol / 1000000), 3) + ' м³');\n    lines.push((en ? 'Largest item: ' : 'Най-голям: ') + big + (en ? ' cm' : ' см'));\n  }\n  return lines.join('\\n');\n})()}}",
   "textAlign": "LEFT",
   "textColor": "#4b5563",
   "topRow": 0,

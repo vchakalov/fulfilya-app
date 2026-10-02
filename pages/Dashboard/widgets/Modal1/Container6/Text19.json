@@ -37,7 +37,7 @@
   "responsiveBehavior": "fill",
   "rightColumn": 42,
   "shouldTruncate": false,
-  "text": "{{GetOrderTracking.data[0]?.driver_name || \"No driver assigned\"}}",
+  "text": "{{GetOrderTracking.data[0]?.driver_name || (appsmith.store.bo_lang === 'en' ? 'No driver assigned' : 'Няма възложен шофьор')}}",
   "textAlign": "LEFT",
   "textColor": "#231F20",
   "topRow": 0,

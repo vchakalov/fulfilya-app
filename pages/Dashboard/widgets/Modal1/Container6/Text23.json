@@ -37,7 +37,7 @@
   "responsiveBehavior": "fill",
   "rightColumn": 63,
   "shouldTruncate": false,
-  "text": "📍 To: {{GetOrderTracking.data[0]?.dropoff_name || 'Delivery Location'}}",
+  "text": "{{(appsmith.store.bo_lang === 'en' ? '📍 To: ' : '📍 До: ') + (GetOrderTracking.data[0]?.dropoff_name || (appsmith.store.bo_lang === 'en' ? 'Delivery address' : 'Адрес за доставка'))}}",
   "textAlign": "LEFT",
   "textColor": "#231F20",
   "topRow": 17,

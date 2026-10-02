@@ -37,7 +37,7 @@
   "responsiveBehavior": "fill",
   "rightColumn": 9,
   "shouldTruncate": false,
-  "text": "{{GetOrderItems.data?.length || 0}} item(s)",
+  "text": "{{(() => { const n = (GetOrderItems.data || []).length; const en = appsmith.store.bo_lang === 'en'; return en ? n + (n === 1 ? ' item' : ' items') : n + (n === 1 ? ' артикул' : ' артикула'); })()}}",
   "textAlign": "LEFT",
   "textColor": "#6b7280",
   "topRow": 6,

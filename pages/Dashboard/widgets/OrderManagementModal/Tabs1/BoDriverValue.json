@@ -37,7 +37,7 @@
   "responsiveBehavior": "fill",
   "rightColumn": 21,
   "shouldTruncate": false,
-  "text": "{{GetOrderDetails.data[0]?.driver_name || 'Not assigned yet'}}",
+  "text": "{{GetOrderDetails.data[0]?.driver_name || (appsmith.store.bo_lang === 'en' ? 'Not assigned yet' : 'Все още не е възложена')}}",
   "textAlign": "LEFT",
   "textColor": "#1D1D1F",
   "topRow": 19,

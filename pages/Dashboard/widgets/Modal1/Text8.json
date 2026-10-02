@@ -5,6 +5,9 @@
   "dynamicBindingPathList": [
     {
       "key": "fontFamily"
+    },
+    {
+      "key": "text"
     }
   ],
   "dynamicHeight": "AUTO_HEIGHT",
@@ -30,7 +33,7 @@
   "responsiveBehavior": "fill",
   "rightColumn": 41,
   "shouldTruncate": false,
-  "text": "Order Tracking",
+  "text": "{{appsmith.store.bo_lang === 'en' ? \"Order tracking\" : \"Проследяване на поръчката\"}}",
   "textAlign": "LEFT",
   "textColor": "#231F20",
   "topRow": 1,
