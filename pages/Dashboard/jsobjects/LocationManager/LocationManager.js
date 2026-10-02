@@ -220,8 +220,11 @@ updateNewDropoffFromGeocode: () => {
         RecipientNameInput.setValue(''), RecipientPhoneInput.setValue(''), CustomerEmailInput.setValue(''),
         DeliveryNotesInput.setValue(''), NewAmountInput.setValue(''),
         ItemNameInput.setValue(''), ItemSkuInput.setValue(''), ItemQuantityInput.setValue('1'),
-        ItemWeightInput.setValue(''), ItemLengthInput.setValue(''), ItemWidthInput.setValue(''), ItemHeightInput.setValue('')
+        ItemWeightInput.setValue(''), ItemLengthInput.setValue(''), ItemWidthInput.setValue(''), ItemHeightInput.setValue(''),
+        DeclaredValueInput.setValue('')
       ]);
+      DeclaredValueSelect.setSelectedOption('no');
+      OrderShippingSelect.setSelectedOption('');
       await storeValue('newOrderDraftFor', me, false);
     }
     storeValue('newOrderItems', []);
@@ -276,5 +279,12 @@ updateNewDropoffFromGeocode: () => {
 
     // Reset selects to defaults
     NewPaymentMethodSelect.setSelectedOption('all');
+    // The next order starts without the last one's choices (Ico, 2026-10-02): an "Обявена
+    // стойност" left on "Да" with its value silently added the service - and its fee - to the
+    // following order. The delivery type is emptied too, so it is chosen each time; Създай
+    // refuses an order without one ("Изберете вид доставка").
+    DeclaredValueSelect.setSelectedOption('no');
+    DeclaredValueInput.setValue('');
+    OrderShippingSelect.setSelectedOption('');
   }
   }
