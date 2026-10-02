@@ -2,7 +2,9 @@
 """The header on the Office (admin) page - no merchant tabs, just Изход - and Appsmith's
 own navbar switched off app-wide now that every page carries the BackOffice header."""
 import json, os, glob
-import os as _os, tempfile as _tempfile
+import os as _os, tempfile as _tempfile, sys as _sys
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+import bo_i18n
 
 # Where this generator reads its siblings and writes its output. Until 2026-09-19
 # both pointed at the scratchpad of the session they were written in
@@ -25,19 +27,21 @@ def w(path, content):
     p = os.path.join(OUT, path); os.makedirs(os.path.dirname(p), exist_ok=True)
     with open(p, 'w', encoding='utf-8') as f:
         f.write(content if isinstance(content, str) else json.dumps(content, ensure_ascii=False, indent=2) + '\n')
-LOGOUT = "{{(async () => { const m = BoHeader.model || {}; if (m.action !== 'logout') { return; } await removeValue('authToken'); await removeValue('is_admin'); await removeValue('customer_name'); await removeValue('customer_uuid'); navigateTo('Authentication'); })()}}"
+# 'lang' as on every merchant page. Until 2026-10-02 this handler only knew 'logout', so the
+# office's BG|EN button wrote nothing and the page never changed language.
+LOGOUT = "{{(async () => { const m = BoHeader.model || {}; if (m.action === 'lang') { return storeValue('bo_lang', m.lang || 'bg'); } if (m.action !== 'logout') { return; } await removeValue('authToken'); await removeValue('is_admin'); await removeValue('customer_name'); await removeValue('customer_uuid'); navigateTo('Authentication'); })()}}"
 d = {
     "animateLoading": True, "backgroundColor": "transparent", "borderColor": "transparent", "borderRadius": "0px", "borderWidth": "0",
     "boxShadow": "none", "bottomRow": 8,
-    "defaultModel": "{{ { page: 'office', admin: true, merchant: 'Fulfilya · офис', logo: '' } }}",
+    "defaultModel": "{{ { " + bo_i18n.MODEL_LANG + ", page: 'office', admin: true, merchant: 'Fulfilya · офис', logo: '' } }}",
     "dynamicBindingPathList": [{"key": "theme"}, {"key": "defaultModel"}], "dynamicHeight": "FIXED",
     "dynamicTriggerPathList": [{"key": "onAction"}], "events": ["onAction"], "onAction": LOGOUT,
     "isLoading": False, "isVisible": True, "key": "hdr0ff1ce9", "leftColumn": 0, "maxDynamicHeight": 9000, "minDynamicHeight": 4, "minWidth": 450,
     "mobileBottomRow": 8, "mobileLeftColumn": 0, "mobileRightColumn": 64, "mobileTopRow": 0, "needsErrorInfo": False,
     "originalBottomRow": 8, "originalTopRow": 0, "parentColumnSpace": 10.484375, "parentId": "0", "parentRowSpace": 10,
     "renderMode": "CANVAS", "responsiveBehavior": "fill", "rightColumn": 64,
-    "srcDoc": {"html": ns['HEADER_HTML'], "css": ns['HEADER_CSS'], "js": ns['HEADER_JS']},
-    "uncompiledSrcDoc": {"html": ns['HEADER_HTML'], "css": ns['HEADER_CSS'], "js": ns['HEADER_JS']},
+    "srcDoc": {"html": ns['HEADER_HTML'], "css": ns['HEADER_CSS'], "js": ns['HEADER_JS'] + bo_i18n.translator_js() + ns['BO_WATCH']},
+    "uncompiledSrcDoc": {"html": ns['HEADER_HTML'], "css": ns['HEADER_CSS'], "js": ns['HEADER_JS'] + bo_i18n.translator_js() + ns['BO_WATCH']},
     "theme": "{{appsmith.theme}}", "topRow": 0, "type": "CUSTOM_WIDGET", "version": 1, "widgetId": "bohdr0ff1c", "widgetName": "BoHeader",
 }
 w('pages/Office/widgets/BoHeader.json', d)
@@ -165,6 +169,12 @@ function render() {
   const sel = m.sel || 'all';
   const period = m.period || 'day';
   const oneMerchant = sel && sel !== 'all';
+  // The two date boxes show the days the report actually counts. A preset used to leave
+  // them reading "today" and blank while the server counted Monday to Sunday or the whole
+  // month - so in the week of 28.09-04.10 the office saw 02.10 and could not tell why
+  // September orders were in it (2026-10-02). The server's own bounds, when it has sent them.
+  const shownFrom = (r.period && r.period.from) || m.from || '';
+  const shownTo = (r.period && r.period.to) || m.to || '';
   const who = oneMerchant ? (merchants.find((x) => x.uuid === sel) || {}).name || '' : 'всички клиенти';
 
   // А + Б must equal what the drivers collected. That equation is the whole reason this
@@ -189,8 +199,8 @@ function render() {
       `<button type="button" class="chip${period === 'week' ? ' on' : ''}" data-period="week">Тази седмица</button>` +
       `<button type="button" class="chip${period === 'month' ? ' on' : ''}" data-period="month">Този месец</button>` +
       `<span class="sep"></span>` +
-      `<label for="of-from">от</label><input type="date" id="of-from" value="${esc(m.from || '')}">` +
-      `<label for="of-to">до</label><input type="date" id="of-to" value="${esc(m.to || '')}">` +
+      `<label for="of-from">от</label><input type="date" id="of-from" value="${esc(shownFrom)}">` +
+      `<label for="of-to">до</label><input type="date" id="of-to" value="${esc(shownTo)}">` +
       `<button type="button" class="btn go" id="of-show">Покажи периода</button>` +
       `<span class="spacer" style="flex:1 1 auto"></span>` +
       `<button type="button" class="btn" id="of-pdf">Свали PDF</button>` +
@@ -214,7 +224,7 @@ function render() {
   const table = t
     ? `<div class="card" style="padding:0">` +
       `<div class="hd" style="padding:14px 18px 0;margin:0"><h3 style="text-transform:none;font-size:15px;color:var(--ink)">По клиенти</h3>` +
-        `<span class="hint">${esc(r.period ? r.period.label : '')} · ${esc(who)} · ${plural(num(t.orders), 'поръчка', 'поръчки')}</span></div>` +
+        `<span class="hint"><span>${esc(r.period ? r.period.label : '')}</span> · <span>${esc(who)}</span> · <span>${plural(num(t.orders), 'поръчка', 'поръчки')}</span></span></div>` +
       `<div class="tablewrap" style="padding:10px 8px 6px">` +
       // Her column names, verbatim from the page she reconciles against today
       // (Ico, 2026-09-21: "this is mandatory to have"). Do not shorten them again.
@@ -237,8 +247,8 @@ function render() {
         : '') +
       `</table></div>` +
       ((r.drivers || []).length
-        ? `<div class="note" style="padding:0 18px 14px">По шофьори: ` +
-          (r.drivers || []).map((d) => `${esc(d.name)} ${eur(d.total)} (в брой ${eur(d.cash)})`).join(' · ') + `</div>`
+        ? `<div class="note" style="padding:0 18px 14px"><span>По шофьори:</span> ` +
+          (r.drivers || []).map((d) => `${esc(d.name)} ${eur(d.total)} (<span>в брой</span> ${eur(d.cash)})`).join(' · ') + `</div>`
         : '') +
       `</div>`
     : `<div class="card"><div class="empty">Избери период, за да видиш отчета.</div></div>`;
@@ -252,11 +262,16 @@ function render() {
     pay = `<div class="card"><h3>Изплащане</h3><div class="empty">Избери клиент, за да видиш какво му дължим.</div></div>`;
   } else if (!num(pt.orders)) {
     const owes = withheld + num(ret.carried);
-    pay = `<div class="card"><h3>Изплащане · ${esc(who)}</h3>` +
-      `<div class="empty">Няма неизплатени поръчки.${owes ? ` Дължи ни <strong class="held">${eur(owes)}</strong> за върнати пратки — удържа се от следващото изплащане.` : ''}</div></div>`;
+    pay = `<div class="card"><h3><span>Изплащане</span> · ${esc(who)}</h3>` +
+      `<div class="empty"><span>Няма неизплатени поръчки.</span>${owes ? ` <span>Дължи ни</span> <strong class="held">${eur(owes)}</strong> <span>за върнати пратки — удържа се от следващото изплащане.</span>` : ''}</div></div>`;
   } else {
     pay = `<div class="card pay">` +
-      `<div><h3>За превод към ${esc(who)}</h3><div class="amt num">${fmt(net)} <small style="font-size:17px;color:var(--accent-ink)">€</small></div></div>` +
+      // Everything unpaid, whatever dates are picked above - a payout covers every
+      // delivered order no payout has stamped yet. Said on the box because a September
+      // order still waiting here under "Този месец" (October) read as the report being
+      // confused about the month (2026-10-02).
+      `<div><h3>За превод към ${esc(who)}</h3><div class="amt num">${fmt(net)} <small style="font-size:17px;color:var(--accent-ink)">€</small></div>` +
+      `<div class="note" style="color:var(--accent-ink)">всичко неизплатено, за всички дати</div></div>` +
       `<div class="break">Наложен платеж <strong>${eur(pt.owed)}</strong> по ${plural(num(pt.orders), 'поръчка', 'поръчки')}` +
         (withheld ? `<br><span class="held">− ${eur(withheld)}</span> удържани за ${plural(num(ret.count), 'върната пратка', 'върнати пратки')}` : '') +
         (num(ret.carried) ? `<br><span class="note">още ${eur(ret.carried)} остават за следващо изплащане</span>` : '') +
@@ -287,7 +302,7 @@ function render() {
   const history = runs.length
     ? `<div class="card" style="padding:0">` +
       `<div class="hd" style="padding:14px 18px 0;margin:0"><h3 style="text-transform:none;font-size:15px;color:var(--ink)">Направени изплащания</h3>` +
-      `<span class="hint">${oneMerchant ? esc(who) : 'всички клиенти'} · последните ${runs.length}</span></div>` +
+      `<span class="hint"><span>${oneMerchant ? esc(who) : 'всички клиенти'}</span> · <span>последните ${runs.length}</span></span></div>` +
       `<div class="tablewrap" style="padding:10px 8px 6px"><table><thead><tr>` +
       `<th>Дата</th><th>Клиент</th><th class="r">Поръчки</th><th class="r">Изплатено</th><th class="r"></th>` +
       `</tr></thead><tbody class="num">` +
@@ -365,7 +380,7 @@ OFFICE_ON = ("{{(async () => { const m = BoOffice.model || {}; "
              "if (m.action === 'receipt') { await storeValue('receipt_payout_id', m.id || ''); "
              "return OfficeReport.payoutPdf(); } })()}}")
 
-OFFICE_MODEL = ("{{ { report: GetCodReport.data, pending: GetPendingPayout.data, merchants: ListMerchants.data, "
+OFFICE_MODEL = ("{{ { " + bo_i18n.MODEL_LANG + ", report: GetCodReport.data, pending: GetPendingPayout.data, merchants: ListMerchants.data, "
                 "queue: GetPendingAll.data, history: GetPayoutHistory.data, returns: GetPeriodReturns.data, "
                 "sel: appsmith.store.office_merchant || 'all', period: appsmith.store.office_period || 'day', "
                 "from: appsmith.store.office_date || '', to: appsmith.store.office_to || '', "
@@ -383,8 +398,8 @@ office = {
     "needsErrorInfo": False, "originalBottomRow": 86, "originalTopRow": 10,
     "parentColumnSpace": 10.484375, "parentId": "0", "parentRowSpace": 10, "renderMode": "CANVAS",
     "responsiveBehavior": "fill", "rightColumn": 64,
-    "srcDoc": {"html": OFFICE_HTML, "css": OFFICE_CSS, "js": OFFICE_JS},
-    "uncompiledSrcDoc": {"html": OFFICE_HTML, "css": OFFICE_CSS, "js": OFFICE_JS},
+    "srcDoc": {"html": OFFICE_HTML, "css": OFFICE_CSS, "js": OFFICE_JS + bo_i18n.translator_js() + ns['BO_WATCH']},
+    "uncompiledSrcDoc": {"html": OFFICE_HTML, "css": OFFICE_CSS, "js": OFFICE_JS + bo_i18n.translator_js() + ns['BO_WATCH']},
     "theme": "{{appsmith.theme}}", "topRow": 10, "type": "CUSTOM_WIDGET", "version": 1,
     "widgetId": "booff1cew1", "widgetName": "BoOffice",
 }
