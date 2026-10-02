@@ -54,7 +54,7 @@
 	// driver collects; every percentage fee is charged on this amount. Required in all three.
 	const payer = NewPaymentMethodSelect.selectedOptionValue || "all";
 	const NewCodAmount = String(NewAmountInput.text || "").trim().replace(",", ".");
-	if (!(Number(NewCodAmount) > 0)) {
+	if (payer !== "nothing" && !(Number(NewCodAmount) > 0)) {
 		throw new Error("Въведете наложения платеж - стойността на стоката");
 	}
 
@@ -79,7 +79,8 @@
 		},
 		"service_rate_uuid": OrderShippingSelect.selectedOptionValue,
 		"payer": payer,
-		"cod_amount": NewCodAmount,
+		// "Клиентът не плаща нищо" has no наложен платеж - nothing to send (2026-10-02).
+		...(payer !== "nothing" ? { "cod_amount": NewCodAmount } : {}),
 		// Always a hand-typed order. "Тип магазин" and "Номер от магазина" left the form on
 		// 2026-10-01 (Ico): the type is always this, and the select was being reset to
 		// Shopify after every order. A shop's own number still arrives with the Excel upload.

@@ -11,7 +11,7 @@
           "value": "application/json"
         }
       ],
-      "body": "{{ {\n\t// What this order will settle at, before Създай - the same lines as the console's\n\t// order box, for the chosen \"Кой плаща\" (2026-10-02). Read-only on the server.\n\t\"payer\": NewPaymentMethodSelect.selectedOptionValue || \"all\",\n\t\"cod_amount\": String(NewAmountInput.text || \"0\").trim().replace(\",\", \".\") || \"0\",\n\t\"service_rate_uuid\": OrderShippingSelect.selectedOptionValue || \"\"\n} }}",
+      "body": "{{ {\n\t// What this order will settle at, before Създай - the same lines as the console's\n\t// order box, for the chosen \"Кой плаща\" (2026-10-02). Read-only on the server.\n\t\"payer\": NewPaymentMethodSelect.selectedOptionValue || \"all\",\n\t\"cod_amount\": NewPaymentMethodSelect.selectedOptionValue === \"nothing\" ? \"0\" : (String(NewAmountInput.text || \"0\").trim().replace(\",\", \".\") || \"0\"),\n\t\"service_rate_uuid\": OrderShippingSelect.selectedOptionValue || \"\"\n} }}",
       "bodyFormData": [],
       "encodeParamsToggle": true,
       "formData": {

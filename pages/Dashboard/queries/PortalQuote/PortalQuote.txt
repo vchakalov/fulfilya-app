@@ -2,6 +2,6 @@
 	// What this order will settle at, before Създай - the same lines as the console's
 	// order box, for the chosen "Кой плаща" (2026-10-02). Read-only on the server.
 	"payer": NewPaymentMethodSelect.selectedOptionValue || "all",
-	"cod_amount": String(NewAmountInput.text || "0").trim().replace(",", ".") || "0",
+	"cod_amount": NewPaymentMethodSelect.selectedOptionValue === "nothing" ? "0" : (String(NewAmountInput.text || "0").trim().replace(",", ".") || "0"),
 	"service_rate_uuid": OrderShippingSelect.selectedOptionValue || ""
 } }}

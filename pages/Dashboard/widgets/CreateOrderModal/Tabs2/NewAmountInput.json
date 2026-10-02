@@ -15,6 +15,9 @@
     },
     {
       "key": "label"
+    },
+    {
+      "key": "isVisible"
     }
   ],
   "dynamicHeight": "FIXED",
@@ -28,7 +31,7 @@
   "isDisabled": false,
   "isLoading": false,
   "isRequired": false,
-  "isVisible": true,
+  "isVisible": "{{NewPaymentMethodSelect.selectedOptionValue !== 'nothing'}}",
   "key": "gnxtfpd5ih",
   "label": "{{appsmith.store.bo_lang === 'en' ? \"COD amount (EUR)\" : \"Наложен платеж (EUR)\"}}",
   "labelAlignment": "left",
