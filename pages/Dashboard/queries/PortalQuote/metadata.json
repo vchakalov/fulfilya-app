@@ -58,7 +58,7 @@
     ],
     "name": "PortalQuote",
     "pageId": "Dashboard",
-    "runBehaviour": "MANUAL",
+    "runBehaviour": "AUTOMATIC",
     "userSetOnLoad": false
   }
 }
