@@ -17,7 +17,7 @@
   "fontSize": "1rem",
   "fontStyle": "BOLD",
   "isLoading": false,
-  "isVisible": true,
+  "isVisible": false,
   "key": "9s3adk87bv",
   "leftColumn": 35,
   "maxDynamicHeight": 9000,

@@ -92,7 +92,14 @@
 			// `ski` is the key the Add-item button has always written; read both so a
 			// fixed button and an unfixed one both work.
 			"sku": item.sku || item.ski || "",
-			"quantity": item.quantity || 1
-		}))
+			"quantity": item.quantity || 1,
+			// Per unit, kg and cm (2026-10-02) - summed for the товарителница.
+			"weight_kg": item.weight_kg,
+			"length_cm": item.length_cm,
+			"width_cm": item.width_cm,
+			"height_cm": item.height_cm
+		})),
+		// The form requires a measured product; the server refuses the order otherwise.
+		"measures_required": true
 	};
 })()}}
