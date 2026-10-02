@@ -104,6 +104,8 @@
       CASE
           WHEN o.status = 'order_returned' THEN 'Returned'
           WHEN o.status = 'order_cancel' THEN 'Cancelled'
+          -- Order::cancel() writes 'canceled', one L (2026-10-02)
+          WHEN o.status IN ('canceled', 'cancelled') THEN 'Cancelled'
           WHEN o.status = 'created' THEN 'Pending'
           WHEN o.status = 'dispatched' THEN 'In Transit'
           WHEN o.status = 'started' THEN 'In Transit'
