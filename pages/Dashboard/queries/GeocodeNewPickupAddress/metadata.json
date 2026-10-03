@@ -25,7 +25,7 @@
       "queryParameters": [
         {
           "key": "address",
-          "value": "{{NewPickupAddressInput.text}}"
+          "value": "{{LocationManager.expandAbbreviations(NewPickupAddressInput.text)}}"
         },
         {
           "key": "components",

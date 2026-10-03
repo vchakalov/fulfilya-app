@@ -35,6 +35,51 @@ export default {
         shortName: getComponent('route') || getComponent('neighborhood') || fullAddress.split(',')[0]
       };
     },
+  // Google's geocoder drops the Cyrillic "бул." (and "ул.", "пл.", "б-р") and then matches
+  // the street name anywhere in the country: `бул. сливница 566, софия` came back as a
+  // confident street in Кътина, 15 km north, and an order was filed there (2026-10-03,
+  // TODO 45). Spelt out, the same text answers the real building in кв. Република. The
+  // server does the same before it geocodes the order; the field keeps the merchant's words.
+  expandAbbreviations: (text) => {
+    const words = { "бул": "булевард", "б-р": "булевард", "ул": "улица", "пл": "площад" };
+    const expanded = (text || "").replace(/(?<!\p{L})(бул|б-р|ул|пл)(?:\.|(?=\s))/giu, (m, w) => words[w.toLowerCase()] + " ");
+    return expanded.replace(/[ \t]{2,}/g, " ").trim();
+  },
+
+  // Cyrillic to Latin the way Google labels Bulgarian towns (Кътина -> Katina, София -> Sofia).
+  transliterate: (text) => {
+    const map = { а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ж: "zh", з: "z", и: "i", й: "y", к: "k", л: "l", м: "m",
+      н: "n", о: "o", п: "p", р: "r", с: "s", т: "t", у: "u", ф: "f", х: "h", ц: "ts", ч: "ch", ш: "sh", щ: "sht",
+      ъ: "a", ь: "y", ю: "yu", я: "ya" };
+    const chars = Array.from((text || "").replace(/(ия|ИЯ|Ия)(?!\p{L})/gu, (m) => ({ "ия": "ia", "ИЯ": "IA", "Ия": "Ia" })[m]));
+    const isUpper = (c) => c !== undefined && c !== c.toLowerCase();
+    return chars.map((c, i) => {
+      const lower = c.toLowerCase();
+      if (!map[lower]) return c;
+      if (c === lower) return map[lower];
+      const inCapitals = isUpper(chars[i - 1]) || isUpper(chars[i + 1]);
+      const latin = map[lower];
+      return inCapitals ? latin.toUpperCase() : latin.charAt(0).toUpperCase() + latin.slice(1);
+    }).join("");
+  },
+
+  // The town Google put the address in when the typed text never names it (so "с. Бистрица, ..."
+  // answered in Bistritsa passes), or "" when the answer is Sofia or names no town at all.
+  wrongTown: (geoResult, typed) => {
+    const component = (geoResult?.address_components || []).find((c) => (c.types || []).includes("locality"));
+    const town = (component?.long_name || "").trim();
+    const lower = town.toLowerCase();
+    if (!town || lower.includes("sofia") || lower.includes("софия")) return "";
+    const written = ((typed || "") + " " + LocationManager.transliterate(typed || "")).toLowerCase();
+    return written.includes(lower) ? "" : town;
+  },
+
+  // The second try: the same address in Latin, with Sofia named when the text did not name it.
+  latinQuery: (typed) => {
+    const latin = LocationManager.transliterate(LocationManager.expandAbbreviations(typed));
+    return /sofia|софия/i.test(latin) ? latin : latin + ", Sofia";
+  },
+
   updatePickupFromGeocode: () => {
       const geoResult = GeocodePickupAddress.data?.results?.[0];
       const loc = geoResult?.geometry?.location;

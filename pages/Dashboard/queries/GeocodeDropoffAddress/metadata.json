@@ -25,7 +25,7 @@
       "queryParameters": [
         {
           "key": "address",
-          "value": "{{DropoffAddressInput.text}}"
+          "value": "{{LocationManager.expandAbbreviations(DropoffAddressInput.text)}}"
         },
         {
           "key": "components",
