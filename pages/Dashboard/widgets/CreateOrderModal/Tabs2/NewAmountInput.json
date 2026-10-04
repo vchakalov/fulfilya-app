@@ -51,7 +51,7 @@
   "parentColumnSpace": 16.1146240234375,
   "parentId": "sv637as6mi",
   "parentRowSpace": 10,
-  "placeholderText": "стойност на стоката, напр. 43,14",
+  "placeholderText": "ако има - стойност на стоката, напр. 43,14",
   "renderMode": "CANVAS",
   "resetOnSubmit": true,
   "responsiveBehavior": "fill",

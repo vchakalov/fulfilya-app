@@ -51,11 +51,13 @@
 
 	// The COD amount - the goods value the merchant typed - and who pays (Ico, 2026-10-02):
 	// "all" / "fees" / "nothing". The server adds our fees on top and works out what the
-	// driver collects; every percentage fee is charged on this amount. Required in all three.
+	// driver collects; every percentage fee is charged on this amount. OPTIONAL in every
+	// option (Ico, 2026-10-04): no amount = no наложен платеж for the goods and no НП fee,
+	// the delivery and a declared value still apply. Sent only when there is one.
 	const payer = NewPaymentMethodSelect.selectedOptionValue || "all";
 	const NewCodAmount = String(NewAmountInput.text || "").trim().replace(",", ".");
-	if (payer !== "nothing" && !(Number(NewCodAmount) > 0)) {
-		throw new Error("Въведете наложения платеж - стойността на стоката");
+	if (NewCodAmount !== "" && !(Number(NewCodAmount) >= 0)) {
+		throw new Error("Наложеният платеж трябва да е число, напр. 43,14");
 	}
 
 	// "Обявена стойност" (0,25 %), optional in any option; at most 5 112,92 EUR (2026-10-02).
@@ -86,8 +88,8 @@
 		},
 		"service_rate_uuid": OrderShippingSelect.selectedOptionValue,
 		"payer": payer,
-		// "Клиентът не плаща нищо" has no наложен платеж - nothing to send (2026-10-02).
-		...(payer !== "nothing" ? { "cod_amount": NewCodAmount } : {}),
+		// "Клиентът не плаща нищо" has no наложен платеж, and an empty box means none (2026-10-04).
+		...(payer !== "nothing" && Number(NewCodAmount) > 0 ? { "cod_amount": NewCodAmount } : {}),
 		...(withDeclared ? { "declared_value": NewDeclared } : {}),
 		// Always a hand-typed order. "Тип магазин" and "Номер от магазина" left the form on
 		// 2026-10-01 (Ico): the type is always this, and the select was being reset to
