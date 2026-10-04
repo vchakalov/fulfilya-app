@@ -36,6 +36,14 @@
 
 	const NewCustomerEmail = (CustomerEmailInput.text || "").trim();
 
+	// The recipient's postcode, required (Ico, 2026-10-04): Google puts some streets in the
+	// wrong part of town without it. The server geocodes with it and refuses an order that
+	// lacks it when `postal_code_required` is set - the Excel upload does not set it.
+	const NewPostcode = (NewDropoffPostcodeInput.text || "").trim();
+	if (!/^\d{4}$/.test(NewPostcode)) {
+		throw new Error("Въведете пощенския код на получателя (4 цифри)");
+	}
+
 	// When it may be delivered (Ico, 2026-10-02): Standard from tomorrow on - never the
 	// day it is created; Express from now on, today included; never in the past. The
 	// date sits on the first tab and the service on the second, so the picker alone
@@ -81,6 +89,7 @@
 			"address": NewDropoffAddressInput.text,
 			"name": NewRecipientName,
 			"phone": NewRecipientPhone,
+			"postal_code": NewPostcode,
 			// The shopper's own email, so the office can write to them about the
 			// delivery. Optional, and left out entirely when blank rather than sent
 			// empty - the server validates it as an address when it arrives.
@@ -110,6 +119,8 @@
 			"height_cm": item.height_cm
 		})),
 		// The form requires a measured product; the server refuses the order otherwise.
-		"measures_required": true
+		"measures_required": true,
+		// ... and a postcode for the recipient (2026-10-04), same mechanism.
+		"postal_code_required": true
 	};
 })()}}

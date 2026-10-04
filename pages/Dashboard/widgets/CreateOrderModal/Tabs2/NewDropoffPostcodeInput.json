@@ -1,0 +1,73 @@
+{
+  "accentColor": "{{appsmith.theme.colors.primaryColor}}",
+  "animateLoading": true,
+  "autoFocus": false,
+  "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
+  "bottomRow": 13,
+  "boxShadow": "none",
+  "defaultText": "",
+  "dynamicBindingPathList": [
+    {
+      "key": "accentColor"
+    },
+    {
+      "key": "borderRadius"
+    },
+    {
+      "key": "label"
+    }
+  ],
+  "dynamicHeight": "FIXED",
+  "dynamicTriggerPathList": [
+    {
+      "key": "onTextChanged"
+    }
+  ],
+  "iconAlign": "left",
+  "inputType": "TEXT",
+  "isDisabled": false,
+  "isLoading": false,
+  "isRequired": true,
+  "isVisible": true,
+  "key": "dropzipk001",
+  "label": "{{appsmith.store.bo_lang === 'en' ? \"Postcode\" : \"Пощенски код\"}}",
+  "labelAlignment": "left",
+  "labelPosition": "Top",
+  "labelStyle": "",
+  "labelTextSize": "0.875rem",
+  "labelWidth": 5,
+  "leftColumn": 46,
+  "maxDynamicHeight": 9000,
+  "minDynamicHeight": 4,
+  "minWidth": 450,
+  "mobileBottomRow": 12,
+  "mobileLeftColumn": 53,
+  "mobileRightColumn": 64,
+  "mobileTopRow": 5,
+  "needsErrorInfo": false,
+  "parentColumnSpace": 16.1146240234375,
+  "parentId": "z6y81ags76",
+  "parentRowSpace": 10,
+  "placeholderText": "1000",
+  "renderMode": "CANVAS",
+  "resetOnSubmit": true,
+  "responsiveBehavior": "fill",
+  "rightColumn": 52,
+  "showStepArrows": false,
+  "topRow": 6,
+  "type": "INPUT_WIDGET_V2",
+  "version": 2,
+  "widgetId": "dropzip0001",
+  "widgetName": "NewDropoffPostcodeInput",
+  "originalTopRow": 6,
+  "originalBottomRow": 13,
+  "maxChars": 4,
+  "regex": "^\\d{4}$",
+  "errorMessage": "4 цифри, напр. 1000",
+  "dynamicPropertyPathList": [
+    {
+      "key": "onTextChanged"
+    }
+  ],
+  "onTextChanged": "{{(() => {\n     // The pin was found for one address + postcode; a different postcode means another\n     // search is needed - the same rule as the address box (2026-10-04).\n     const zip = (NewDropoffPostcodeInput.text || \"\").trim();\n     if ((NewDropoffLatHidden.text || NewDropoffLngHidden.text) && zip !== (appsmith.store.newDropoffSearchedZip || \"\")) {\n       NewDropoffLatHidden.setValue(\"\");\n       NewDropoffLngHidden.setValue(\"\");\n     }\n   })()}}"
+}

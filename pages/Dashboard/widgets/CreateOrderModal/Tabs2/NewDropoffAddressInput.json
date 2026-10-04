@@ -47,7 +47,7 @@
   "minWidth": 450,
   "mobileBottomRow": 12,
   "mobileLeftColumn": 1,
-  "mobileRightColumn": 52,
+  "mobileRightColumn": 45,
   "mobileTopRow": 5,
   "needsErrorInfo": false,
   "onTextChanged": "{{(() => {\n     // Typing invalidates whatever was found for the previous text. The search itself\n     // is the \"Търси\" button beside this field (or Enter) - see 2026-09-19.\n     // Only when the text really differs from what the pin was found for: this handler can\n     // fire after a quick search and must not wipe its result (2026-10-02).\n     const typed = (NewDropoffAddressInput.text || \"\").trim();\n     if ((NewDropoffLatHidden.text || NewDropoffLngHidden.text) && typed !== (appsmith.store.newDropoffSearchedText || \"\")) {\n       NewDropoffLatHidden.setValue(\"\");\n       NewDropoffLngHidden.setValue(\"\");\n     }\n   })()}}",
@@ -60,12 +60,12 @@
   "renderMode": "CANVAS",
   "resetOnSubmit": true,
   "responsiveBehavior": "fill",
-  "rightColumn": 52,
+  "rightColumn": 45,
   "showStepArrows": false,
   "topRow": 6,
   "type": "INPUT_WIDGET_V2",
   "version": 2,
   "widgetId": "kues3u78fm",
   "widgetName": "NewDropoffAddressInput",
-  "onSubmit": "{{(() => {\n     const address = (NewDropoffAddressInput.text || \"\").trim();\n     if (address.length < 4) {\n       showAlert(\"Въведете адрес преди да търсите\", \"warning\");\n       return;\n     }\n     GeocodeNewDropoffAddress.run()\n       .then(() => {\n         if (GeocodeNewDropoffAddress.data?.results?.length > 0) {\n           LocationManager.updateNewDropoffFromGeocode();\n         } else {\n           showAlert(\"Адресът не е намерен — проверете изписването\", \"warning\");\n         }\n       })\n       .catch(() => showAlert(\"Търсенето на адреса не мина. Опитайте пак.\", \"error\"));\n   })()}}"
+  "onSubmit": "{{(() => {\n     const address = (NewDropoffAddressInput.text || \"\").trim();\n     if (address.length < 4) {\n       showAlert(\"Въведете адрес преди да търсите\", \"warning\");\n       return;\n     }\n     if (!/^\\d{4}$/.test((NewDropoffPostcodeInput.text || \"\").trim())) {\n       showAlert(\"Въведете пощенския код на получателя (4 цифри) преди да търсите\", \"warning\");\n       return;\n     }\n     GeocodeNewDropoffAddress.run()\n       .then(() => {\n         if (GeocodeNewDropoffAddress.data?.results?.length > 0) {\n           LocationManager.updateNewDropoffFromGeocode();\n         } else {\n           showAlert(\"Адресът не е намерен — проверете изписването\", \"warning\");\n         }\n       })\n       .catch(() => showAlert(\"Търсенето на адреса не мина. Опитайте пак.\", \"error\"));\n   })()}}"
 }

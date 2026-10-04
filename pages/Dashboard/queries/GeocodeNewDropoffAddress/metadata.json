@@ -25,7 +25,7 @@
       "queryParameters": [
         {
           "key": "address",
-          "value": "{{this.params.address || LocationManager.expandAbbreviations(NewDropoffAddressInput.text)}}"
+          "value": "{{this.params.address || (() => { const zip = (NewDropoffPostcodeInput.text || '').trim(); const text = NewDropoffAddressInput.text || ''; return LocationManager.expandAbbreviations(text) + (/^\\d{4}$/.test(zip) && !text.includes(zip) ? ', ' + zip + ' София' : ''); })()}}"
         },
         {
           "key": "components",

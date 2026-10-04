@@ -208,6 +208,7 @@ updateNewDropoffFromGeocode: () => {
     // the last keystroke, so on a quick type-and-search it could land AFTER this and wipe
     // the pin it had just been given - "found", then "още не е намерен" on Създай (2026-10-02).
     storeValue("newDropoffSearchedText", (NewDropoffAddressInput.text || "").trim(), false);
+    storeValue("newDropoffSearchedZip", (NewDropoffPostcodeInput.text || "").trim(), false);
 
     showAlert("✓ Адресът за доставка е намерен на картата", "success");
   } else {
@@ -225,6 +226,12 @@ updateNewDropoffFromGeocode: () => {
 
     if (!NewDropoffAddressInput.text) {
       errors.push("Адресът за доставка е задължителен");
+    }
+
+    // Required since 2026-10-04 (Ico): Google misplaces some streets without it, so every
+    // delivery address is searched and created with its postcode.
+    if (!/^\d{4}$/.test((NewDropoffPostcodeInput.text || "").trim())) {
+      errors.push("Пощенският код на получателя е задължителен (4 цифри, напр. 1000)");
     }
 
     if (!ScheduledDeliveryPicker.selectedDate) {
@@ -261,7 +268,7 @@ updateNewDropoffFromGeocode: () => {
     if (appsmith.store.newOrderDraftFor !== me) {
       await Promise.all([
         NewPickupAddressInput.setValue(''), NewPickupLatHidden.setValue(''), NewPickupLngHidden.setValue(''),
-        NewDropoffAddressInput.setValue(''), NewDropoffLatHidden.setValue(''), NewDropoffLngHidden.setValue(''),
+        NewDropoffAddressInput.setValue(''), NewDropoffPostcodeInput.setValue(''), NewDropoffLatHidden.setValue(''), NewDropoffLngHidden.setValue(''),
         RecipientNameInput.setValue(''), RecipientPhoneInput.setValue(''), CustomerEmailInput.setValue(''),
         DeliveryNotesInput.setValue(''), NewAmountInput.setValue(''),
         ItemNameInput.setValue(''), ItemSkuInput.setValue(''), ItemQuantityInput.setValue('1'),
