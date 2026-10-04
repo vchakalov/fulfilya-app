@@ -29,7 +29,7 @@
         },
         {
           "key": "components",
-          "value": "country:BG"
+          "value": "{{this.params.components || 'country:BG'}}"
         },
         {
           "key": "key",
