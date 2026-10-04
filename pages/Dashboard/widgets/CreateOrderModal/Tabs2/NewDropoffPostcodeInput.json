@@ -65,8 +65,8 @@
   "originalTopRow": 6,
   "originalBottomRow": 13,
   "maxChars": 4,
-  "regex": "^\\d{4}$",
-  "errorMessage": "4 цифри, напр. 1000",
+  "regex": "^1\\d{3}$",
+  "errorMessage": "София: 1000–1999",
   "dynamicPropertyPathList": [
     {
       "key": "onTextChanged"

@@ -40,8 +40,8 @@
 	// wrong part of town without it. The server geocodes with it and refuses an order that
 	// lacks it when `postal_code_required` is set - the Excel upload does not set it.
 	const NewPostcode = (NewDropoffPostcodeInput.text || "").trim();
-	if (!/^\d{4}$/.test(NewPostcode)) {
-		throw new Error("Въведете пощенския код на получателя (4 цифри)");
+	if (!/^1\d{3}$/.test(NewPostcode)) {
+		throw new Error("Въведете пощенски код от София (1000–1999)");
 	}
 
 	// When it may be delivered (Ico, 2026-10-02): Standard from tomorrow on - never the

@@ -98,7 +98,7 @@ export default {
       if (!precise() && cyr !== expanded) await GeocodeNewDropoffAddress.run({ address: withZip(cyr), components: strict });
       if (!precise()) await GeocodeNewDropoffAddress.run({ address: withZip(expanded), components: loose });
       if (!first()) {
-        showAlert("Адресът не е намерен — проверете изписването", "warning");
+        showAlert("Адресът не е намерен на картата — проверете изписването. Можете да създадете поръчката и така, ще уточним адреса по телефона.", "warning");
         return false;
       }
       let town = LocationManager.wrongTown(first(), address);
@@ -109,7 +109,7 @@ export default {
       if (town) {
         NewDropoffLatHidden.setValue("");
         NewDropoffLngHidden.setValue("");
-        showAlert(`Google намира адреса в ${town}, а не в София. Проверете улицата и номера, или изпишете квартала/селото.`, "warning");
+        showAlert(`Google намира адреса в ${town}, а не в София. Проверете улицата и номера — или създайте поръчката и така, ще уточним адреса по телефона.`, "warning");
         return false;
       }
       LocationManager.updateNewDropoffFromGeocode();
@@ -304,8 +304,11 @@ updateNewDropoffFromGeocode: () => {
 
     // Required since 2026-10-04 (Ico): Google misplaces some streets without it, so every
     // delivery address is searched and created with its postcode.
-    if (!/^\d{4}$/.test((NewDropoffPostcodeInput.text || "").trim())) {
-      errors.push("Пощенският код на получателя е задължителен (4 цифри, напр. 1000)");
+    // ... and from Sofia (1000-1999): with it the order goes through even when the map could
+    // not place the address - the office clarifies by phone (Ico, 2026-10-04).
+    const zipOk = /^1\d{3}$/.test((NewDropoffPostcodeInput.text || "").trim());
+    if (!zipOk) {
+      errors.push("Пощенският код на получателя е задължителен и трябва да е от София (1000–1999)");
     }
 
     if (!ScheduledDeliveryPicker.selectedDate) {
@@ -319,9 +322,9 @@ updateNewDropoffFromGeocode: () => {
       errors.push("Адресът за взимане трябва да е в България");
     }
 
-    if (!NewDropoffLatHidden.text || !NewDropoffLngHidden.text) {
-      errors.push("Адресът за доставка още не е намерен — изчакайте или проверете изписването");
-    } else if (!LocationManager.validateCoordinates(NewDropoffLatHidden.text, NewDropoffLngHidden.text)) {
+    // No pin is not a stop any more (Ico, 2026-10-04): a Sofia postcode is enough, the server
+    // pins the postcode's centre and flags the order for a phone call.
+    if (NewDropoffLatHidden.text && NewDropoffLngHidden.text && !LocationManager.validateCoordinates(NewDropoffLatHidden.text, NewDropoffLngHidden.text)) {
       errors.push("Адресът за доставка трябва да е в България");
     }
 
