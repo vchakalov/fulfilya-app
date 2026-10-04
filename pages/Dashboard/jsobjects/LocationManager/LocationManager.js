@@ -41,9 +41,83 @@ export default {
   // TODO 45). Spelt out, the same text answers the real building in кв. Република. The
   // server does the same before it geocodes the order; the field keeps the merchant's words.
   expandAbbreviations: (text) => {
-    const words = { "бул": "булевард", "б-р": "булевард", "ул": "улица", "пл": "площад" };
-    const expanded = (text || "").replace(/(?<!\p{L})(бул|б-р|ул|пл)(?:\.|(?=\s))/giu, (m, w) => words[w.toLowerCase()] + " ");
+    const words = { "бул": "булевард", "б-р": "булевард", "ул": "улица", "пл": "площад",
+      "bul": "bulevard", "blvd": "bulevard", "ul": "ulitsa", "pl": "ploshtad" };
+    // Latin too (2026-10-04): "bul.slivnica 566" is how merchants type; Google needs the word.
+    const expanded = (text || "").replace(/(?<!\p{L})(бул|б-р|ул|пл|bul|blvd|ul|pl)(?:\.|(?=\s))/giu, (m, w) => words[w.toLowerCase()] + " ");
     return expanded.replace(/[ \t]{2,}/g, " ").trim();
+  },
+
+  // Latin-typed text in Cyrillic, the way Bulgarians type it on a Latin keyboard: Google's
+  // geocoder knows "булевард Сливница" and "Boulevard Slivnitsa" but not "bul.slivnica", so
+  // a Latin address is asked once more in Cyrillic (2026-10-04). Text that already has a
+  // Cyrillic letter comes back untouched.
+  cyrillic: (text) => {
+    const t = text || "";
+    if (/[\u0400-\u04FF]/.test(t)) return t;
+    const map = { sht: "щ", sch: "щ", dzh: "дж", zh: "ж", ch: "ч", sh: "ш", ts: "ц", yu: "ю", ya: "я", ju: "ю", ja: "я", ia: "ия",
+      a: "а", b: "б", c: "ц", d: "д", e: "е", f: "ф", g: "г", h: "х", i: "и", j: "й", k: "к", l: "л", m: "м", n: "н", o: "о",
+      p: "п", q: "к", r: "р", s: "с", t: "т", u: "у", v: "в", w: "в", x: "кс", y: "й", z: "з" };
+    return t.replace(/sht|sch|dzh|zh|ch|sh|ts|yu|ya|ju|ja|ia(?![a-z])|[a-z]/gi, (m) => {
+      const out = map[m.toLowerCase()];
+      return m[0] === m[0].toUpperCase() && m[0] !== m[0].toLowerCase() ? out[0].toUpperCase() + out.slice(1) : out;
+    });
+  },
+
+  // The delivery-address search behind Търси and Enter (2026-10-04). Google is asked up to
+  // four times, stopping at the first precise answer:
+  //   1. the text as typed (abbreviations spelt out) with the postcode as Google's hard
+  //      filter - the answer is inside that postcode or there is none;
+  //   2. the same in Cyrillic, when the merchant typed Latin ("bul.slivnica" found nothing,
+  //      "булевард сливница" finds the building);
+  //   3. the postcode as plain text only, which merely nudges - for a postcode Google
+  //      disagrees with (a block in ж.к. Младост 1 is 1750 to Google, 1784 to everyone else);
+  //   4. if the answer is a town the text never names, once more in Latin (TODO 45).
+  // The server runs the same ladder when the order is created.
+  searchNewDropoff: async () => {
+    const address = (NewDropoffAddressInput.text || "").trim();
+    if (address.length < 4) {
+      showAlert("Въведете адрес преди да търсите", "warning");
+      return false;
+    }
+    const zip = (NewDropoffPostcodeInput.text || "").trim();
+    if (!/^\d{4}$/.test(zip)) {
+      showAlert("Въведете пощенския код на получателя (4 цифри) преди да търсите", "warning");
+      return false;
+    }
+    const coarse = ["country", "administrative_area_level_1", "administrative_area_level_2",
+      "administrative_area_level_3", "colloquial_area", "political", "locality", "postal_code", "postal_town"];
+    const first = () => GeocodeNewDropoffAddress.data?.results?.[0];
+    const precise = () => { const r = first(); return !!r && !((r.types || []).length > 0 && r.types.every((t) => coarse.includes(t))); };
+    const withZip = (q) => q.includes(zip) ? q : q + ", " + zip + " София";
+    const strict = "country:BG|postal_code:" + zip, loose = "country:BG";
+    const expanded = LocationManager.expandAbbreviations(address);
+    const cyr = LocationManager.cyrillic(expanded);
+    try {
+      await GeocodeNewDropoffAddress.run({ address: withZip(expanded), components: strict });
+      if (!precise() && cyr !== expanded) await GeocodeNewDropoffAddress.run({ address: withZip(cyr), components: strict });
+      if (!precise()) await GeocodeNewDropoffAddress.run({ address: withZip(expanded), components: loose });
+      if (!first()) {
+        showAlert("Адресът не е намерен — проверете изписването", "warning");
+        return false;
+      }
+      let town = LocationManager.wrongTown(first(), address);
+      if (town) {
+        await GeocodeNewDropoffAddress.run({ address: LocationManager.latinQuery(address) + ", " + zip + " Sofia", components: loose });
+        if (first()) town = LocationManager.wrongTown(first(), address);
+      }
+      if (town) {
+        NewDropoffLatHidden.setValue("");
+        NewDropoffLngHidden.setValue("");
+        showAlert(`Google намира адреса в ${town}, а не в София. Проверете улицата и номера, или изпишете квартала/селото.`, "warning");
+        return false;
+      }
+      LocationManager.updateNewDropoffFromGeocode();
+      return true;
+    } catch (e) {
+      showAlert("Търсенето на адреса не мина. Опитайте пак.", "error");
+      return false;
+    }
   },
 
   // Cyrillic to Latin the way Google labels Bulgarian towns (Кътина -> Katina, София -> Sofia).

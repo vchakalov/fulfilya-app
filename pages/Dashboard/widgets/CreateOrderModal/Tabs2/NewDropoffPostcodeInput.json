@@ -21,6 +21,9 @@
   "dynamicTriggerPathList": [
     {
       "key": "onTextChanged"
+    },
+    {
+      "key": "onSubmit"
     }
   ],
   "iconAlign": "left",
@@ -67,7 +70,11 @@
   "dynamicPropertyPathList": [
     {
       "key": "onTextChanged"
+    },
+    {
+      "key": "onSubmit"
     }
   ],
-  "onTextChanged": "{{(() => {\n     // The pin was found for one address + postcode; a different postcode means another\n     // search is needed - the same rule as the address box (2026-10-04).\n     const zip = (NewDropoffPostcodeInput.text || \"\").trim();\n     if ((NewDropoffLatHidden.text || NewDropoffLngHidden.text) && zip !== (appsmith.store.newDropoffSearchedZip || \"\")) {\n       NewDropoffLatHidden.setValue(\"\");\n       NewDropoffLngHidden.setValue(\"\");\n     }\n   })()}}"
+  "onTextChanged": "{{(() => {\n     // The pin was found for one address + postcode; a different postcode means another\n     // search is needed - the same rule as the address box (2026-10-04).\n     const zip = (NewDropoffPostcodeInput.text || \"\").trim();\n     if ((NewDropoffLatHidden.text || NewDropoffLngHidden.text) && zip !== (appsmith.store.newDropoffSearchedZip || \"\")) {\n       NewDropoffLatHidden.setValue(\"\");\n       NewDropoffLngHidden.setValue(\"\");\n     }\n   })()}}",
+  "onSubmit": "{{LocationManager.searchNewDropoff()}}"
 }
