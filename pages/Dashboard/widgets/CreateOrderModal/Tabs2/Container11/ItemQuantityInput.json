@@ -12,6 +12,9 @@
     },
     {
       "key": "borderRadius"
+    },
+    {
+      "key": "label"
     }
   ],
   "dynamicHeight": "FIXED",
@@ -23,7 +26,7 @@
   "isRequired": false,
   "isVisible": true,
   "key": "gnxtfpd5ih",
-  "label": "Количество",
+  "label": "{{appsmith.store.bo_lang === 'en' ? \"Quantity\" : \"Количество\"}}",
   "labelAlignment": "left",
   "labelPosition": "Top",
   "labelStyle": "",

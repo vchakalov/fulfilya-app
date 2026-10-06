@@ -11,6 +11,12 @@
     },
     {
       "key": "borderRadius"
+    },
+    {
+      "key": "labelText"
+    },
+    {
+      "key": "placeholderText"
     }
   ],
   "dynamicHeight": "FIXED",
@@ -32,7 +38,7 @@
   "key": "3i1ms37q0n",
   "labelAlignment": "left",
   "labelPosition": "Top",
-  "labelText": "Вид доставка",
+  "labelText": "{{appsmith.store.bo_lang === 'en' ? \"Delivery type\" : \"Вид доставка\"}}",
   "labelTextSize": "0.875rem",
   "labelWidth": 5,
   "leftColumn": 1,
@@ -44,12 +50,13 @@
   "mobileRightColumn": 21,
   "mobileTopRow": 10,
   "needsErrorInfo": false,
+  "onOptionChange": "{{OrderShippingSelect.selectedOptionValue ? PortalQuote.run() : null}}",
   "optionLabel": "label",
   "optionValue": "value",
   "parentColumnSpace": 9.442358398437499,
-  "parentId": "sv637as6mi",
+  "parentId": "dqpf5acdio",
   "parentRowSpace": 10,
-  "placeholderText": "Изберете",
+  "placeholderText": "{{appsmith.store.bo_lang === 'en' ? \"Choose\" : \"Изберете\"}}",
   "renderMode": "CANVAS",
   "responsiveBehavior": "fill",
   "rightColumn": 21,
@@ -59,6 +66,5 @@
   "type": "SELECT_WIDGET",
   "version": 1,
   "widgetId": "cmsgmjtqsw",
-  "widgetName": "OrderShippingSelect",
-  "onOptionChange": "{{OrderShippingSelect.selectedOptionValue ? PortalQuote.run() : null}}"
+  "widgetName": "OrderShippingSelect"
 }

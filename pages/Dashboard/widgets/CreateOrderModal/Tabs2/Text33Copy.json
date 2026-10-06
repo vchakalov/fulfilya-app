@@ -5,6 +5,9 @@
   "dynamicBindingPathList": [
     {
       "key": "fontFamily"
+    },
+    {
+      "key": "text"
     }
   ],
   "dynamicHeight": "AUTO_HEIGHT",
@@ -34,7 +37,7 @@
   "responsiveBehavior": "fill",
   "rightColumn": 47,
   "shouldTruncate": false,
-  "text": "Адрес за доставка",
+  "text": "{{appsmith.store.bo_lang === 'en' ? \"Delivery address\" : \"Адрес за доставка\"}}",
   "textAlign": "LEFT",
   "textColor": "#231F20",
   "topRow": 0,

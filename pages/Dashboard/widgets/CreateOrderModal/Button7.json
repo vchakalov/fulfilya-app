@@ -10,6 +10,9 @@
   "dynamicBindingPathList": [
     {
       "key": "borderRadius"
+    },
+    {
+      "key": "text"
     }
   ],
   "dynamicTriggerPathList": [
@@ -39,7 +42,7 @@
   "resetFormOnClick": false,
   "responsiveBehavior": "hug",
   "rightColumn": 47,
-  "text": "Затвори",
+  "text": "{{appsmith.store.bo_lang === 'en' ? \"Close\" : \"Затвори\"}}",
   "topRow": 41,
   "type": "BUTTON_WIDGET",
   "version": 1,

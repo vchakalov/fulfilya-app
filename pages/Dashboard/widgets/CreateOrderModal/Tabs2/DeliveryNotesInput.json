@@ -12,6 +12,12 @@
     },
     {
       "key": "borderRadius"
+    },
+    {
+      "key": "label"
+    },
+    {
+      "key": "placeholderText"
     }
   ],
   "dynamicHeight": "AUTO_HEIGHT",
@@ -23,19 +29,19 @@
   "isRequired": false,
   "isVisible": true,
   "key": "gnxtfpd5ih",
-  "label": "Бележки за куриера",
+  "label": "{{appsmith.store.bo_lang === 'en' ? \"Notes for the courier\" : \"Бележки за куриера\"}}",
   "labelAlignment": "left",
   "labelPosition": "Top",
   "labelStyle": "",
   "labelTextSize": "0.875rem",
   "labelWidth": 5,
-  "leftColumn": 23,
+  "leftColumn": 45,
   "maxDynamicHeight": 9000,
   "minDynamicHeight": 4,
   "minWidth": 450,
   "mobileBottomRow": 26,
-  "mobileLeftColumn": 23,
-  "mobileRightColumn": 43,
+  "mobileLeftColumn": 45,
+  "mobileRightColumn": 64,
   "mobileTopRow": 19,
   "needsErrorInfo": false,
   "originalBottomRow": 20,
@@ -43,11 +49,11 @@
   "parentColumnSpace": 16.1146240234375,
   "parentId": "dqpf5acdio",
   "parentRowSpace": 10,
-  "placeholderText": "Специални указания, етаж, звънец...",
+  "placeholderText": "{{appsmith.store.bo_lang === 'en' ? \"Special instructions, floor, bell...\" : \"Специални указания, етаж, звънец...\"}}",
   "renderMode": "CANVAS",
   "resetOnSubmit": true,
   "responsiveBehavior": "fill",
-  "rightColumn": 56,
+  "rightColumn": 64,
   "shouldAllowAutofill": false,
   "showStepArrows": false,
   "topRow": 10,

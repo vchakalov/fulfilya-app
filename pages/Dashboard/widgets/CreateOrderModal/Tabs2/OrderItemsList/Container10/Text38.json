@@ -35,7 +35,7 @@
   "responsiveBehavior": "fill",
   "rightColumn": 53,
   "shouldTruncate": false,
-  "text": "{{ 'Бр.: ' + currentItem.quantity + (currentItem.weight_kg ? ' · ' + String(currentItem.weight_kg).replace('.', ',') + ' кг · ' + [currentItem.length_cm, currentItem.width_cm, currentItem.height_cm].map((x) => String(x).replace('.', ',')).join('×') + ' см' : '') }}",
+  "text": "{{ (appsmith.store.bo_lang === 'en' ? \"Qty: \" : 'Бр.: ') + currentItem.quantity + (currentItem.weight_kg ? ' · ' + String(currentItem.weight_kg).replace('.', ',') + (appsmith.store.bo_lang === 'en' ? \" kg · \" : ' кг · ') + [currentItem.length_cm, currentItem.width_cm, currentItem.height_cm].map((x) => String(x).replace('.', ',')).join('×') + (appsmith.store.bo_lang === 'en' ? \" cm\" : ' см') : '') }}",
   "textAlign": "LEFT",
   "textColor": "#231F20",
   "topRow": 4,

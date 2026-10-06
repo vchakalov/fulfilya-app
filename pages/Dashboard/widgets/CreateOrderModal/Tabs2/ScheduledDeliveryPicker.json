@@ -5,9 +5,9 @@
   "bottomRow": 17,
   "boxShadow": "none",
   "closeOnSelection": true,
-  "dateFormat": "DD/MM/YYYY HH:mm",
+  "dateFormat": "DD/MM/YYYY",
   "datePickerType": "DATE_PICKER",
-  "defaultDate": "{{moment().add(1,'days').startOf('day').add(9, \"hours\");}}",
+  "defaultDate": "{{moment().add(1, 'days').startOf('day').toISOString()}}",
   "dynamicBindingPathList": [
     {
       "key": "defaultDate"
@@ -20,6 +20,9 @@
     },
     {
       "key": "borderRadius"
+    },
+    {
+      "key": "label"
     }
   ],
   "dynamicHeight": "FIXED",
@@ -41,20 +44,20 @@
   "isRequired": false,
   "isVisible": true,
   "key": "rr3cz5jv4u",
-  "label": "Дата и час на доставка",
+  "label": "{{appsmith.store.bo_lang === 'en' ? \"Delivery date\" : \"Дата на доставка\"}}",
   "labelAlignment": "left",
   "labelPosition": "Top",
   "labelTextSize": "0.875rem",
   "labelWidth": 5,
-  "leftColumn": 1,
+  "leftColumn": 23,
   "maxDate": "2121-12-31T18:29:00.000Z",
   "maxDynamicHeight": 9000,
-  "minDate": "{{ /express/i.test(OrderShippingSelect.selectedOptionLabel || '') ? moment().startOf('minute').toISOString() : moment().add(1, 'days').startOf('day').toISOString() }}",
+  "minDate": "{{ /express/i.test(OrderShippingSelect.selectedOptionLabel || '') ? moment().startOf('day').toISOString() : moment().add(1, 'days').startOf('day').toISOString() }}",
   "minDynamicHeight": 4,
   "minWidth": 450,
   "mobileBottomRow": 28,
-  "mobileLeftColumn": 1,
-  "mobileRightColumn": 21,
+  "mobileLeftColumn": 23,
+  "mobileRightColumn": 43,
   "mobileTopRow": 21,
   "needsErrorInfo": false,
   "parentColumnSpace": 16.1146240234375,
@@ -62,9 +65,9 @@
   "parentRowSpace": 10,
   "renderMode": "CANVAS",
   "responsiveBehavior": "fill",
-  "rightColumn": 21,
+  "rightColumn": 43,
   "shortcuts": false,
-  "timePrecision": "minute",
+  "timePrecision": "None",
   "topRow": 10,
   "type": "DATE_PICKER_WIDGET2",
   "version": 2,

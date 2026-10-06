@@ -312,7 +312,7 @@ updateNewDropoffFromGeocode: () => {
     }
 
     if (!ScheduledDeliveryPicker.selectedDate) {
-      errors.push("Датата и часът на доставка са задължителни");
+      errors.push("Датата на доставка е задължителна");
     }
 
     // Check geocoding with Bulgaria validation

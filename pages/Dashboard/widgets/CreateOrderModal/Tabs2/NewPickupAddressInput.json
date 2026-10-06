@@ -12,6 +12,12 @@
     },
     {
       "key": "borderRadius"
+    },
+    {
+      "key": "label"
+    },
+    {
+      "key": "placeholderText"
     }
   ],
   "dynamicHeight": "FIXED",
@@ -35,7 +41,7 @@
   "isRequired": false,
   "isVisible": true,
   "key": "gnxtfpd5ih",
-  "label": "Адрес за взимане",
+  "label": "{{appsmith.store.bo_lang === 'en' ? \"Pickup address\" : \"Адрес за взимане\"}}",
   "labelAlignment": "left",
   "labelPosition": "Top",
   "labelStyle": "",
@@ -50,13 +56,14 @@
   "mobileRightColumn": 21,
   "mobileTopRow": 5,
   "needsErrorInfo": false,
+  "onSubmit": "{{(() => {\n     const address = (NewPickupAddressInput.text || \"\").trim();\n     if (address.length < 4) {\n       showAlert(\"Въведете адрес преди да търсите\", \"warning\");\n       return;\n     }\n     GeocodeNewPickupAddress.run()\n       .then(() => {\n         if (GeocodeNewPickupAddress.data?.results?.length > 0) {\n           LocationManager.updateNewPickupFromGeocode();\n         } else {\n           showAlert(\"Адресът не е намерен — проверете изписването\", \"warning\");\n         }\n       })\n       .catch(() => showAlert(\"Търсенето на адреса не мина. Опитайте пак.\", \"error\"));\n   })()}}",
   "onTextChanged": "{{(() => {\n     // Typing invalidates whatever was found for the previous text. The search itself\n     // is the \"Търси\" button beside this field (or Enter) - see 2026-09-19.\n     // The warehouse's own line needs no search - it is where we collect from.\n     const w = (BoWarehouse.data || [])[0];\n     if (w && w.address && NewPickupAddressInput.text === w.address) {\n       NewPickupLatHidden.setValue(String(w.lat));\n       NewPickupLngHidden.setValue(String(w.lng));\n       return;\n     }\n     // Only when the text really differs from what the pin was found for: this handler can\n     // fire after a quick search and must not wipe its result (2026-10-02).\n     const typed = (NewPickupAddressInput.text || \"\").trim();\n     if ((NewPickupLatHidden.text || NewPickupLngHidden.text) && typed !== (appsmith.store.newPickupSearchedText || \"\")) {\n       NewPickupLatHidden.setValue(\"\");\n       NewPickupLngHidden.setValue(\"\");\n     }\n   })()}}",
   "originalBottomRow": 13,
   "originalTopRow": 6,
   "parentColumnSpace": 16.1146240234375,
   "parentId": "z6y81ags76",
   "parentRowSpace": 10,
-  "placeholderText": "Пълен адрес, напр. ул. Витоша 15, София",
+  "placeholderText": "{{appsmith.store.bo_lang === 'en' ? \"Full address, e.g. ul. Vitosha 15, Sofia\" : \"Пълен адрес, напр. ул. Витоша 15, София\"}}",
   "renderMode": "CANVAS",
   "resetOnSubmit": true,
   "responsiveBehavior": "fill",
@@ -66,6 +73,5 @@
   "type": "INPUT_WIDGET_V2",
   "version": 2,
   "widgetId": "2dxqat7w43",
-  "widgetName": "NewPickupAddressInput",
-  "onSubmit": "{{(() => {\n     const address = (NewPickupAddressInput.text || \"\").trim();\n     if (address.length < 4) {\n       showAlert(\"Въведете адрес преди да търсите\", \"warning\");\n       return;\n     }\n     GeocodeNewPickupAddress.run()\n       .then(() => {\n         if (GeocodeNewPickupAddress.data?.results?.length > 0) {\n           LocationManager.updateNewPickupFromGeocode();\n         } else {\n           showAlert(\"Адресът не е намерен — проверете изписването\", \"warning\");\n         }\n       })\n       .catch(() => showAlert(\"Търсенето на адреса не мина. Опитайте пак.\", \"error\"));\n   })()}}"
+  "widgetName": "NewPickupAddressInput"
 }

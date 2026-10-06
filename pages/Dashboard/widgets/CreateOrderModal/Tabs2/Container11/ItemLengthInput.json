@@ -15,6 +15,9 @@
     },
     {
       "key": "label"
+    },
+    {
+      "key": "placeholderText"
     }
   ],
   "dynamicHeight": "FIXED",
@@ -46,6 +49,7 @@
   "parentColumnSpace": 16.1146240234375,
   "parentId": "k9ywthklz6",
   "parentRowSpace": 10,
+  "placeholderText": "{{appsmith.store.bo_lang === 'en' ? \"e.g. 30\" : \"напр. 30\"}}",
   "renderMode": "CANVAS",
   "resetOnSubmit": true,
   "responsiveBehavior": "fill",
@@ -56,6 +60,5 @@
   "type": "INPUT_WIDGET_V2",
   "version": 2,
   "widgetId": "6ghga032jh",
-  "widgetName": "ItemLengthInput",
-  "placeholderText": "напр. 30"
+  "widgetName": "ItemLengthInput"
 }

@@ -12,6 +12,12 @@
     },
     {
       "key": "borderRadius"
+    },
+    {
+      "key": "label"
+    },
+    {
+      "key": "placeholderText"
     }
   ],
   "dynamicHeight": "FIXED",
@@ -23,7 +29,7 @@
   "isRequired": false,
   "isVisible": true,
   "key": "gnxtfpd5ih",
-  "label": "Артикул",
+  "label": "{{appsmith.store.bo_lang === 'en' ? \"Item\" : \"Артикул\"}}",
   "labelAlignment": "left",
   "labelPosition": "Top",
   "labelStyle": "",
@@ -43,7 +49,7 @@
   "parentColumnSpace": 16.1146240234375,
   "parentId": "k9ywthklz6",
   "parentRowSpace": 10,
-  "placeholderText": "напр. Кафе",
+  "placeholderText": "{{appsmith.store.bo_lang === 'en' ? \"e.g. Coffee\" : \"напр. Кафе\"}}",
   "renderMode": "CANVAS",
   "resetOnSubmit": true,
   "responsiveBehavior": "fill",

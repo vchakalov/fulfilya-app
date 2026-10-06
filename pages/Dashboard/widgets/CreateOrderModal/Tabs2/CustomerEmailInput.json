@@ -12,6 +12,9 @@
     },
     {
       "key": "borderRadius"
+    },
+    {
+      "key": "label"
     }
   ],
   "dynamicHeight": "FIXED",
@@ -23,7 +26,7 @@
   "isRequired": false,
   "isVisible": true,
   "key": "q094w2l63u",
-  "label": "Имейл на клиента (незадължително)",
+  "label": "{{appsmith.store.bo_lang === 'en' ? \"Customer email (optional)\" : \"Имейл на клиента (незадължително)\"}}",
   "labelAlignment": "left",
   "labelPosition": "Top",
   "labelStyle": "",

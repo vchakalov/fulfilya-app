@@ -12,6 +12,12 @@
     },
     {
       "key": "borderRadius"
+    },
+    {
+      "key": "label"
+    },
+    {
+      "key": "placeholderText"
     }
   ],
   "dynamicHeight": "FIXED",
@@ -35,7 +41,7 @@
   "isRequired": false,
   "isVisible": true,
   "key": "gnxtfpd5ih",
-  "label": "Адрес за доставка",
+  "label": "{{appsmith.store.bo_lang === 'en' ? \"Delivery address\" : \"Адрес за доставка\"}}",
   "labelAlignment": "left",
   "labelPosition": "Top",
   "labelStyle": "",
@@ -50,13 +56,14 @@
   "mobileRightColumn": 45,
   "mobileTopRow": 5,
   "needsErrorInfo": false,
+  "onSubmit": "{{LocationManager.searchNewDropoff()}}",
   "onTextChanged": "{{(() => {\n     // Typing invalidates whatever was found for the previous text. The search itself\n     // is the \"Търси\" button beside this field (or Enter) - see 2026-09-19.\n     // Only when the text really differs from what the pin was found for: this handler can\n     // fire after a quick search and must not wipe its result (2026-10-02).\n     const typed = (NewDropoffAddressInput.text || \"\").trim();\n     if ((NewDropoffLatHidden.text || NewDropoffLngHidden.text) && typed !== (appsmith.store.newDropoffSearchedText || \"\")) {\n       NewDropoffLatHidden.setValue(\"\");\n       NewDropoffLngHidden.setValue(\"\");\n     }\n   })()}}",
   "originalBottomRow": 13,
   "originalTopRow": 6,
   "parentColumnSpace": 16.1146240234375,
   "parentId": "z6y81ags76",
   "parentRowSpace": 10,
-  "placeholderText": "Пълен адрес, напр. ул. Витоша 15, София",
+  "placeholderText": "{{appsmith.store.bo_lang === 'en' ? \"Full address, e.g. ul. Vitosha 15, Sofia\" : \"Пълен адрес, напр. ул. Витоша 15, София\"}}",
   "renderMode": "CANVAS",
   "resetOnSubmit": true,
   "responsiveBehavior": "fill",
@@ -66,6 +73,5 @@
   "type": "INPUT_WIDGET_V2",
   "version": 2,
   "widgetId": "kues3u78fm",
-  "widgetName": "NewDropoffAddressInput",
-  "onSubmit": "{{LocationManager.searchNewDropoff()}}"
+  "widgetName": "NewDropoffAddressInput"
 }

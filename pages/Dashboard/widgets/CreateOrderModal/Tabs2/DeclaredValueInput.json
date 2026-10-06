@@ -3,7 +3,7 @@
   "animateLoading": true,
   "autoFocus": false,
   "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
-  "bottomRow": 25,
+  "bottomRow": 17,
   "boxShadow": "none",
   "defaultText": "",
   "dynamicBindingPathList": [
@@ -18,6 +18,9 @@
     },
     {
       "key": "isVisible"
+    },
+    {
+      "key": "placeholderText"
     }
   ],
   "dynamicHeight": "FIXED",
@@ -43,27 +46,27 @@
   "maxDynamicHeight": 9000,
   "minDynamicHeight": 4,
   "minWidth": 450,
-  "mobileBottomRow": 25,
+  "mobileBottomRow": 17,
   "mobileLeftColumn": 22,
   "mobileRightColumn": 33,
-  "mobileTopRow": 18,
+  "mobileTopRow": 10,
   "needsErrorInfo": false,
+  "onTextChanged": "{{OrderShippingSelect.selectedOptionValue ? PortalQuote.run() : null}}",
+  "originalBottomRow": 25,
+  "originalTopRow": 18,
   "parentColumnSpace": 16.1146240234375,
   "parentId": "sv637as6mi",
   "parentRowSpace": 10,
-  "placeholderText": "до 5 112,92 €",
+  "placeholderText": "{{appsmith.store.bo_lang === 'en' ? \"up to €5,112.92\" : \"до 5 112,92 €\"}}",
   "renderMode": "CANVAS",
   "resetOnSubmit": true,
   "responsiveBehavior": "fill",
   "rightColumn": 33,
   "shouldAllowAutofill": false,
   "showStepArrows": false,
-  "topRow": 18,
+  "topRow": 10,
   "type": "INPUT_WIDGET_V2",
   "version": 2,
   "widgetId": "bjtb522cfv",
-  "widgetName": "DeclaredValueInput",
-  "onTextChanged": "{{OrderShippingSelect.selectedOptionValue ? PortalQuote.run() : null}}",
-  "originalTopRow": 18,
-  "originalBottomRow": 25
+  "widgetName": "DeclaredValueInput"
 }

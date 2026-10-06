@@ -48,14 +48,21 @@
 	// day it is created; Express from now on, today included; never in the past. The
 	// date sits on the first tab and the service on the second, so the picker alone
 	// cannot enforce it. The server checks the same rule.
-	const when = ScheduledDeliveryPicker.selectedDate ? moment(ScheduledDeliveryPicker.selectedDate) : null;
+	// Since 2026-10-06 the picker is a DAY, not a moment (Ico: "they cannot choose time of
+	// delivery just the day"). Today means "from now" and is sent as no date at all, so the
+	// server's "not in the past" check and the planner's not-before window both read it as
+	// now; any later day is sent as its midnight, so the van is never made to wait for a
+	// clock time nobody chose (a held order with a "not before 14:00" parked the van for
+	// three hours on 2026-10-06).
+	const day = ScheduledDeliveryPicker.selectedDate ? moment(ScheduledDeliveryPicker.selectedDate).startOf("day") : null;
 	const isExpress = /express/i.test(OrderShippingSelect.selectedOptionLabel || "");
-	if (when && when.isBefore(moment().subtract(15, "minutes"))) {
-		throw new Error("Датата и часът на доставка са в миналото. Изберете бъдещ момент.");
+	if (day && day.isBefore(moment().startOf("day"))) {
+		throw new Error("Датата на доставка е в миналото. Изберете днес или по-късно.");
 	}
-	if (when && !isExpress && when.isBefore(moment().add(1, "days").startOf("day"))) {
+	if (day && !isExpress && day.isBefore(moment().add(1, "days").startOf("day"))) {
 		throw new Error("Стандартната доставка е от утре нататък. За доставка днес изберете Експресна.");
 	}
+	const scheduledAt = day && day.isAfter(moment()) ? day.toISOString() : null;
 
 	// The COD amount - the goods value the merchant typed - and who pays (Ico, 2026-10-02):
 	// "all" / "fees" / "nothing". The server adds our fees on top and works out what the
@@ -104,7 +111,7 @@
 		// 2026-10-01 (Ico): the type is always this, and the select was being reset to
 		// Shopify after every order. A shop's own number still arrives with the Excel upload.
 		"store_type": "Internal",
-		"scheduled_at": ScheduledDeliveryPicker.selectedDate,
+		"scheduled_at": scheduledAt,
 		"notes": DeliveryNotesInput.text || "",
 		"items": (appsmith.store.newOrderItems || []).map(item => ({
 			"name": item.name,

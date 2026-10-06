@@ -18,6 +18,9 @@
     },
     {
       "key": "isVisible"
+    },
+    {
+      "key": "placeholderText"
     }
   ],
   "dynamicHeight": "FIXED",
@@ -48,10 +51,11 @@
   "mobileRightColumn": 42,
   "mobileTopRow": 1,
   "needsErrorInfo": false,
+  "onTextChanged": "{{OrderShippingSelect.selectedOptionValue ? PortalQuote.run() : null}}",
   "parentColumnSpace": 16.1146240234375,
   "parentId": "sv637as6mi",
   "parentRowSpace": 10,
-  "placeholderText": "ако има - стойност на стоката, напр. 43,14",
+  "placeholderText": "{{appsmith.store.bo_lang === 'en' ? \"if any: value of the goods, e.g. 43.14\" : \"ако има - стойност на стоката, напр. 43,14\"}}",
   "renderMode": "CANVAS",
   "resetOnSubmit": true,
   "responsiveBehavior": "fill",
@@ -62,6 +66,5 @@
   "type": "INPUT_WIDGET_V2",
   "version": 2,
   "widgetId": "5l1c1n9u41",
-  "widgetName": "NewAmountInput",
-  "onTextChanged": "{{OrderShippingSelect.selectedOptionValue ? PortalQuote.run() : null}}"
+  "widgetName": "NewAmountInput"
 }
