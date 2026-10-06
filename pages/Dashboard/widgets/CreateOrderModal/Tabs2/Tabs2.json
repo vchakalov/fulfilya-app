@@ -198,6 +198,18 @@
     },
     {
       "key": "boxShadow"
+    },
+    {
+      "key": "tabsObj.tab1.label"
+    },
+    {
+      "key": "tabsObj.tab2.label"
+    },
+    {
+      "key": "tabsObj.tabmvy92nj13j.label"
+    },
+    {
+      "key": "tabsObj.tab1cv2g89y77.label"
     }
   ],
   "dynamicHeight": "AUTO_HEIGHT",
@@ -231,7 +243,7 @@
       "id": "tab1",
       "index": 0,
       "isVisible": true,
-      "label": "Основни данни",
+      "label": "{{appsmith.store.bo_lang === 'en' ? \"Basic details\" : \"Основни данни\"}}",
       "positioning": "vertical",
       "widgetId": "dqpf5acdio"
     },
@@ -239,14 +251,14 @@
       "id": "tab1cv2g89y77",
       "index": 3,
       "isVisible": true,
-      "label": "Артикули",
+      "label": "{{appsmith.store.bo_lang === 'en' ? \"Items\" : \"Артикули\"}}",
       "widgetId": "3c67n9dps2"
     },
     "tab2": {
       "id": "tab2",
       "index": 1,
       "isVisible": true,
-      "label": "Плащане",
+      "label": "{{appsmith.store.bo_lang === 'en' ? \"Payment\" : \"Плащане\"}}",
       "positioning": "vertical",
       "widgetId": "sv637as6mi"
     },
@@ -254,7 +266,7 @@
       "id": "tabmvy92nj13j",
       "index": 2,
       "isVisible": true,
-      "label": "Адреси",
+      "label": "{{appsmith.store.bo_lang === 'en' ? \"Addresses\" : \"Адреси\"}}",
       "widgetId": "z6y81ags76"
     }
   },
