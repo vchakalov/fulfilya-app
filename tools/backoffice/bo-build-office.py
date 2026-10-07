@@ -81,8 +81,11 @@ OFFICE_CSS = TOKENS + """
 .row .sub{color:var(--muted);margin-top:2px}
 .grid{display:grid;gap:14px}
 .g4{grid-template-columns:repeat(4,minmax(0,1fr))}
-@media (max-width:1100px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:640px){.g4{grid-template-columns:1fr}}
+.g5{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media (max-width:1100px){.g4,.g5{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){.g4,.g5{grid-template-columns:1fr}}
+.inv{color:var(--warn)}
+.who{color:var(--muted);font-size:12px;white-space:nowrap}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow);min-width:0}
 .card h3{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
 .card .hd{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
@@ -186,6 +189,12 @@ function render() {
   // announcing "отчетът е верен" over four zeros - reassurance about nothing teaches
   // the eye to ignore the tile on the day it matters.
   const nothingYet = !t || !num(t.orders);
+  // Група В (2026-10-07, Ico: "which are collected by recipient and which will be paid by
+  // merchant with an invoice"): orders where nothing was collected at the door - the
+  // merchant is invoiced our fees. Kept outside А and Б so the А + Б tile still holds.
+  const invOrders = t ? num(t.invoice_orders) : 0;
+  const payerText = { all: 'получателят — всичко', fees: 'получателят — само таксите', nothing: 'клиентът — по фактура' };
+  const who_ = (p) => payerText[p] || '—';
 
   const bar =
     `<div class="card bar">` +
@@ -204,10 +213,11 @@ function render() {
       `<button type="button" class="btn go" id="of-show">Покажи периода</button>` +
       `<span class="spacer" style="flex:1 1 auto"></span>` +
       `<button type="button" class="btn" id="of-pdf">Свали PDF</button>` +
+      `<button type="button" class="btn" id="of-csv">Свали CSV</button>` +
     `</div>`;
 
   const tiles = t
-    ? `<div class="grid g4">` +
+    ? `<div class="grid g5">` +
       `<div class="card kpi"><h3>Събрано от шофьорите</h3><div class="big num">${fmt(t.total)} <small>€</small></div>` +
         `<div class="foot">в брой ${eur(t.cash)} · с карта ${eur(t.card)}</div></div>` +
       `<div class="card kpi"><h3>Група А · наложен платеж</h3><div class="big num">${fmt(t.goods)} <small>€</small></div>` +
@@ -217,6 +227,8 @@ function render() {
       `<div class="card kpi ${nothingYet ? '' : (balances ? 'ok' : 'bad')}"><h3>А + Б${nothingYet ? '' : (balances ? ' = събраното' : ' ≠ събраното')}</h3>` +
         `<div class="big num">${fmt(ab)} <small>€</small></div>` +
         `<div class="foot">${nothingYet ? 'няма поръчки за този период' : (balances ? 'съвпада — отчетът е верен' : 'разминаване ' + eur(Math.abs(ab - num(t.total))) + ' — провери')}</div></div>` +
+      `<div class="card kpi"><h3>Група В · за фактура</h3><div class="big num inv">${fmt(t.invoiced)} <small>€</small></div>` +
+        `<div class="foot">${invOrders ? plural(invOrders, 'поръчка', 'поръчки') + ' · доставки ' + eur(t.invoice_delivery) + ' · обявена ст. ' + eur(t.invoice_declared) : 'нищо за фактуриране'}</div></div>` +
       `</div>`
     : '';
 
@@ -230,20 +242,23 @@ function render() {
       // (Ico, 2026-09-21: "this is mandatory to have"). Do not shorten them again.
       `<table><thead><tr><th>Клиент</th><th class="r">Поръчки</th>` +
       `<th class="r">Група А в брой</th><th class="r">Група А с карта</th><th class="r">Група А общо</th>` +
-      `<th class="r">Група Б в брой</th><th class="r">Група Б с карта</th><th class="r">Група Б общо</th></tr></thead><tbody class="num">` +
+      `<th class="r">Група Б в брой</th><th class="r">Група Б с карта</th><th class="r">Група Б общо</th>` +
+      `<th class="r">Група В поръчки</th><th class="r">Група В за фактура</th></tr></thead><tbody class="num">` +
       (rows.length
         ? rows.map((x) =>
             `<tr><td><strong>${esc(x.name)}</strong></td><td class="r">${num(x.orders)}</td>` +
             `<td class="r cash">${eur(x.goods_cash)}</td><td class="r card-c">${eur(x.goods_card)}</td>` +
             `<td class="r"><strong>${eur(x.goods)}</strong></td>` +
             `<td class="r cash">${eur(x.revenue_cash)}</td><td class="r card-c">${eur(x.revenue_card)}</td>` +
-            `<td class="r"><strong>${eur(x.revenue)}</strong></td></tr>`).join('')
-        : `<tr><td colspan="8"><div class="empty">Няма поръчки за този период.</div></td></tr>`) +
+            `<td class="r"><strong>${eur(x.revenue)}</strong></td>` +
+            `<td class="r">${num(x.invoice_orders)}</td><td class="r inv"><strong>${eur(x.invoiced)}</strong></td></tr>`).join('')
+        : `<tr><td colspan="10"><div class="empty">Няма поръчки за този период.</div></td></tr>`) +
       `</tbody>` +
       (rows.length > 1
         ? `<tfoot><tr><td>Общо</td><td class="r">${num(t.orders)}</td>` +
           `<td class="r">${eur(t.goods_cash)}</td><td class="r">${eur(t.goods_card)}</td><td class="r">${eur(t.goods)}</td>` +
-          `<td class="r">${eur(t.revenue_cash)}</td><td class="r">${eur(t.revenue_card)}</td><td class="r">${eur(t.revenue)}</td></tr></tfoot>`
+          `<td class="r">${eur(t.revenue_cash)}</td><td class="r">${eur(t.revenue_card)}</td><td class="r">${eur(t.revenue)}</td>` +
+          `<td class="r">${num(t.invoice_orders)}</td><td class="r">${eur(t.invoiced)}</td></tr></tfoot>`
         : '') +
       `</table></div>` +
       ((r.drivers || []).length
@@ -252,6 +267,34 @@ function render() {
         : '') +
       `</div>`
     : `<div class="card"><div class="empty">Избери период, за да видиш отчета.</div></div>`;
+
+  // Every order of the period, one line each, saying who paid our fees: collected from
+  // the recipient (А + Б) or owed by the merchant (В). What the accountants asked for
+  // (Ico, 2026-10-07); the CSV button in the bar is this table as a file.
+  const allLines = [];
+  rows.forEach((x) => {
+    (x.lines || []).forEach((l) => allLines.push({ ...l, merchant: x.name, invoiced: 0 }));
+    (x.invoice_lines || []).forEach((l) => allLines.push({ ...l, merchant: x.name, amount: 0, goods: 0, fee: 0, kind: '' }));
+  });
+  allLines.sort((a, b) => String(a.delivered_at).localeCompare(String(b.delivered_at)));
+  const ordersTable = t && allLines.length
+    ? `<div class="card" style="padding:0">` +
+      `<div class="hd" style="padding:14px 18px 0;margin:0"><h3 style="text-transform:none;font-size:15px;color:var(--ink)">Поръчки за периода — кой плаща</h3>` +
+        `<span class="hint">${plural(allLines.length, 'поръчка', 'поръчки')} · събрано от получателя ${eur(t.total)} · за фактура ${eur(t.invoiced)}</span></div>` +
+      `<div class="tablewrap" style="padding:10px 8px 6px"><table><thead><tr>` +
+      `<th>Доставена</th><th>Клиент</th><th>Поръчка</th><th>Получател</th><th>Кой плаща</th><th>Платено</th>` +
+      `<th class="r">Събрано</th><th class="r">Стока (А)</th><th class="r">Доставка</th><th class="r">Такса НП</th><th class="r">Обявена ст.</th><th class="r">За фактура (В)</th>` +
+      `</tr></thead><tbody class="num">` +
+      allLines.map((l) =>
+        `<tr><td>${esc(l.delivered_at)}</td><td>${esc(l.merchant)}</td><td><strong>${esc(l.shop_order_id || l.order_id)}</strong></td>` +
+        `<td>${esc(l.recipient)}</td><td class="who">${who_(l.payer)}</td>` +
+        `<td>${l.kind === 'card' ? '<span class="card-c">с карта</span>' : (l.kind === 'cash' ? '<span class="cash">в брой</span>' : '—')}</td>` +
+        `<td class="r">${num(l.amount) ? eur(l.amount) : '—'}</td><td class="r">${num(l.amount) ? eur(l.goods) : '—'}</td>` +
+        `<td class="r">${eur(l.delivery)}</td><td class="r">${num(l.amount) ? eur(l.fee) : '—'}</td><td class="r">${eur(l.declared)}</td>` +
+        `<td class="r inv">${num(l.invoiced) ? '<strong>' + eur(l.invoiced) + '</strong>' : '—'}</td></tr>`).join('') +
+      `</tbody></table></div>` +
+      `<div class="note" style="padding:0 18px 14px">„Събрано“, „Стока“ и „Такса НП“ са платени от получателя на място (Група А + Б). „За фактура“ е това, което клиентът дължи на нас по поръчки, при които получателят не е платил нищо (Група В).</div></div>`
+    : '';
 
   // The payout block. It leads with what gets typed into the bank - totals.net, never
   // totals.owed, which is what the orders were worth BEFORE return charges come off.
@@ -355,9 +398,10 @@ function render() {
     `<div class="wrap">` +
     `<div class="row"><div><h2>Наложен платеж</h2>` +
     `<div class="sub">отчет за периода и изплащане към клиента</div></div></div>` +
-    bar + tiles + table + returns + pay + queueLine + history +
+    bar + tiles + table + ordersTable + returns + pay + queueLine + history +
     `<div class="note">Група А е стойността на стоката, Група Б са нашите приходи — доставката и таксата наложен платеж. ` +
-    `Сборът им е точно това, което шофьорите са събрали; затова плочката вдясно е зелена само когато двете съвпадат.</div>` +
+    `Сборът им е точно това, което шофьорите са събрали; затова плочката А + Б е зелена само когато двете съвпадат. ` +
+    `Група В са нашите такси по поръчки без плащане на място — дължат се от клиента по фактура и не влизат в събраното.</div>` +
     `</div>`;
 
   const on = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener('click', fn); };
@@ -367,6 +411,7 @@ function render() {
   if (msel) msel.addEventListener('change', () => send({ action: 'merchant', merchant: msel.value }));
   on('of-show', () => send({ action: 'range', from: (document.getElementById('of-from') || {}).value || '', to: (document.getElementById('of-to') || {}).value || '' }));
   on('of-pdf', () => send({ action: 'pdf' }));
+  on('of-csv', () => send({ action: 'csv' }));
   on('of-pay', () => send({ action: 'payout' }));
   document.querySelectorAll('.btn[data-receipt]').forEach((b) =>
     b.addEventListener('click', () => send({ action: 'receipt', id: b.dataset.receipt })));
@@ -395,6 +440,19 @@ OFFICE_ON = ("{{(async () => { const m = BoOffice.model || {}; "
              "if (m.from > m.to) { return showAlert(en ? 'The start date is after the end date.' : 'Началната дата е след крайната.', 'warning'); } "
              "await OfficeReport.useRange(m.from, m.to); return GetPendingPayout.run(); } "
              "if (m.action === 'pdf') { return OfficeReport.downloadPdf(); } "
+             # The per-order CSV for accounting (2026-10-07): the same lines the page shows, one
+             # row per delivered order, А+Б collected from the recipient or В invoiced to the merchant.
+             "if (m.action === 'csv') { const r = GetCodReport.data || {}; const rows = []; "
+             "const payer = { all: 'получателят - всичко', fees: 'получателят - само таксите', nothing: 'клиентът - по фактура' }; "
+             "const cell = (v) => String(v == null ? '' : v).replace('.', ','); "
+             "(r.merchants || []).forEach((x) => { (x.lines || []).forEach((l) => rows.push([l.delivered_at, x.name, l.shop_order_id || l.order_id, l.recipient, payer[l.payer] || '', l.kind === 'card' ? 'с карта' : 'в брой', l.amount, l.goods, l.delivery, l.fee, l.declared, 0, l.driver])); "
+             "(x.invoice_lines || []).forEach((l) => rows.push([l.delivered_at, x.name, l.shop_order_id || l.order_id, l.recipient, payer[l.payer] || '', '', 0, 0, l.delivery, 0, l.declared, l.invoiced, l.driver])); }); "
+             "rows.sort((a, b) => String(a[0]).localeCompare(String(b[0]))); "
+             "if (!rows.length) { return showAlert(en ? 'Nothing to export for this period.' : 'Няма поръчки за този период.', 'info'); } "
+             "const head = ['Доставена', 'Клиент', 'Поръчка', 'Получател', 'Кой плаща', 'Платено', 'Събрано от получателя', 'Стока (А)', 'Доставка', 'Такса НП', 'Обявена стойност', 'За фактура (В)', 'Шофьор']; "
+             "const q = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; "
+             "const lines = [head.map(q).join(';')].concat(rows.map((row) => row.map((v, i) => i >= 6 && i <= 11 ? cell(v) : q(v)).join(';'))); "
+             "const p = r.period || {}; return download('\\ufeff' + lines.join('\\r\\n'), 'nalozhen-platezh-' + (p.from || '') + (p.to && p.to !== p.from ? '-' + p.to : '') + '.csv', 'text/csv'); } "
              "if (m.action === 'payout') { return OfficeReport.payout(); } "
              "if (m.action === 'receipt') { await storeValue('receipt_payout_id', m.id || ''); "
              "return OfficeReport.payoutPdf(); } })()}}")
