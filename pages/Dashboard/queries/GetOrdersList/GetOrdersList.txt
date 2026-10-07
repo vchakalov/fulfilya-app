@@ -50,6 +50,8 @@ SELECT
     ROUND(MAX(CAST(JSON_UNQUOTE(JSON_EXTRACT(sq.meta, '$.goods_amount')) AS DECIMAL(12,2))) / 100, 2)  as goods_amount,
     ROUND(MAX(CAST(JSON_UNQUOTE(JSON_EXTRACT(sq.meta, '$.delivery_amount')) AS DECIMAL(12,2))) / 100, 2) as delivery_amount,
     ROUND(MAX(CAST(JSON_UNQUOTE(JSON_EXTRACT(sq.meta, '$.cod_commission')) AS DECIMAL(12,2))) / 100, 2) as cod_fee,
+    -- Who pays, as the form said (all / fees / nothing); empty for a shop order.
+    MAX(JSON_UNQUOTE(JSON_EXTRACT(sq.meta, '$.payer'))) as payer,
 
     -- Status display
   CASE

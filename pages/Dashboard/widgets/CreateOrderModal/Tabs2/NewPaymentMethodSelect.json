@@ -4,7 +4,7 @@
   "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
   "bottomRow": 8,
   "boxShadow": "none",
-  "defaultOptionValue": "{\"label\": \"Получателят плаща всичко\", \"value\": \"all\"}",
+  "defaultOptionValue": "{{(() => { const allowed = (() => { try { const raw = ((BoPayerOptions.data || [])[0] || {}).options; const a = raw ? JSON.parse(raw) : null; return Array.isArray(a) && a.length ? a : null; } catch (e) { return null; } })(); return allowed ? allowed[0] : 'all'; })()}}",
   "dynamicBindingPathList": [
     {
       "key": "borderRadius"
@@ -17,6 +17,9 @@
     },
     {
       "key": "sourceData"
+    },
+    {
+      "key": "defaultOptionValue"
     }
   ],
   "dynamicHeight": "FIXED",
@@ -61,7 +64,7 @@
   "responsiveBehavior": "fill",
   "rightColumn": 21,
   "serverSideFiltering": false,
-  "sourceData": "{{appsmith.store.bo_lang === 'en' ? [{\"label\": \"The recipient pays everything\", \"value\": \"all\"}, {\"label\": \"The recipient pays only the fees\", \"value\": \"fees\"}, {\"label\": \"The recipient pays nothing\", \"value\": \"nothing\"}] : [{\"label\": \"Получателят плаща всичко\", \"value\": \"all\"}, {\"label\": \"Получателят плаща само таксите\", \"value\": \"fees\"}, {\"label\": \"Получателят не плаща нищо\", \"value\": \"nothing\"}]}}",
+  "sourceData": "{{(() => { const en = appsmith.store.bo_lang === 'en'; const all = en ? [{\"label\": \"The recipient pays everything\", \"value\": \"all\"}, {\"label\": \"The recipient pays only the fees\", \"value\": \"fees\"}, {\"label\": \"The recipient pays nothing\", \"value\": \"nothing\"}] : [{\"label\": \"Получателят плаща всичко\", \"value\": \"all\"}, {\"label\": \"Получателят плаща само таксите\", \"value\": \"fees\"}, {\"label\": \"Получателят не плаща нищо\", \"value\": \"nothing\"}]; /* A merchant may be limited to some of the three (The Gourmet House: only the fees, 2026-10-07) - settings row read by BoPayerOptions. */ const allowed = (() => { try { const raw = ((BoPayerOptions.data || [])[0] || {}).options; const a = raw ? JSON.parse(raw) : null; return Array.isArray(a) && a.length ? a : null; } catch (e) { return null; } })(); return allowed ? all.filter((o) => allowed.includes(o.value)) : all; })()}}",
   "topRow": 1,
   "type": "SELECT_WIDGET",
   "version": 1,

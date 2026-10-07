@@ -342,6 +342,9 @@ updateNewDropoffFromGeocode: () => {
   // warehouse; the same merchant keeps what they typed, as before.
   openNewOrder: async () => {
     const me = appsmith.store.customer_uuid || '';
+    // Which "Кой плаща" options this merchant gets (The Gourmet House: only the fees,
+    // 2026-10-07). Run here, on the click, like BoWarehouse: a Pull adds no on-load query.
+    await BoPayerOptions.run().catch(() => null);
     if (appsmith.store.newOrderDraftFor !== me) {
       await Promise.all([
         NewPickupAddressInput.setValue(''), NewPickupLatHidden.setValue(''), NewPickupLngHidden.setValue(''),
@@ -358,7 +361,7 @@ updateNewDropoffFromGeocode: () => {
     }
     storeValue('newOrderItems', []);
     storeValue('newOrderUUIDs', {});
-    NewPaymentMethodSelect.setSelectedOption('all');
+    NewPaymentMethodSelect.setSelectedOption((() => { try { const a = JSON.parse((((BoPayerOptions.data || [])[0] || {}).options) || 'null'); return Array.isArray(a) && a.length ? a[0] : 'all'; } catch (e) { return 'all'; } })());
     // The pickup opens as the merchant's warehouse (2026-10-01): filled in, not fixed.
     if (!NewPickupAddressInput.text) {
       await BoWarehouse.run();
@@ -407,7 +410,7 @@ updateNewDropoffFromGeocode: () => {
     storeValue('newOrderItems', []);
 
     // Reset selects to defaults
-    NewPaymentMethodSelect.setSelectedOption('all');
+    NewPaymentMethodSelect.setSelectedOption((() => { try { const a = JSON.parse((((BoPayerOptions.data || [])[0] || {}).options) || 'null'); return Array.isArray(a) && a.length ? a[0] : 'all'; } catch (e) { return 'all'; } })());
     // The next order starts without the last one's choices (Ico, 2026-10-02): an "Обявена
     // стойност" left on "Да" with its value silently added the service - and its fee - to the
     // following order. The delivery type is emptied too, so it is chosen each time; Създай
