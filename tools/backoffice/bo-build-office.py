@@ -189,12 +189,12 @@ function render() {
   // announcing "отчетът е верен" over four zeros - reassurance about nothing teaches
   // the eye to ignore the tile on the day it matters.
   const nothingYet = !t || !num(t.orders);
-  // Група В (2026-10-07, Ico: "which are collected by recipient and which will be paid by
-  // merchant with an invoice"): orders where nothing was collected at the door - the
-  // merchant is invoiced our fees. Kept outside А and Б so the А + Б tile still holds.
+  // Група Б in two subgroups (Ico, 2026-10-07, for the accountants): Б.1 фактурирано към
+  // партньор - orders where nothing was collected at the door, our fees are invoiced to the
+  // merchant; Б.2 събрано от получател - our fees paid at the door, cash or card, on the
+  // fiscal device only. А + Б.2 = събраното is the check; Б.1 never passes through the drivers.
   const invOrders = t ? num(t.invoice_orders) : 0;
-  const payerText = { all: 'получателят — всичко', fees: 'получателят — само таксите', nothing: 'клиентът — по фактура' };
-  const who_ = (p) => payerText[p] || '—';
+  const revenueAll = t ? (t.revenue_all === undefined ? num(t.revenue) + num(t.invoiced) : num(t.revenue_all)) : 0;
 
   const bar =
     `<div class="card bar">` +
@@ -217,18 +217,16 @@ function render() {
     `</div>`;
 
   const tiles = t
-    ? `<div class="grid g5">` +
+    ? `<div class="grid g4">` +
       `<div class="card kpi"><h3>Събрано от шофьорите</h3><div class="big num">${fmt(t.total)} <small>€</small></div>` +
         `<div class="foot">в брой ${eur(t.cash)} · с карта ${eur(t.card)}</div></div>` +
       `<div class="card kpi"><h3>Група А · наложен платеж</h3><div class="big num">${fmt(t.goods)} <small>€</small></div>` +
         `<div class="foot">в брой ${eur(t.goods_cash)} · с карта ${eur(t.goods_card)}</div></div>` +
-      `<div class="card kpi"><h3>Група Б · приходи</h3><div class="big num">${fmt(t.revenue)} <small>€</small></div>` +
-        `<div class="foot">доставки ${eur(t.delivery)} · такса НП ${eur(t.fee)}</div></div>` +
-      `<div class="card kpi ${nothingYet ? '' : (balances ? 'ok' : 'bad')}"><h3>А + Б${nothingYet ? '' : (balances ? ' = събраното' : ' ≠ събраното')}</h3>` +
+      `<div class="card kpi"><h3>Група Б · приходи</h3><div class="big num">${fmt(revenueAll)} <small>€</small></div>` +
+        `<div class="foot">1. фактурирано към партньор <strong class="inv">${eur(t.invoiced)}</strong> · 2. събрано от получател <strong>${eur(t.revenue)}</strong></div></div>` +
+      `<div class="card kpi ${nothingYet ? '' : (balances ? 'ok' : 'bad')}"><h3>А + Б.2${nothingYet ? '' : (balances ? ' = събраното' : ' ≠ събраното')}</h3>` +
         `<div class="big num">${fmt(ab)} <small>€</small></div>` +
         `<div class="foot">${nothingYet ? 'няма поръчки за този период' : (balances ? 'съвпада — отчетът е верен' : 'разминаване ' + eur(Math.abs(ab - num(t.total))) + ' — провери')}</div></div>` +
-      `<div class="card kpi"><h3>Група В · за фактура</h3><div class="big num inv">${fmt(t.invoiced)} <small>€</small></div>` +
-        `<div class="foot">${invOrders ? plural(invOrders, 'поръчка', 'поръчки') + ' · доставки ' + eur(t.invoice_delivery) + ' · обявена ст. ' + eur(t.invoice_declared) : 'нищо за фактуриране'}</div></div>` +
       `</div>`
     : '';
 
@@ -236,65 +234,40 @@ function render() {
   const table = t
     ? `<div class="card" style="padding:0">` +
       `<div class="hd" style="padding:14px 18px 0;margin:0"><h3 style="text-transform:none;font-size:15px;color:var(--ink)">По клиенти</h3>` +
-        `<span class="hint"><span>${esc(r.period ? r.period.label : '')}</span> · <span>${esc(who)}</span> · <span>${plural(num(t.orders), 'поръчка', 'поръчки')}</span></span></div>` +
+        `<span class="hint"><span>${esc(r.period ? r.period.label : '')}</span> · <span>${esc(who)}</span> · <span>${plural(num(t.all_orders === undefined ? t.orders : t.all_orders), 'поръчка', 'поръчки')}</span></span></div>` +
       `<div class="tablewrap" style="padding:10px 8px 6px">` +
       // Her column names, verbatim from the page she reconciles against today
       // (Ico, 2026-09-21: "this is mandatory to have"). Do not shorten them again.
+      // Група Б since 2026-10-07 in two subgroups: Б.1 фактурирано, Б.2 събрано (в брой / с карта).
       `<table><thead><tr><th>Клиент</th><th class="r">Поръчки</th>` +
       `<th class="r">Група А в брой</th><th class="r">Група А с карта</th><th class="r">Група А общо</th>` +
-      `<th class="r">Група Б в брой</th><th class="r">Група Б с карта</th><th class="r">Група Б общо</th>` +
-      `<th class="r">Група В поръчки</th><th class="r">Група В за фактура</th></tr></thead><tbody class="num">` +
+      `<th class="r">Б.1 фактурирано</th><th class="r">Б.2 в брой</th><th class="r">Б.2 с карта</th><th class="r">Б.2 общо</th><th class="r">Група Б общо</th></tr></thead><tbody class="num">` +
       (rows.length
         ? rows.map((x) =>
-            `<tr><td><strong>${esc(x.name)}</strong></td><td class="r">${num(x.orders)}</td>` +
+            `<tr><td><strong>${esc(x.name)}</strong></td><td class="r">${num(x.all_orders === undefined ? x.orders : x.all_orders)}</td>` +
             `<td class="r cash">${eur(x.goods_cash)}</td><td class="r card-c">${eur(x.goods_card)}</td>` +
             `<td class="r"><strong>${eur(x.goods)}</strong></td>` +
+            `<td class="r inv">${eur(x.invoiced)}</td>` +
             `<td class="r cash">${eur(x.revenue_cash)}</td><td class="r card-c">${eur(x.revenue_card)}</td>` +
-            `<td class="r"><strong>${eur(x.revenue)}</strong></td>` +
-            `<td class="r">${num(x.invoice_orders)}</td><td class="r inv"><strong>${eur(x.invoiced)}</strong></td></tr>`).join('')
+            `<td class="r">${eur(x.revenue)}</td>` +
+            `<td class="r"><strong>${eur(x.revenue_all === undefined ? num(x.revenue) + num(x.invoiced) : x.revenue_all)}</strong></td></tr>`).join('')
         : `<tr><td colspan="10"><div class="empty">Няма поръчки за този период.</div></td></tr>`) +
       `</tbody>` +
       (rows.length > 1
-        ? `<tfoot><tr><td>Общо</td><td class="r">${num(t.orders)}</td>` +
+        ? `<tfoot><tr><td>Общо</td><td class="r">${num(t.all_orders === undefined ? t.orders : t.all_orders)}</td>` +
           `<td class="r">${eur(t.goods_cash)}</td><td class="r">${eur(t.goods_card)}</td><td class="r">${eur(t.goods)}</td>` +
+          `<td class="r">${eur(t.invoiced)}</td>` +
           `<td class="r">${eur(t.revenue_cash)}</td><td class="r">${eur(t.revenue_card)}</td><td class="r">${eur(t.revenue)}</td>` +
-          `<td class="r">${num(t.invoice_orders)}</td><td class="r">${eur(t.invoiced)}</td></tr></tfoot>`
+          `<td class="r">${eur(revenueAll)}</td></tr></tfoot>`
         : '') +
       `</table></div>` +
+      `<div class="note" style="padding:0 18px 6px">Група Б = <strong>1. фактурирано към партньор</strong> (поръчки без плащане на място — изисква фактура) + <strong>2. събрано от получател</strong> (на място, в брой или с карта — само на фискалното устройство).</div>` +
       ((r.drivers || []).length
         ? `<div class="note" style="padding:0 18px 14px"><span>По шофьори:</span> ` +
           (r.drivers || []).map((d) => `${esc(d.name)} ${eur(d.total)} (<span>в брой</span> ${eur(d.cash)})`).join(' · ') + `</div>`
         : '') +
       `</div>`
     : `<div class="card"><div class="empty">Избери период, за да видиш отчета.</div></div>`;
-
-  // Every order of the period, one line each, saying who paid our fees: collected from
-  // the recipient (А + Б) or owed by the merchant (В). What the accountants asked for
-  // (Ico, 2026-10-07); the CSV button in the bar is this table as a file.
-  const allLines = [];
-  rows.forEach((x) => {
-    (x.lines || []).forEach((l) => allLines.push({ ...l, merchant: x.name, invoiced: 0 }));
-    (x.invoice_lines || []).forEach((l) => allLines.push({ ...l, merchant: x.name, amount: 0, goods: 0, fee: 0, kind: '' }));
-  });
-  allLines.sort((a, b) => String(a.delivered_at).localeCompare(String(b.delivered_at)));
-  const ordersTable = t && allLines.length
-    ? `<div class="card" style="padding:0">` +
-      `<div class="hd" style="padding:14px 18px 0;margin:0"><h3 style="text-transform:none;font-size:15px;color:var(--ink)">Поръчки за периода — кой плаща</h3>` +
-        `<span class="hint">${plural(allLines.length, 'поръчка', 'поръчки')} · събрано от получателя ${eur(t.total)} · за фактура ${eur(t.invoiced)}</span></div>` +
-      `<div class="tablewrap" style="padding:10px 8px 6px"><table><thead><tr>` +
-      `<th>Доставена</th><th>Клиент</th><th>Поръчка</th><th>Получател</th><th>Кой плаща</th><th>Платено</th>` +
-      `<th class="r">Събрано</th><th class="r">Стока (А)</th><th class="r">Доставка</th><th class="r">Такса НП</th><th class="r">Обявена ст.</th><th class="r">За фактура (В)</th>` +
-      `</tr></thead><tbody class="num">` +
-      allLines.map((l) =>
-        `<tr><td>${esc(l.delivered_at)}</td><td>${esc(l.merchant)}</td><td><strong>${esc(l.shop_order_id || l.order_id)}</strong></td>` +
-        `<td>${esc(l.recipient)}</td><td class="who">${who_(l.payer)}</td>` +
-        `<td>${l.kind === 'card' ? '<span class="card-c">с карта</span>' : (l.kind === 'cash' ? '<span class="cash">в брой</span>' : '—')}</td>` +
-        `<td class="r">${num(l.amount) ? eur(l.amount) : '—'}</td><td class="r">${num(l.amount) ? eur(l.goods) : '—'}</td>` +
-        `<td class="r">${eur(l.delivery)}</td><td class="r">${num(l.amount) ? eur(l.fee) : '—'}</td><td class="r">${eur(l.declared)}</td>` +
-        `<td class="r inv">${num(l.invoiced) ? '<strong>' + eur(l.invoiced) + '</strong>' : '—'}</td></tr>`).join('') +
-      `</tbody></table></div>` +
-      `<div class="note" style="padding:0 18px 14px">„Събрано“, „Стока“ и „Такса НП“ са платени от получателя на място (Група А + Б). „За фактура“ е това, което клиентът дължи на нас по поръчки, при които получателят не е платил нищо (Група В).</div></div>`
-    : '';
 
   // The payout block. It leads with what gets typed into the bank - totals.net, never
   // totals.owed, which is what the orders were worth BEFORE return charges come off.
@@ -398,10 +371,10 @@ function render() {
     `<div class="wrap">` +
     `<div class="row"><div><h2>Наложен платеж</h2>` +
     `<div class="sub">отчет за периода и изплащане към клиента</div></div></div>` +
-    bar + tiles + table + ordersTable + returns + pay + queueLine + history +
+    bar + tiles + table + returns + pay + queueLine + history +
     `<div class="note">Група А е стойността на стоката, Група Б са нашите приходи — доставката и таксата наложен платеж. ` +
-    `Сборът им е точно това, което шофьорите са събрали; затова плочката А + Б е зелена само когато двете съвпадат. ` +
-    `Група В са нашите такси по поръчки без плащане на място — дължат се от клиента по фактура и не влизат в събраното.</div>` +
+    `Б.2 (събрано от получател) плюс Група А е точно това, което шофьорите са събрали; затова плочката А + Б.2 е зелена само когато двете съвпадат. ` +
+    `Б.1 (фактурирано към партньор) са нашите такси по поръчки без плащане на място — не минават през шофьорите.</div>` +
     `</div>`;
 
   const on = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener('click', fn); };
