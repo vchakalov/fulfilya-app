@@ -53,6 +53,11 @@
       ROUND(CAST(JSON_UNQUOTE(JSON_EXTRACT(sq.meta, '$.delivery_amount')) AS DECIMAL(12,2)) / 100, 2) as delivery_amount,
       ROUND(CAST(JSON_UNQUOTE(JSON_EXTRACT(sq.meta, '$.cod_commission')) AS DECIMAL(12,2)) / 100, 2) as cod_fee,
       CAST(JSON_UNQUOTE(JSON_EXTRACT(sq.meta, '$.cod_pct')) AS DECIMAL(5,2))                         as cod_pct,
+      -- How the recipient paid at the door, as the driver recorded it (empty until then). The
+      -- fee above follows it since 2026-10-07; the latest press wins, older rows are soft-deleted.
+      (SELECT v.value FROM custom_field_values v
+       WHERE v.subject_uuid = o.uuid AND v.custom_field_uuid = '38c677ff-5bd4-4087-bb0e-2f4c031153c7' AND v.deleted_at <=> NULL
+       ORDER BY v.created_at DESC LIMIT 1) as paid_with_card,
 
       -- The merchant's own order number, without the "woo:" / "shopify:" prefix.
       COALESCE(SUBSTRING_INDEX(o.internal_id, ':', -1), '') as shop_order_id,
