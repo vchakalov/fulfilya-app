@@ -5,11 +5,12 @@ SELECT
   sr.currency,
   sr.duration_terms,
   sr.estimated_days,
-  -- Extract service type from the service name
+  -- The label: the two tiers in English as before, any other service by the name the office
+  -- gave it in the merchant box (TODO 50, 2026-10-11 - TheBasket's "Кауфланд").
   CASE 
     WHEN sr.service_name LIKE '%-express' THEN 'Express Delivery'
     WHEN sr.service_name LIKE '%-standard' THEN 'Standard Delivery'
-    ELSE 'Delivery Service'
+    ELSE COALESCE(svc.name, SUBSTRING(sr.service_name, CHAR_LENGTH(c.email) + 2))
   END as display_name,
   CASE 
     WHEN sr.service_name LIKE '%-express' THEN '⚡'
@@ -23,15 +24,21 @@ SELECT
   END as description
 FROM service_rates sr
 JOIN contacts c ON c.uuid = '{{appsmith.store.customer_uuid}}'
+-- The merchant's own services, saved from the console box: one row per service.
+LEFT JOIN settings st ON st.`key` = CONCAT('fulfilya.services.', c.uuid) AND JSON_VALID(st.value)
+LEFT JOIN JSON_TABLE(COALESCE(st.value, '{}'), '$.services[*]' COLUMNS (svc_key VARCHAR(64) CHARSET utf8mb4 COLLATE utf8mb4_unicode_ci PATH '$.key', name VARCHAR(80) CHARSET utf8mb4 COLLATE utf8mb4_unicode_ci PATH '$.name')) svc
+  ON sr.service_name = CONCAT(c.email, '-', svc.svc_key)
 WHERE sr.company_uuid = c.company_uuid
   AND sr.deleted_at IS NULL
   -- No service_type filter. The rates are matched by NAME, which carries the merchant's
   -- email - the same rule the backend uses (OrderWebhookService::findServiceRate). The old
   -- condition service_type = 'e-commerce-with-cod' emptied this dropdown for every merchant
   -- once the rates were recreated as 'parcel' on 2026-09-14 (found 2026-09-16).
+  -- A third service counts only while the box lists it (TODO 50).
   AND (
     sr.service_name = CONCAT(c.email, '-standard')
     OR sr.service_name = CONCAT(c.email, '-express')
+    OR svc.svc_key IS NOT NULL
   )
 ORDER BY 
   CASE 

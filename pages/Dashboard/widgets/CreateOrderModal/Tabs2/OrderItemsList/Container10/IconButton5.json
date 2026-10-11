@@ -33,7 +33,7 @@
   "mobileRightColumn": 60,
   "mobileTopRow": 0,
   "needsErrorInfo": false,
-  "onClick": "{{(() => {\n         const items = appsmith.store.newOrderItems || [];\n         items.splice(currentIndex, 1);\n         storeValue('newOrderItems', items);\n       })()}}",
+  "onClick": "{{(() => {\n         const items = appsmith.store.newOrderItems || [];\n         items.splice(currentIndex, 1);\n         storeValue('newOrderItems', items).then(() => OrderShippingSelect.selectedOptionValue ? PortalQuote.run() : null);\n       })()}}",
   "parentColumnSpace": 5.6054840087890625,
   "parentId": "m6csofwp0m",
   "parentRowSpace": 10,

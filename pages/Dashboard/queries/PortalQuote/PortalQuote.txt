@@ -4,6 +4,8 @@
 	"payer": NewPaymentMethodSelect.selectedOptionValue || "all",
 	"cod_amount": NewPaymentMethodSelect.selectedOptionValue === "nothing" ? "0" : (String(NewAmountInput.text || "0").trim().replace(",", ".") || "0"),
 	"service_rate_uuid": OrderShippingSelect.selectedOptionValue || "",
+	// The products' weights, for a service priced by weight (TODO 50, 2026-10-11).
+	"items": (appsmith.store.newOrderItems || []).map(item => ({ "quantity": item.quantity || 1, "weight_kg": item.weight_kg })),
 	// "Обявена стойност" - 0,25 % of this, when the merchant chose it (2026-10-02).
 	"declared_value": DeclaredValueSelect.selectedOptionValue === "yes" ? (String(DeclaredValueInput.text || "0").trim().replace(",", ".") || "0") : "0"
 } }}
