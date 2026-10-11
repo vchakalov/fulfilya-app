@@ -14,7 +14,8 @@ SELECT
   DATE_FORMAT(DATE_ADD(z.returned_at, INTERVAL {{moment().tz('Europe/Sofia').utcOffset() / 60}} HOUR), '%Y-%m-%d %H:%i') AS returned_at,
   z.charge_id,
   ROUND(z.delivery, 2) AS delivery,
-  ROUND(z.delivery * 1.5, 2) AS charge
+  ROUND(z.delivery * 1.5, 2) AS charge,
+  z.by_invoice
 FROM (
   SELECT
     o.public_id,
@@ -27,7 +28,9 @@ FROM (
       o.updated_at
     ) AS returned_at,
     JSON_UNQUOTE(JSON_EXTRACT(o.meta, '$.fulfilya_return_charge.id')) AS charge_id,
-    COALESCE(CAST(NULLIF(JSON_UNQUOTE(JSON_EXTRACT((SELECT sq.meta FROM service_quotes sq WHERE sq.payload_uuid = o.payload_uuid AND sq.deleted_at <=> NULL ORDER BY sq.created_at DESC LIMIT 1), '$.delivery_amount')), 'null') AS DECIMAL(14,2)) / 100, 0) AS delivery
+    COALESCE(CAST(NULLIF(JSON_UNQUOTE(JSON_EXTRACT((SELECT sq.meta FROM service_quotes sq WHERE sq.payload_uuid = o.payload_uuid AND sq.deleted_at <=> NULL ORDER BY sq.created_at DESC LIMIT 1), '$.delivery_amount')), 'null') AS DECIMAL(14,2)) / 100, 0) AS delivery,
+    -- Fees on the monthly фактура (TheBasket, 2026-10-11): the return goes on the invoice, never off a payout.
+    CASE WHEN JSON_UNQUOTE(JSON_EXTRACT((SELECT sq.meta FROM service_quotes sq WHERE sq.payload_uuid = o.payload_uuid AND sq.deleted_at <=> NULL ORDER BY sq.created_at DESC LIMIT 1), '$.settlement')) = 'invoice' THEN 1 ELSE 0 END AS by_invoice
   FROM orders o
   JOIN contacts c ON c.uuid = o.customer_uuid
   LEFT JOIN payloads p ON p.uuid = o.payload_uuid

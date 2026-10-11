@@ -361,7 +361,7 @@ function render() {
         `<tr><td>${esc(x.returned_at || '')}</td><td>${esc(x.merchant)}</td><td><strong>${esc(x.source_id)}</strong></td>` +
         `<td>${esc(x.recipient)}</td><td class="r">${eur(x.delivery)}</td>` +
         `<td class="r held">${eur(x.charge)}</td>` +
-        `<td>${x.charge_id ? '<span class="pill ok">удържано</span>' : '<span class="pill">предстои</span>'}</td></tr>`).join('') +
+        `<td>${Number(x.by_invoice) === 1 ? '<span class="pill">по фактура</span>' : x.charge_id ? '<span class="pill ok">удържано</span>' : '<span class="pill">предстои</span>'}</td></tr>`).join('') +
       `</tbody></table></div>` +
       `<div class="note" style="padding:0 18px 14px">Не влиза в Група А и Група Б — при върната пратка не се събира нищо. ` +
       `Дължимото е цената на доставката плюс 50% за обратния курс (Общи условия, раздел VI, т. 2Е).</div></div>`
