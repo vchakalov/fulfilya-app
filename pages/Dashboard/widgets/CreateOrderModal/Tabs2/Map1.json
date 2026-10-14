@@ -24,7 +24,7 @@
   "isClickedMarkerCentered": true,
   "isDisabled": false,
   "isLoading": false,
-  "isVisible": true,
+  "isVisible": false,
   "key": "ds9au2y10s",
   "leftColumn": 1,
   "mapCenter": {
