@@ -753,8 +753,9 @@ w('Dashboard/widgets/BoAccountModal/BoAccountModal.json', {
         "mobileTopRow": 0, "needsErrorInfo": False, "parentColumnSpace": 1, "parentId": ACC_MODAL, "parentRowSpace": 1,
         "renderMode": "CANVAS", "responsiveBehavior": "fill", "rightColumn": 480, "shouldScrollContents": False,
         "topRow": 0, "type": "CANVAS_WIDGET", "version": 1, "widgetId": ACC_CANVAS, "widgetName": "BoAccountCanvas"}],
+    # No "isVisible" here: on a MODAL_WIDGET it means "open when the page loads" (it did, 2026-10-21).
     "detachFromLayout": True, "dynamicBindingPathList": [], "dynamicHeight": "FIXED", "height": 700, "isCanvas": True,
-    "isLoading": False, "isVisible": True, "key": "acctmodal1", "leftColumn": 0, "maxDynamicHeight": 9000,
+    "isLoading": False, "key": "acctmodal1", "leftColumn": 0, "maxDynamicHeight": 9000,
     "minDynamicHeight": 24, "minHeight": 700, "mobileBottomRow": 60, "mobileLeftColumn": 0, "mobileRightColumn": 24,
     "mobileTopRow": 0, "needsErrorInfo": False, "parentColumnSpace": 10.171875, "parentId": "0", "parentRowSpace": 10,
     "renderMode": "CANVAS", "rightColumn": 24, "shouldScrollContents": False, "topRow": 0, "type": "MODAL_WIDGET",
