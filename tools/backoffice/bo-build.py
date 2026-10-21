@@ -220,6 +220,10 @@ HEADER_CSS = TOKENS + """
 .merchant .logo{height:36px;width:auto;max-width:120px;border-radius:8px;display:block;object-fit:contain}
 .merchant .avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);color:#1D1D1F;font-family:var(--display);font-weight:800;font-size:13px;display:grid;place-items:center;flex:none}
 .merchant .name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* A button only for a merchant who may change their password (PortalPassword, 2026-10-21). */
+button.merchant{font:inherit;font-weight:600;color:inherit;cursor:pointer}
+button.merchant:hover{border-color:var(--line-strong)}
+.merchant .caret{color:var(--muted);font-size:11px;margin-left:-2px}
 .btn{border:1px solid transparent;background:transparent;border-radius:999px;padding:8px 14px;font-weight:600;cursor:pointer;color:var(--muted);flex:none}
 .btn:hover{color:var(--ink);border-color:var(--line-strong)}
 .btn.lang{font-family:var(--display);font-weight:700;font-size:11px;letter-spacing:.06em;padding:6px 10px;border-color:var(--line)}
@@ -251,7 +255,11 @@ function render() {
     `<a class="brand" href="#" data-act="nav" data-page="Dashboard"><img src="${MARK}" alt=""><span class="word" style="color:${INK}">Fulfil<span style="color:${GOLD}">ya</span></span><span class="product">BackOffice</span></a>` +
     tabs +
     `<span class="grow"></span>` +
-    `<span class="merchant">${logo}<span class="name">${esc(m.merchant || '')}</span></span>` +
+    // The merchant's name opens their account window ("Смяна на парола") when the office has
+    // switched it on for them (Ico, 2026-10-21); for everybody else it stays a plain label.
+    (m.account
+      ? `<button class="merchant" data-act="account" title="Профил">${logo}<span class="name">${esc(m.merchant || '')}</span><span class="caret">▾</span></button>`
+      : `<span class="merchant">${logo}<span class="name">${esc(m.merchant || '')}</span></span>`) +
     `<button class="btn lang" data-act="lang" data-lang="${m.lang === 'en' ? 'bg' : 'en'}" title="${m.lang === 'en' ? 'Превключи на български' : 'Switch to English'}">${m.lang === 'en' ? 'BG' : 'EN'}</button>` +
     `<button class="btn" data-act="logout">Изход</button>` +
     `</div>`;
@@ -440,7 +448,7 @@ appsmith.onReady(render);
 appsmith.onModelChange(render);
 """
 
-HEADER_ON = "{{(async () => { const m = BoHeader.model || {}; if (m.action === 'lang') { return storeValue('bo_lang', m.lang || 'bg'); } if (m.action === 'logout') { return AuthManager.logout(); } if (m.action === 'new') { return LocationManager.openNewOrder(); } if (m.action === 'nav') { if (m.tab === 'orders') { return navigateTo('Dashboard', { tab: 'orders' }); } if (m.tab === 'tablo') { return navigateTo('Dashboard'); } if (m.page) { return navigateTo(m.page); } } })()}}"
+HEADER_ON = "{{(async () => { const m = BoHeader.model || {}; if (m.action === 'lang') { return storeValue('bo_lang', m.lang || 'bg'); } if (m.action === 'logout') { return AuthManager.logout(); } if (m.action === 'account') { await storeValue('pw_result', { at: Date.now(), reset: true }); return showModal('BoAccountModal'); } if (m.action === 'new') { return LocationManager.openNewOrder(); } if (m.action === 'nav') { if (m.tab === 'orders') { return navigateTo('Dashboard', { tab: 'orders' }); } if (m.tab === 'tablo') { return navigateTo('Dashboard'); } if (m.page) { return navigateTo(m.page); } } })()}}"
 TABLO_ON = "{{(async () => { const m = BoTablo.model || {}; if (m.action === 'period' && m.period) { await storeValue('bo_period', m.period); await Promise.all([BoStats.run(), BoPayment.run(), BoStatus.run()]); return; } if (m.action === 'new') { return LocationManager.openNewOrder(); } if (m.action === 'nav' && m.page) { return navigateTo(m.page); } })()}}"
 
 # ---------------------------------------------------------------- товарителница (TODO 42)
@@ -479,7 +487,10 @@ setTimeout(boSweep, 0);
 """
 
 
-def custom(name, top, bottom, html, css, js, model, height, key_seed, visible=None, events=True, on=None, right=None):
+ACCOUNT_FLAG = "account: appsmith.store.can_change_password === true"
+
+
+def custom(name, top, bottom, html, css, js, model, height, key_seed, visible=None, events=True, on=None, right=None, parent=None, folder=''):
     js = js + bo_i18n.translator_js() + BO_WATCH
     model = model.replace('{{ { ', '{{ { ' + bo_i18n.MODEL_LANG + ', ', 1)
     d = {
@@ -506,10 +517,12 @@ def custom(name, top, bottom, html, css, js, model, height, key_seed, visible=No
         d['rightColumn'] = 40; d['mobileRightColumn'] = 40; d['minWidth'] = 200
     if right is not None:
         d['rightColumn'] = right; d['mobileRightColumn'] = right; d['minWidth'] = 200
-    w(f'Dashboard/widgets/{name}.json', d)
+    if parent is not None:
+        d['parentId'] = parent; d['parentColumnSpace'] = 1; d['minWidth'] = 200
+    w(f'Dashboard/widgets/{folder}{name}.json', d)
 
 custom('BoHeader', 0, 8, HEADER_HTML, HEADER_CSS, HEADER_JS,
-       "{{ { page: (appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders') ? 'orders' : 'tablo', merchant: appsmith.store.customer_name || '' } }}",
+       "{{ { page: (appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders') ? 'orders' : 'tablo', merchant: appsmith.store.customer_name || '', " + ACCOUNT_FLAG + " } }}",
        "FIXED", "hdrq1w2e3r")
 custom('BoTablo', 9, 58, TABLO_HTML, TABLO_CSS, TABLO_JS,
        "{{ { period: appsmith.store.bo_period || 'week', merchant: appsmith.store.customer_name || '', stats: BoStats.data, payment: BoPayment.data, status: BoStatus.data, days: BoDays.data } }}",
@@ -586,6 +599,197 @@ w('Dashboard/queries/WaybillPDF/metadata.json', {
         "dynamicBindingPathList": [{"key": "headers[0].value"}, {"key": "queryParameters[0].value"},
                                    {"key": "queryParameters[1].value"}, {"key": "queryParameters[2].value"}],
         "name": "WaybillPDF", "pageId": "Dashboard", "runBehaviour": "MANUAL", "userSetOnLoad": False}})
+
+# ---------------------------------------------------------------- "Смяна на парола" (2026-10-21)
+# The merchant changes their own password, knowing the old one. Only for merchants the
+# office switched on (vlog-backend App\Services\Portal\PortalPassword, `portal-password.php
+# <merchant> on`; ELVI-8 first): the login reads the same settings row into
+# appsmith.store.can_change_password, and only then is the header's merchant name a button.
+# The endpoint checks the switch again and answers in codes; the words are here.
+#
+# A window, not a drop-down: the header is an iframe of fixed height and a menu hanging out
+# of it would be cut off. Other pages' headers send the merchant here with ?account=1 and
+# PageGuard opens the window (bo-build-reports.py patches PageGuard). Passwords pass through
+# the widget's model to the query and are wiped from it as soon as the answer is back.
+ACCOUNT_HTML = FONT_LINK + '<div id="bo-account"></div>'
+ACCOUNT_CSS = TOKENS + """html,body{background:var(--card)}
+.acc{display:grid;gap:14px;padding:6px 8px 10px;font-family:var(--body)}
+.top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.who{display:flex;align-items:center;gap:12px;min-width:0}
+.avatar{width:40px;height:40px;border-radius:50%;background:var(--accent);color:#1D1D1F;font-family:var(--display);font-weight:800;font-size:15px;display:grid;place-items:center;flex:none}
+.who .n{font-family:var(--display);font-weight:800;font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.who .e{color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.x{border:0;background:transparent;font-size:22px;line-height:1;color:var(--muted);cursor:pointer;padding:2px 6px;border-radius:8px}
+.x:hover{color:var(--ink);background:var(--ground)}
+h3{font-family:var(--display);font-size:15px;font-weight:800;margin:4px 0 0;padding-top:12px;border-top:1px solid var(--line)}
+label{display:grid;gap:5px;font-size:13px;font-weight:600;color:var(--ink)}
+.f{position:relative}
+.f input{width:100%;box-sizing:border-box;font:15px var(--body);padding:10px 64px 10px 12px;border:1px solid var(--line-strong);border-radius:10px;background:#fff;color:var(--ink)}
+.f input:focus{outline:2px solid var(--accent);outline-offset:0;border-color:transparent}
+.f .eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:transparent;font:600 12px var(--body);color:var(--muted);cursor:pointer;padding:4px 8px}
+.rules{list-style:none;margin:0;padding:10px 12px;display:grid;gap:4px;background:var(--ground);border-radius:10px;font-size:13px;color:var(--muted)}
+.rules li{display:flex;gap:8px;align-items:center}
+.rules .dot{width:16px;text-align:center;font-weight:700}
+.rules li.ok{color:var(--ok)}
+.rules li.bad{color:#B42318}
+.msg{font-size:13px;border-radius:10px;padding:10px 12px;display:none}
+.msg.err{display:block;background:#FBE9E7;color:#B42318}
+.msg.ok{display:block;background:var(--ok-soft);color:var(--ok);font-weight:600}
+.actions{display:flex;justify-content:flex-end;gap:8px}
+.btn{font:600 14px var(--body);border-radius:999px;padding:9px 18px;cursor:pointer;border:1px solid var(--line-strong);background:#fff;color:var(--ink)}
+.btn.go{background:var(--accent);border-color:var(--accent);color:#1D1D1F}
+.btn[disabled]{opacity:.45;cursor:default}"""
+ACCOUNT_JS = r"""const esc = (v) => String(v == null ? '' : v).replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
+const initials = (name) => String(name || '').split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0].toUpperCase()).join('') || 'F';
+// The same rules as PortalPassword::problems() on the server, which has the last word.
+const RULES = [
+  ['len', 'От 6 до 30 знака', (p) => [...p].length >= 6 && [...p].length <= 30],
+  ['cap', 'Поне една главна буква', (p) => /\p{Lu}/u.test(p)],
+  ['dig', 'Поне една цифра', (p) => /\p{Nd}/u.test(p)],
+  ['sym', 'Поне един символ, напр. @ ! # $', (p) => /[^\p{L}\p{N}\s]/u.test(p)],
+  ['spc', 'Без интервали', (p) => !/\s/u.test(p)],
+];
+const ERR = {
+  wrong_current: 'Текущата парола не е вярна.',
+  mismatch: 'Двете нови пароли не съвпадат.',
+  same_as_current: 'Новата парола е същата като текущата.',
+  weak: 'Новата парола не отговаря на изискванията.',
+  too_many_tries: 'Твърде много грешни опити. Опитайте отново след 15 минути.',
+  not_enabled: 'Смяната на парола не е включена за вашия профил. Свържете се с нас.',
+  not_merchant: 'Смяната на парола не е включена за вашия профил. Свържете се с нас.',
+};
+let built = false, busy = false, lastAt = null, done = false;
+const $ = (id) => document.getElementById(id);
+
+function build(m) {
+  document.documentElement.dataset.theme = 'light';
+  const field = (id, label, auto) => '<label>' + label + '<span class="f"><input id="' + id + '" type="password" autocomplete="' + auto + '" maxlength="64"><button type="button" class="eye" data-eye="' + id + '">Покажи</button></span></label>';
+  $('bo-account').innerHTML =
+    '<div class="acc">' +
+      '<div class="top"><div class="who"><span class="avatar" id="av"></span><div style="min-width:0"><div class="n" id="nm"></div><div class="e" id="em"></div></div></div>' +
+      '<button class="x" data-act="close" title="Затвори">×</button></div>' +
+      '<h3>Смяна на парола</h3>' +
+      field('cur', 'Текуща парола', 'current-password') +
+      field('nw1', 'Нова парола', 'new-password') +
+      field('nw2', 'Повторете новата парола', 'new-password') +
+      '<ul class="rules" id="rules"></ul>' +
+      '<div class="msg" id="msg"></div>' +
+      '<div class="actions"><button class="btn" data-act="close">Затвори</button><button class="btn go" id="save">Смени паролата</button></div>' +
+    '</div>';
+  built = true;
+  document.addEventListener('input', check);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !$('save').disabled) save(); });
+  document.addEventListener('click', (e) => {
+    const eye = e.target.closest('[data-eye]');
+    if (eye) { const i = $(eye.dataset.eye); const show = i.type === 'password'; i.type = show ? 'text' : 'password'; eye.textContent = show ? 'Скрий' : 'Покажи'; return; }
+    if (e.target.closest('[data-act="close"]')) { appsmith.updateModel({ action: 'close' }); appsmith.triggerEvent('onAction'); return; }
+    if (e.target.closest('#save') && !$('save').disabled) save();
+  });
+}
+
+function check() {
+  const p = $('nw1').value, q = $('nw2').value, c = $('cur').value;
+  const rows = RULES.map(([k, label, fn]) => ({ label, ok: fn(p) }));
+  rows.push({ label: 'Двете нови пароли съвпадат', ok: p !== '' && p === q });
+  $('rules').innerHTML = rows.map((r) => {
+    const cls = p === '' ? '' : (r.ok ? 'ok' : 'bad');
+    return '<li class="' + cls + '"><span class="dot">' + (p === '' ? '·' : (r.ok ? '✓' : '✗')) + '</span><span>' + esc(r.label) + '</span></li>';
+  }).join('');
+  $('save').disabled = busy || done || c === '' || !rows.every((r) => r.ok);
+  $('save').textContent = busy ? 'Запазване…' : 'Смени паролата';
+  if (!busy && !done && $('msg').className === 'msg err' && document.activeElement && document.activeElement.tagName === 'INPUT') { /* keep the last error until the next try */ }
+}
+
+function save() {
+  busy = true; check();
+  setMsg('', '');
+  appsmith.updateModel({ action: 'save', current: $('cur').value, next: $('nw1').value, again: $('nw2').value });
+  appsmith.triggerEvent('onAction');
+}
+
+function setMsg(kind, text) { const el = $('msg'); el.className = 'msg' + (kind ? ' ' + kind : ''); el.textContent = text; }
+
+function clearAll() { ['cur', 'nw1', 'nw2'].forEach((id) => { $(id).value = ''; $(id).type = 'password'; }); document.querySelectorAll('[data-eye]').forEach((b) => { b.textContent = 'Покажи'; }); }
+
+function render() {
+  const m = appsmith.model || {};
+  if (!built) build(m);
+  $('av').textContent = initials(m.merchant);
+  $('nm').textContent = m.merchant || '';
+  $('em').textContent = m.email || '';
+  const r = m.result || null;
+  if (r && r.at !== lastAt) {
+    lastAt = r.at;
+    busy = false;
+    // The passwords leave the model the moment the answer is back.
+    appsmith.updateModel({ action: '', current: '', next: '', again: '' });
+    if (r.reset) { done = false; clearAll(); setMsg('', ''); }
+    else if (r.code === 'ok') { done = true; clearAll(); setMsg('ok', 'Паролата е сменена. Използвайте новата при следващото влизане.'); }
+    else { setMsg('err', ERR[r.code] || 'Паролата не беше сменена. Опитайте отново.'); if (r.code === 'wrong_current') { $('cur').value = ''; $('cur').focus(); } }
+  }
+  check();
+}
+appsmith.onReady(render);
+appsmith.onModelChange(render);"""
+
+ACCOUNT_ON = ("{{(async () => { const m = BoAccount.model || {}; "
+              "if (m.action === 'close') { return closeModal('BoAccountModal'); } "
+              "if (m.action !== 'save') { return; } "
+              "let code = 'failed'; let problems = []; "
+              "try { await ChangePassword.run({ current: m.current || '', next: m.next || '', again: m.again || '' }); const b = ChangePassword.data || {}; code = b.ok ? 'ok' : (b.error || 'failed'); } "
+              "catch (e) { const b = ChangePassword.data || {}; code = b.error || 'failed'; problems = b.problems || []; } "
+              "await storeValue('pw_result', { at: Date.now(), code: code, problems: problems }); "
+              "if (code === 'ok') { showAlert(appsmith.store.bo_lang === 'en' ? 'Password changed.' : 'Паролата е сменена.', 'success'); } })()}}")
+
+ACC_MODAL, ACC_CANVAS = 'boacctmod1', 'boacctcnv1'
+w('Dashboard/widgets/BoAccountModal/BoAccountModal.json', {
+    "animateLoading": True, "borderRadius": "18px", "bottomRow": 60, "boxShadow": "none",
+    "canEscapeKeyClose": True, "canOutsideClickClose": True,
+    "children": [{
+        "borderRadius": "18px", "bottomRow": 560, "boxShadow": "none", "canExtend": True, "detachFromLayout": True,
+        "dynamicBindingPathList": [], "dynamicHeight": "AUTO_HEIGHT", "flexLayers": [], "isDisabled": False, "isLoading": False,
+        "isVisible": True, "key": "acctcanvas", "leftColumn": 0, "maxDynamicHeight": 9000, "minDynamicHeight": 4,
+        "minHeight": 560, "minWidth": 450, "mobileBottomRow": 560, "mobileLeftColumn": 0, "mobileRightColumn": 480,
+        "mobileTopRow": 0, "needsErrorInfo": False, "parentColumnSpace": 1, "parentId": ACC_MODAL, "parentRowSpace": 1,
+        "renderMode": "CANVAS", "responsiveBehavior": "fill", "rightColumn": 480, "shouldScrollContents": False,
+        "topRow": 0, "type": "CANVAS_WIDGET", "version": 1, "widgetId": ACC_CANVAS, "widgetName": "BoAccountCanvas"}],
+    "detachFromLayout": True, "dynamicBindingPathList": [], "dynamicHeight": "FIXED", "height": 560, "isCanvas": True,
+    "isLoading": False, "isVisible": True, "key": "acctmodal1", "leftColumn": 0, "maxDynamicHeight": 9000,
+    "minDynamicHeight": 24, "minHeight": 560, "mobileBottomRow": 60, "mobileLeftColumn": 0, "mobileRightColumn": 24,
+    "mobileTopRow": 0, "needsErrorInfo": False, "parentColumnSpace": 10.171875, "parentId": "0", "parentRowSpace": 10,
+    "renderMode": "CANVAS", "rightColumn": 24, "shouldScrollContents": False, "topRow": 0, "type": "MODAL_WIDGET",
+    "version": 2, "widgetId": ACC_MODAL, "widgetName": "BoAccountModal", "width": 480})
+custom('BoAccount', 0, 54, ACCOUNT_HTML, ACCOUNT_CSS, ACCOUNT_JS,
+       "{{ { merchant: appsmith.store.customer_name || '', email: appsmith.store.customer_email || '', result: appsmith.store.pw_result || null } }}",
+       "FIXED", "acc0unt1ab", on=ACCOUNT_ON, parent=ACC_CANVAS, folder='BoAccountModal/')
+
+# The merchant's OWN token: the endpoint changes the password of whoever it belongs to.
+CHANGE_PW_BODY = """{{ {
+\t"current_password": this.params.current || "",
+\t"new_password": this.params.next || "",
+\t"new_password_confirmation": this.params.again || ""
+} }}"""
+w('Dashboard/queries/ChangePassword/metadata.json', {
+    "gitSyncId": gid('Dashboard/ChangePassword'), "id": "Dashboard_ChangePassword", "pluginId": "restapi-plugin", "pluginType": "API",
+    "unpublishedAction": {
+        "actionConfiguration": {
+            "autoGeneratedHeaders": [{"key": "content-type", "value": "application/json"}],
+            "body": CHANGE_PW_BODY, "bodyFormData": [], "encodeParamsToggle": True,
+            "formData": {"apiContentType": "application/json"},
+            "headers": [
+                {"key": "Authorization", "value": "Bearer {{appsmith.store.authToken}}"},
+                {"key": "Accept", "value": "application/json"},
+            ],
+            "httpMethod": "POST", "httpVersion": "HTTP11", "paginationType": "NONE", "path": "/int/v1/portal/account/password",
+            "pluginSpecifiedTemplates": [{"value": True}], "queryParameters": [], "timeoutInMillisecond": 30000,
+        },
+        "confirmBeforeExecute": False,
+        "datasource": {"datasourceConfiguration": {"url": "https://api.operations.fulfilya.com"},
+                       "isAutoGenerated": False, "name": "DEFAULT_REST_DATASOURCE", "pluginId": "restapi-plugin"},
+        "dynamicBindingPathList": [{"key": "body"}, {"key": "headers[0].value"}],
+        "name": "ChangePassword", "pageId": "Dashboard", "runBehaviour": "MANUAL", "userSetOnLoad": False}})
+# Appsmith reads an API's body from the .txt beside it, not from metadata.json.
+w('Dashboard/queries/ChangePassword/ChangePassword.txt', CHANGE_PW_BODY)
 
 # ---------------------------------------------------------------- existing widgets, restyled
 def load(rel): return json.load(open(os.path.join(REPO, rel), encoding='utf-8'))
@@ -697,6 +901,8 @@ cols['status']['computedValue'] = "{{(() => { const tableData = OrdersTable.proc
 PAY = r"""(() => {
       const method = String(currentRow.payment_method || '').toUpperCase();
       const en = appsmith.store.bo_lang === 'en';
+      // "Само таксите" collects our fees, nothing for the merchant - not наложен платеж (2026-10-07).
+      if (method === 'COD' && String(currentRow.payer || '') === 'fees') return en ? 'Fees at the door' : 'Таксите на място';
       if (method === 'COD') return en ? 'Cash on delivery' : 'Наложен платеж';
       if (method === 'CARD' || method === 'PAID') return en ? 'Paid online' : 'Платена онлайн';
       return '—';
@@ -722,7 +928,9 @@ SQL_LOGIN = """SELECT
   c.uuid as customer_uuid,
   c.name as customer_name,
   c.email as customer_email,
-  CASE WHEN f.path <=> NULL THEN '' ELSE CONCAT('https://api.operations.fulfilya.com/storage/', f.path) END as customer_logo
+  CASE WHEN f.path <=> NULL THEN '' ELSE CONCAT('https://api.operations.fulfilya.com/storage/', f.path) END as customer_logo,
+  COALESCE((SELECT JSON_UNQUOTE(JSON_EXTRACT(s.value, '$.enabled')) FROM settings s
+            WHERE s.`key` = CONCAT('fulfilya.portal_password.', c.uuid) LIMIT 1), 'false') as password_change
 FROM contacts c
 LEFT JOIN files f ON f.uuid = c.photo_uuid AND f.deleted_at <=> NULL
 WHERE c.email = '{{EmailInput.text}}'
@@ -737,6 +945,9 @@ am = open(os.path.join(REPO, 'Authentication/jsobjects/AuthManager/AuthManager.j
 old = "          storeValue('customer_email', customer.customer_email);\n"
 assert old in am
 am = am if 'customer_logo' in am else am.replace(old, old + "          // The merchant's logo: the photo on their Contact in the console, if one was uploaded.\n          storeValue('customer_logo', customer.customer_logo || '');\n", 1)
+old = "          storeValue('customer_logo', customer.customer_logo || '');\n"
+assert old in am
+am = am if 'can_change_password' in am else am.replace(old, old + "          // \"Смяна на парола\" in the header, for merchants the office switched on (2026-10-21).\n          storeValue('can_change_password', ['true', '1'].includes(String(customer.password_change)));\n", 1)
 w('Authentication/jsobjects/AuthManager/AuthManager.js', am)
 
 print('built into', OUT)

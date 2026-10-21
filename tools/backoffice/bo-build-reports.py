@@ -372,7 +372,7 @@ appsmith.onReady(render);
 appsmith.onModelChange(render);
 """
 
-RP_HEADER_ON = "{{(async () => { const m = BoHeader.model || {}; if (m.action === 'lang') { return storeValue('bo_lang', m.lang || 'bg'); } if (m.action === 'logout') { return AuthManager.logout(); } if (m.action === 'new') { return navigateTo('Dashboard', { new: '1' }); } if (m.action === 'nav') { if (m.tab === 'orders') { return navigateTo('Dashboard', { tab: 'orders' }); } if (m.page) { return navigateTo(m.page); } } })()}}"
+RP_HEADER_ON = "{{(async () => { const m = BoHeader.model || {}; if (m.action === 'lang') { return storeValue('bo_lang', m.lang || 'bg'); } if (m.action === 'logout') { return AuthManager.logout(); } if (m.action === 'account') { return navigateTo('Dashboard', { account: '1' }); } if (m.action === 'new') { return navigateTo('Dashboard', { new: '1' }); } if (m.action === 'nav') { if (m.tab === 'orders') { return navigateTo('Dashboard', { tab: 'orders' }); } if (m.page) { return navigateTo(m.page); } } })()}}"
 RP_REPORTS_ON = "{{(async () => { const m = BoReports.model || {}; const reload = () => Promise.all([RpStats.run(), RpPayment.run(), RpService.run(), RpOutcome.run(), RpProducts.run(), RpDaily.run()]); if (m.action === 'period' && m.period) { await storeValue('rp_period', m.period); await reload(); return; } if (m.action === 'range' && m.from && m.to) { await storeValue('rp_from', m.from); await storeValue('rp_to', m.to); await storeValue('rp_period', 'range'); await reload(); return; } if (m.action === 'csv') { const rows = RpDaily.data || []; const head = ['Ден', 'Доставени', 'Върнати', 'НП в брой', 'НП с карта', 'Платени онлайн', 'Общо събрано', 'Доставка и такса НП', 'За изплащане']; const cell = (v) => String(v == null ? '' : v).replace('.', ','); const lines = [head.join(';')].concat(rows.map((r) => [r.day, r.delivered, r.returned, cell(r.cod_cash), cell(r.cod_card), cell(r.prepaid), cell(r.collected), cell(r.fees), cell(r.payout)].join(';'))); return download('\\ufeff' + lines.join('\\r\\n'), 'fulfilya-otchet-' + RpNav.since() + '-' + RpNav.until() + '.csv', 'text/csv'); } })()}}"
 
 def custom(page, name, top, bottom, html, css, js, model, height, key_seed, handler):
@@ -397,7 +397,7 @@ def custom(page, name, top, bottom, html, css, js, model, height, key_seed, hand
     w(f'{page}/widgets/{name}.json', d)
 
 custom('Reporting', 'BoHeader', 0, 8, HEADER_HTML, HEADER_CSS, HEADER_JS,
-       "{{ { page: 'reports', merchant: appsmith.store.customer_name || '' } }}",
+       "{{ { page: 'reports', merchant: appsmith.store.customer_name || '', account: appsmith.store.can_change_password === true } }}",
        "FIXED", "hdrrep0rt1", RP_HEADER_ON)
 custom('Reporting', 'BoReports', 9, 94, REPORTS_HTML, REPORTS_CSS, REPORTS_JS,
        "{{ { period: appsmith.store.rp_period || 'month', since: RpNav.since(), until: RpNav.until(), stats: RpStats.data, payment: RpPayment.data, service: RpService.data, outcome: RpOutcome.data, months: RpMonths.data, products: RpProducts.data, daily: RpDaily.data } }}",
@@ -415,6 +415,9 @@ pg = open(os.path.join(REPO, 'Dashboard/jsobjects/PageGuard/PageGuard.js'), enco
 anchor = "      return true;\n    }"
 assert anchor in pg
 pg = pg if "queryParams.new" in pg else pg.replace(anchor, "      // \"Нова поръчка\" from another page's header lands here with ?new=1 and opens the form.\n      if (appsmith.URL.queryParams && appsmith.URL.queryParams.new === '1') {\n        showModal('CreateOrderModal');\n      }\n      return true;\n    }", 1)
+# ...and the account window ("Смяна на парола", 2026-10-21) when another page's header sends ?account=1.
+anchor = "      return true;\n    }"
+pg = pg if "queryParams.account" in pg else pg.replace(anchor, "      // \"Смяна на парола\" from another page's header lands here with ?account=1 (2026-10-21).\n      if (appsmith.URL.queryParams && appsmith.URL.queryParams.account === '1' && appsmith.store.can_change_password === true) {\n        storeValue('pw_result', { at: Date.now(), reset: true });\n        showModal('BoAccountModal');\n      }\n      return true;\n    }", 1)
 w('Dashboard/jsobjects/PageGuard/PageGuard.js', pg)
 print('built into', OUT)
 for root, _, files in os.walk(OUT):

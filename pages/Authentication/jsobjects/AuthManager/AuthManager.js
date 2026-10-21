@@ -40,6 +40,8 @@ export default {
           storeValue('customer_email', customer.customer_email);
           // The merchant's logo: the photo on their Contact in the console, if one was uploaded.
           storeValue('customer_logo', customer.customer_logo || '');
+          // "Смяна на парола" in the header, for merchants the office switched on (2026-10-21).
+          storeValue('can_change_password', ['true', '1'].includes(String(customer.password_change)));
           
           // Navigate to dashboard
           showAlert(`Welcome ${customer.customer_name}!`, 'success');

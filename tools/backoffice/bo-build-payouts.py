@@ -628,7 +628,7 @@ appsmith.onReady(render);
 appsmith.onModelChange(render);
 """
 
-PO_HEADER_ON = "{{(async () => { const m = BoHeader.model || {}; if (m.action === 'lang') { return storeValue('bo_lang', m.lang || 'bg'); } if (m.action === 'logout') { return AuthManager.logout(); } if (m.action === 'new') { return navigateTo('Dashboard', { new: '1' }); } if (m.action === 'nav') { if (m.tab === 'orders') { return navigateTo('Dashboard', { tab: 'orders' }); } if (m.page) { return navigateTo(m.page); } } })()}}"
+PO_HEADER_ON = "{{(async () => { const m = BoHeader.model || {}; if (m.action === 'lang') { return storeValue('bo_lang', m.lang || 'bg'); } if (m.action === 'logout') { return AuthManager.logout(); } if (m.action === 'account') { return navigateTo('Dashboard', { account: '1' }); } if (m.action === 'new') { return navigateTo('Dashboard', { new: '1' }); } if (m.action === 'nav') { if (m.tab === 'orders') { return navigateTo('Dashboard', { tab: 'orders' }); } if (m.page) { return navigateTo(m.page); } } })()}}"
 
 
 def custom(name, top, bottom, html, css, js, model, key_seed, handler, height='FIXED'):
@@ -652,7 +652,7 @@ def custom(name, top, bottom, html, css, js, model, key_seed, handler, height='F
 
 
 custom('BoHeader', 0, 8, HEADER_HTML, HEADER_CSS, HEADER_JS,
-       "{{ { page: 'payouts', merchant: appsmith.store.customer_name || '' } }}",
+       "{{ { page: 'payouts', merchant: appsmith.store.customer_name || '', account: appsmith.store.can_change_password === true } }}",
        "hdrpayout1", PO_HEADER_ON)
 # The statement download. `download()` takes the bytes in a data: URI, which is why the
 # endpoint offers pdf-base64 at all - Appsmith cannot stream a file response.

@@ -444,7 +444,7 @@ IMP_ON = ("{{(async () => { const m = BoImport.model || {}; "
           "if (m.action === 'template' && m.data) { return download(m.data, m.filename || 'fulfilya-poruchki.xlsx', m.mime || ''); } "
           "if (m.action === 'orders') { return navigateTo('Dashboard', { tab: 'orders' }); } })()}}")
 
-IMP_HEADER_ON = "{{(async () => { const m = BoHeader.model || {}; if (m.action === 'lang') { return storeValue('bo_lang', m.lang || 'bg'); } if (m.action === 'logout') { return AuthManager.logout(); } if (m.action === 'new') { return navigateTo('Dashboard', { new: '1' }); } if (m.action === 'nav') { if (m.tab === 'orders') { return navigateTo('Dashboard', { tab: 'orders' }); } if (m.page) { return navigateTo(m.page); } } })()}}"
+IMP_HEADER_ON = "{{(async () => { const m = BoHeader.model || {}; if (m.action === 'lang') { return storeValue('bo_lang', m.lang || 'bg'); } if (m.action === 'logout') { return AuthManager.logout(); } if (m.action === 'account') { return navigateTo('Dashboard', { account: '1' }); } if (m.action === 'new') { return navigateTo('Dashboard', { new: '1' }); } if (m.action === 'nav') { if (m.tab === 'orders') { return navigateTo('Dashboard', { tab: 'orders' }); } if (m.page) { return navigateTo(m.page); } } })()}}"
 
 
 def custom(name, top, bottom, html, css, js, model, key_seed, handler, height='FIXED'):
@@ -468,7 +468,7 @@ def custom(name, top, bottom, html, css, js, model, key_seed, handler, height='F
 
 
 custom('BoHeader', 0, 8, HEADER_HTML, HEADER_CSS, HEADER_JS,
-       "{{ { page: 'import', merchant: appsmith.store.customer_name || '' } }}",
+       "{{ { page: 'import', merchant: appsmith.store.customer_name || '', account: appsmith.store.can_change_password === true } }}",
        "hdrimport1", IMP_HEADER_ON)
 custom('BoImport', 9, 78, IMPORT_HTML, IMPORT_CSS, IMPORT_JS,
        "{{ { results: appsmith.store.imp_results || null } }}",
