@@ -12,6 +12,8 @@ export default {
     await removeValue('customer_name');
     await removeValue('customer_email');
     await removeValue('is_admin');
+    await removeValue('can_change_password');
+    await removeValue('pw_result');
     navigateTo('Authentication');
   },
 
