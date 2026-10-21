@@ -5,7 +5,7 @@
   "borderRadius": "0px",
   "borderWidth": "0",
   "boxShadow": "none",
-  "bottomRow": 54,
+  "bottomRow": 68,
   "defaultModel": "{{ { lang: appsmith.store.bo_lang || 'bg', merchant: appsmith.store.customer_name || '', email: appsmith.store.customer_email || '', result: appsmith.store.pw_result || null } }}",
   "dynamicBindingPathList": [
     {
@@ -32,12 +32,12 @@
   "maxDynamicHeight": 9000,
   "minDynamicHeight": 4,
   "minWidth": 200,
-  "mobileBottomRow": 54,
+  "mobileBottomRow": 68,
   "mobileLeftColumn": 0,
   "mobileRightColumn": 64,
   "mobileTopRow": 0,
   "needsErrorInfo": false,
-  "originalBottomRow": 54,
+  "originalBottomRow": 68,
   "originalTopRow": 0,
   "parentColumnSpace": 1,
   "parentId": "boacctcnv1",

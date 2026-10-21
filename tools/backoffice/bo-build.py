@@ -746,20 +746,20 @@ w('Dashboard/widgets/BoAccountModal/BoAccountModal.json', {
     "animateLoading": True, "borderRadius": "18px", "bottomRow": 60, "boxShadow": "none",
     "canEscapeKeyClose": True, "canOutsideClickClose": True,
     "children": [{
-        "borderRadius": "18px", "bottomRow": 560, "boxShadow": "none", "canExtend": True, "detachFromLayout": True,
+        "borderRadius": "18px", "bottomRow": 700, "boxShadow": "none", "canExtend": True, "detachFromLayout": True,
         "dynamicBindingPathList": [], "dynamicHeight": "AUTO_HEIGHT", "flexLayers": [], "isDisabled": False, "isLoading": False,
         "isVisible": True, "key": "acctcanvas", "leftColumn": 0, "maxDynamicHeight": 9000, "minDynamicHeight": 4,
-        "minHeight": 560, "minWidth": 450, "mobileBottomRow": 560, "mobileLeftColumn": 0, "mobileRightColumn": 480,
+        "minHeight": 700, "minWidth": 450, "mobileBottomRow": 700, "mobileLeftColumn": 0, "mobileRightColumn": 480,
         "mobileTopRow": 0, "needsErrorInfo": False, "parentColumnSpace": 1, "parentId": ACC_MODAL, "parentRowSpace": 1,
         "renderMode": "CANVAS", "responsiveBehavior": "fill", "rightColumn": 480, "shouldScrollContents": False,
         "topRow": 0, "type": "CANVAS_WIDGET", "version": 1, "widgetId": ACC_CANVAS, "widgetName": "BoAccountCanvas"}],
-    "detachFromLayout": True, "dynamicBindingPathList": [], "dynamicHeight": "FIXED", "height": 560, "isCanvas": True,
+    "detachFromLayout": True, "dynamicBindingPathList": [], "dynamicHeight": "FIXED", "height": 700, "isCanvas": True,
     "isLoading": False, "isVisible": True, "key": "acctmodal1", "leftColumn": 0, "maxDynamicHeight": 9000,
-    "minDynamicHeight": 24, "minHeight": 560, "mobileBottomRow": 60, "mobileLeftColumn": 0, "mobileRightColumn": 24,
+    "minDynamicHeight": 24, "minHeight": 700, "mobileBottomRow": 60, "mobileLeftColumn": 0, "mobileRightColumn": 24,
     "mobileTopRow": 0, "needsErrorInfo": False, "parentColumnSpace": 10.171875, "parentId": "0", "parentRowSpace": 10,
     "renderMode": "CANVAS", "rightColumn": 24, "shouldScrollContents": False, "topRow": 0, "type": "MODAL_WIDGET",
     "version": 2, "widgetId": ACC_MODAL, "widgetName": "BoAccountModal", "width": 480})
-custom('BoAccount', 0, 54, ACCOUNT_HTML, ACCOUNT_CSS, ACCOUNT_JS,
+custom('BoAccount', 0, 68, ACCOUNT_HTML, ACCOUNT_CSS, ACCOUNT_JS,
        "{{ { merchant: appsmith.store.customer_name || '', email: appsmith.store.customer_email || '', result: appsmith.store.pw_result || null } }}",
        "FIXED", "acc0unt1ab", on=ACCOUNT_ON, parent=ACC_CANVAS, folder='BoAccountModal/')
 
