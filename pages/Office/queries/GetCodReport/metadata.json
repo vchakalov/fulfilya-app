@@ -34,7 +34,7 @@
       "queryParameters": [
         {
           "key": "period",
-          "value": "{{appsmith.store.office_period || 'day'}}"
+          "value": "{{appsmith.store.office_period || 'month'}}"
         },
         {
           "key": "date",

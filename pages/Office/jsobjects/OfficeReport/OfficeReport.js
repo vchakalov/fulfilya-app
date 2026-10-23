@@ -23,7 +23,7 @@ export default {
 
   run: async () => {
     if (!appsmith.store.office_period) {
-      await storeValue('office_period', 'day');
+      await storeValue('office_period', 'month');
       await storeValue('office_date', OfficeReport.today());
       await storeValue('office_to', '');
     }

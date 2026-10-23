@@ -408,7 +408,7 @@ function render() {
   const ret = (p.returns && p.returns.totals) || {};
   const merchants = Array.isArray(m.merchants) ? m.merchants : [];
   const sel = m.sel || 'all';
-  const period = m.period || 'day';
+  const period = m.period || 'month';
   const oneMerchant = sel && sel !== 'all';
   // The two date boxes show the days the report actually counts. A preset used to leave
   // them reading "today" and blank while the server counted Monday to Sunday or the whole
@@ -688,7 +688,7 @@ OFFICE_ON = ("{{(async () => { const m = BoOffice.model || {}; "
 
 OFFICE_MODEL = ("{{ { " + bo_i18n.MODEL_LANG + ", report: GetCodReport.data, pending: GetPendingPayout.data, merchants: ListMerchants.data, "
                 "queue: GetPendingAll.data, history: GetPayoutHistory.data, returns: GetPeriodReturns.data, "
-                "sel: appsmith.store.office_merchant || 'all', period: appsmith.store.office_period || 'day', "
+                "sel: appsmith.store.office_merchant || 'all', period: appsmith.store.office_period || 'month', "
                 "from: appsmith.store.office_date || '', to: appsmith.store.office_to || '', "
                 "lastPayout: appsmith.store.last_payout_id || '', "
                 "cashbook: GetCashbook.data, cbDone: appsmith.store.cb_done || 0 } }}")

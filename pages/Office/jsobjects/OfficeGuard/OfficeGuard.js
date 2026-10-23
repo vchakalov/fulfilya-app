@@ -7,7 +7,9 @@ export default {
       navigateTo('Authentication');
       return false;
     }
-    OfficeReport.run();
+    // The page always opens on this month (Maria, 2026-10-23) - not on whatever period was
+    // picked last time, which the store would otherwise remember.
+    OfficeReport.setPeriod('month');
     return true;
   }
 }
