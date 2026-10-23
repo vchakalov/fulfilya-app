@@ -477,23 +477,27 @@ function render() {
       // Her column names, verbatim from the page she reconciles against today
       // (Ico, 2026-09-21: "this is mandatory to have"). Do not shorten them again.
       // Група Б since 2026-10-07 in two subgroups: Б.1 фактурирано, Б.2 събрано (в брой / с карта).
+      // Б.1 в брой / с карта since 2026-10-23 (Maria): what the merchant paid the driver at pickup,
+      // from the office's "Маркирай платено". By bank or not paid yet: in the Б.1 total only.
       `<table><thead><tr><th>Клиент</th><th class="r">Поръчки</th>` +
       `<th class="r">Група А в брой</th><th class="r">Група А с карта</th><th class="r">Група А общо</th>` +
-      `<th class="r">Б.1 фактурирано</th><th class="r">Б.2 в брой</th><th class="r">Б.2 с карта</th><th class="r">Б.2 общо</th><th class="r">Група Б общо</th></tr></thead><tbody class="num">` +
+      `<th class="r">Б.1 в брой</th><th class="r">Б.1 с карта</th><th class="r">Б.1 фактурирано</th><th class="r">Б.2 в брой</th><th class="r">Б.2 с карта</th><th class="r">Б.2 общо</th><th class="r">Група Б общо</th></tr></thead><tbody class="num">` +
       (rows.length
         ? rows.map((x) =>
             `<tr><td><strong>${esc(x.name)}</strong></td><td class="r">${num(x.all_orders === undefined ? x.orders : x.all_orders)}</td>` +
             `<td class="r cash">${eur(x.goods_cash)}</td><td class="r card-c">${eur(x.goods_card)}</td>` +
             `<td class="r"><strong>${eur(x.goods)}</strong></td>` +
+            `<td class="r cash">${eur(x.invoiced_cash)}</td><td class="r card-c">${eur(x.invoiced_card)}</td>` +
             `<td class="r inv">${eur(x.invoiced)}</td>` +
             `<td class="r cash">${eur(x.revenue_cash)}</td><td class="r card-c">${eur(x.revenue_card)}</td>` +
             `<td class="r">${eur(x.revenue)}</td>` +
             `<td class="r"><strong>${eur(x.revenue_all === undefined ? num(x.revenue) + num(x.invoiced) : x.revenue_all)}</strong></td></tr>`).join('')
-        : `<tr><td colspan="10"><div class="empty">Няма поръчки за този период.</div></td></tr>`) +
+        : `<tr><td colspan="12"><div class="empty">Няма поръчки за този период.</div></td></tr>`) +
       `</tbody>` +
       (rows.length > 1
         ? `<tfoot><tr><td>Общо</td><td class="r">${num(t.all_orders === undefined ? t.orders : t.all_orders)}</td>` +
           `<td class="r">${eur(t.goods_cash)}</td><td class="r">${eur(t.goods_card)}</td><td class="r">${eur(t.goods)}</td>` +
+          `<td class="r">${eur(t.invoiced_cash)}</td><td class="r">${eur(t.invoiced_card)}</td>` +
           `<td class="r">${eur(t.invoiced)}</td>` +
           `<td class="r">${eur(t.revenue_cash)}</td><td class="r">${eur(t.revenue_card)}</td><td class="r">${eur(t.revenue)}</td>` +
           `<td class="r">${eur(revenueAll)}</td></tr></tfoot>`
@@ -658,7 +662,8 @@ OFFICE_ON = ("{{(async () => { const m = BoOffice.model || {}; "
              "const payer = { all: 'получателят - всичко', fees: 'получателят - само таксите', nothing: 'клиентът - по фактура' }; "
              "const cell = (v) => String(v == null ? '' : v).replace('.', ','); "
              "(r.merchants || []).forEach((x) => { (x.lines || []).forEach((l) => rows.push([l.delivered_at, x.name, l.shop_order_id || l.order_id, l.recipient, payer[l.payer] || '', l.kind === 'card' ? 'с карта' : 'в брой', l.amount, l.goods, l.delivery, l.fee, l.declared, 0, l.driver])); "
-             "(x.invoice_lines || []).forEach((l) => rows.push([l.delivered_at, x.name, l.shop_order_id || l.order_id, l.recipient, payer[l.payer] || '', '', 0, 0, l.delivery, 0, l.declared, l.invoiced, l.driver])); }); "
+             "const feePaid = { cash: 'при вземане - в брой', card: 'при вземане - с карта', bank: 'по банка' }; "
+             "(x.invoice_lines || []).forEach((l) => rows.push([l.delivered_at, x.name, l.shop_order_id || l.order_id, l.recipient, payer[l.payer] || '', feePaid[l.paid_how] || '', 0, 0, l.delivery, 0, l.declared, l.invoiced, l.driver])); }); "
              "rows.sort((a, b) => String(a[0]).localeCompare(String(b[0]))); "
              "if (!rows.length) { return showAlert(en ? 'Nothing to export for this period.' : 'Няма поръчки за този период.', 'info'); } "
              "const head = ['Доставена', 'Клиент', 'Поръчка', 'Получател', 'Кой плаща', 'Платено', 'Събрано от получателя', 'Стока (А)', 'Доставка', 'Такса НП', 'Обявена стойност', 'За фактура (В)', 'Шофьор']; "
