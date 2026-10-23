@@ -51,6 +51,10 @@
         {
           "key": "format",
           "value": "pdf-base64"
+        },
+        {
+          "key": "layout",
+          "value": "office"
         }
       ],
       "timeoutInMillisecond": 30000

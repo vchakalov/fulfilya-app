@@ -32,6 +32,9 @@ export default {
     const en = appsmith.store.bo_lang === 'en';
     try {
       await GetCodReport.run();
+      // The returned parcels read the report's own period bounds, so they follow it (v2, 2026-10-23: they used
+      // to load on their own at page open, before the report knew its period, and the report loaded twice).
+      await GetPeriodReturns.run();
     } catch (e) {
       const body = GetCodReport.data || {};
       showAlert((en ? 'The report could not be loaded: ' : 'Отчетът не можа да се зареди: ') + (body.error || e.message || ''), 'error');

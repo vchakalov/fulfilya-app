@@ -58,7 +58,7 @@
     ],
     "name": "GetPendingPayout",
     "pageId": "Office",
-    "runBehaviour": "AUTOMATIC",
+    "runBehaviour": "MANUAL",
     "userSetOnLoad": false
   }
 }
