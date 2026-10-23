@@ -295,9 +295,13 @@ function holdingsBlock(m) {
   const pays = (cb.payouts && cb.payouts.merchants) || [];
 
   const tiles =
-    `<div class="grid g3">` +
+    `<div class="grid g4">` +
       `<div class="card kpi"><h3>В брой</h3><div class="big xl num">${fmt(cb.cash)} <small>€</small></div></div>` +
       `<div class="card kpi"><h3>Банка</h3><div class="big xl num">${fmt(cb.bank)} <small>€</small></div></div>` +
+      // What in the account is ours (Maria, 2026-10-23): the bank less the наложен платеж still owed to merchants -
+      // payouts always go by bank, so that money is not ours to spend.
+      `<div class="card kpi"><h3>Наличен приход банка</h3><div class="big xl num">${fmt(num(cb.bank) - num(cb.payouts && cb.payouts.total))} <small>€</small></div>` +
+        `<div class="foot">банка <b>${eur(cb.bank)}</b> − наложен платеж за изплащане <b>${eur(cb.payouts && cb.payouts.total)}</b></div></div>` +
       `<div class="card kpi"><h3>Приспаднати такси</h3><div class="hint" style="margin-top:2px">от ПОС такси и банкови преводи в myPOS</div>` +
         `<div class="big xl num">−${fmt(fees.total)} <small>€</small></div>` +
         `<div class="foot">ПОС терминал 1,2 % <b>${eur(fees.pos)}</b> · преводи 0,40 € <b>${eur(fees.transfers)}</b></div></div>` +
