@@ -291,16 +291,20 @@ function holdingsBlock(m) {
   if (CB.done !== m.cbDone) Object.assign(CB, CB_RESET, { done: m.cbDone });
 
   const fees = cb.fees || {};
+  // Which part of each balance is the merchants' unpaid наложен платеж and which is ours - Cashbook::held()
+  // splits it (card НП in the bank, cash НП in the till up to what it holds), so the two never count it twice.
+  const held = cb.held || {};
   const owed = (cb.owed && cb.owed.merchants) || [];
   const pays = (cb.payouts && cb.payouts.merchants) || [];
 
   const tiles =
     `<div class="grid g3">` +
-      `<div class="card kpi"><h3>В брой</h3><div class="big xl num">${fmt(cb.cash)} <small>€</small></div></div>` +
+      `<div class="card kpi"><h3>В брой</h3><div class="big xl num">${fmt(cb.cash)} <small>€</small></div>` +
+        (held.cash ? `<div class="foot">наложен платеж <b>${eur(held.cash.cod)}</b> · приход <b>${eur(held.cash.income)}</b></div>` : '') + `</div>` +
       // Under the bank, which part of it is the merchants' наложен платеж still to pay out and which part is ours
       // (Maria, 2026-10-23 - a line under the amount rather than a box of its own).
       `<div class="card kpi"><h3>Банка</h3><div class="big xl num">${fmt(cb.bank)} <small>€</small></div>` +
-        `<div class="foot">наложен платеж <b>${eur(cb.payouts && cb.payouts.total)}</b> · приход <b>${eur(num(cb.bank) - num(cb.payouts && cb.payouts.total))}</b></div></div>` +
+        (held.bank ? `<div class="foot">наложен платеж <b>${eur(held.bank.cod)}</b> · приход <b>${eur(held.bank.income)}</b></div>` : '') + `</div>` +
       `<div class="card kpi"><h3>Приспаднати такси</h3><div class="hint" style="margin-top:2px">от ПОС такси и банкови преводи в myPOS</div>` +
         `<div class="big xl num">−${fmt(fees.total)} <small>€</small></div>` +
         `<div class="foot">ПОС терминал 1,2 % <b>${eur(fees.pos)}</b> · преводи 0,40 € <b>${eur(fees.transfers)}</b></div></div>` +
