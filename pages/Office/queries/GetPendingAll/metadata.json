@@ -46,7 +46,7 @@
     ],
     "name": "GetPendingAll",
     "pageId": "Office",
-    "runBehaviour": "ON_PAGE_LOAD",
-    "userSetOnLoad": true
+    "runBehaviour": "MANUAL",
+    "userSetOnLoad": false
   }
 }
