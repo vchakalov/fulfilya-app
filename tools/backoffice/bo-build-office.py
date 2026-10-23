@@ -146,7 +146,7 @@ line-height:1;white-space:nowrap}
 .pill{border-radius:999px;padding:2px 9px;font-size:11px;font-weight:600;background:var(--warn-soft);color:var(--warn)}
 .pill.ok{background:var(--ok-soft);color:var(--ok)}
 /* Каса и банка (TODO 85 + 87, Maria 2026-10-23): balances, three totals, who owes us, deposits */
-.cb{display:grid;gap:14px}
+.cb{display:grid;gap:14px;margin-bottom:22px}
 .g2{grid-template-columns:repeat(2,minmax(0,1fr))}
 .g3{grid-template-columns:repeat(3,minmax(0,1fr))}
 @media (max-width:900px){.g3{grid-template-columns:1fr}}
@@ -204,7 +204,10 @@ function send(payload) {
 // office types in only two things - a deposit, and a merchant paying our invoiced fees. The
 // form's state lives here, outside render(), because render() rebuilds the page on every
 // model change; `cbDone` moves only after a successful save, which is when the form clears.
-const CB = { open: null, scope: 'all', how: '', kind: '', ids: '', dep: false, depDate: '', depAmt: '', depNote: '', cancel: null, reason: '', done: null };
+const CB = { open: null, scope: 'all', how: '', kind: '', ids: '', dep: false, depDate: '', depAmt: '', depNote: '', cancel: null, reason: '', done: null,
+  ent: false, entDate: '', entType: '', entAmt: '', entNote: '', entCancel: null, entReason: '', month: '' };
+const CB_RESET = { open: null, scope: 'all', how: '', kind: '', ids: '', dep: false, depDate: '', depAmt: '', depNote: '', cancel: null, reason: '',
+  ent: false, entDate: '', entType: '', entAmt: '', entNote: '', entCancel: null, entReason: '' };
 const HOW = { bank: 'по банка', cash: 'при вземане · в брой', card: 'при вземане · с карта' };
 const dmy = (d) => String(d || '').slice(0, 10).split('-').reverse().join('.');
 
@@ -265,7 +268,7 @@ function cashbook(m) {
   }
   if (CB.done === null) CB.done = m.cbDone;
   if (CB.done !== m.cbDone) {
-    Object.assign(CB, { open: null, scope: 'all', how: '', kind: '', ids: '', dep: false, depDate: '', depAmt: '', depNote: '', cancel: null, reason: '', done: m.cbDone });
+    Object.assign(CB, CB_RESET, { done: m.cbDone });
   }
 
   // Payouts are always bank transfers (Maria), so the bank has to hold what is waiting to go out.
@@ -285,7 +288,8 @@ function cashbook(m) {
     `</div>` +
     `<div class="grid g3">` +
       `<div class="card kpi"><h3>Нашите приходи</h3><div class="big num">${fmt(cb.revenue.total)} <small>€</small></div>` +
-        `<div class="foot">събрани от получатели <b>${eur(cb.revenue.collected)}</b> · фактурирани към клиенти <b>${eur(cb.revenue.invoiced)}</b></div></div>` +
+        `<div class="foot">събрани от получатели <b>${eur(cb.revenue.collected)}</b> · фактурирани към клиенти <b>${eur(cb.revenue.invoiced)}</b>` +
+        (num(cb.revenue.other) ? ` · други приходи <b>${eur(cb.revenue.other)}</b>` : '') + `</div></div>` +
       `<div class="card kpi"><h3>Събран наложен платеж</h3><div class="big num">${fmt(cb.cod.collected)} <small>€</small></div>` +
         `<div class="foot">изплатен <b>${eur(cb.cod.paid)}</b> · за изплащане <b>${eur(cb.cod.unpaid)}</b></div></div>` +
       `<div class="card kpi owed"><h3>Дължат ни клиенти</h3><div class="big num">${fmt(cb.owed.total)} <small>€</small></div>` +
@@ -355,9 +359,54 @@ function cashbook(m) {
         : `<tr><td colspan="5"><div class="empty">Още няма записано внасяне.</div></td></tr>`) +
       `</tbody></table></div></div>`;
 
+  // The month as myPOS and the accountant see it: opening + the month's lines = closing (2026-10-23).
+  const sts = cb.statements || [];
+  const st = sts.find((x) => x.month === CB.month) || sts[sts.length - 1];
+  const side = (title, a) => a
+    ? `<div style="min-width:0"><h3 style="margin-bottom:6px">${title}</h3><table><tbody class="num">` +
+      `<tr><td>Начално салдо</td><td class="r">${eur(a.opening)}</td></tr>` +
+      (a.rows || []).map((x) => `<tr><td>${esc(x.label)}</td><td class="r ${num(x.amount) < 0 ? 'minus' : 'plus'}">${num(x.amount) > 0 ? '+' : ''}${eur(x.amount)}</td></tr>`).join('') +
+      `</tbody><tfoot><tr><td>Крайно салдо</td><td class="r">${eur(a.closing)}</td></tr></tfoot></table></div>`
+    : '';
+  const stCard = st
+    ? `<div class="card">` +
+      `<div class="hd"><h3>Месечно извлечение</h3><label class="hint" for="cb-month">месец ` +
+        `<select id="cb-month" style="min-width:150px">${sts.map((x) => `<option value="${esc(x.month)}"${x.month === st.month ? ' selected' : ''}>${esc(x.label)}</option>`).join('')}</select></label></div>` +
+      `<div class="grid g2">${side('Каса', st.cash)}${side('Банка', st.bank)}</div>` +
+      `<div class="note" style="margin-top:8px">Крайното салдо на банката трябва да съвпада с myPOS в края на месеца. Таксата на ПОС терминала (1,2 % от всяко плащане с карта) и таксата за превод (0,40 € на изплащане) се смятат сами.</div>` +
+    `</div>`
+    : '';
+
+  const types = cb.entry_types || {};
+  const ents = cb.entries || [];
+  const entCard =
+    `<div class="card" style="padding:0">` +
+      `<div class="hd" style="padding:14px 18px 0;margin:0"><h3>Други движения</h3>` +
+        `<button type="button" class="btn sm" id="cb-ent-open">+ Друго движение</button></div>` +
+      (CB.ent
+        ? `<div class="mform" style="margin:12px 18px 4px"><div class="steps">` +
+            `<label class="fld" for="cb-ent-date"><span>Дата</span><input type="date" id="cb-ent-date" min="${esc(cb.since)}" max="${esc(cb.as_of)}" value="${esc(CB.entDate || cb.as_of)}"></label>` +
+            `<label class="fld" for="cb-ent-type"><span>Вид</span><select id="cb-ent-type"><option value="">Изберете…</option>` +
+              Object.keys(types).map((k) => `<option value="${esc(k)}"${CB.entType === k ? ' selected' : ''}>${esc(types[k])}</option>`).join('') + `</select></label>` +
+            `<label class="fld" for="cb-ent-amt"><span>Сума, €</span><input type="text" inputmode="decimal" id="cb-ent-amt" placeholder="0,00" value="${esc(CB.entAmt)}"></label>` +
+            `<label class="fld" for="cb-ent-note"><span>Бележка</span><input type="text" id="cb-ent-note" placeholder="какво е това" maxlength="200" value="${esc(CB.entNote)}"></label>` +
+          `</div><div class="note">Приход с карта: таксата на ПОС терминала се смята сама.</div>` +
+          `<div class="act"><button type="button" class="btn go" id="cb-ent-save">Запиши движението</button><button type="button" class="link" id="cb-ent-close">откажи</button></div></div>`
+        : '') +
+      `<div class="tablewrap" style="padding:10px 8px 6px"><table><thead><tr><th>Дата</th><th>Вид</th><th>Бележка</th><th class="r">Сума</th><th></th></tr></thead><tbody class="num">` +
+      (ents.length
+        ? ents.map((e) =>
+            `<tr><td>${esc(dmy(e.date))}</td><td>${esc(e.label || e.type)}</td><td style="white-space:normal">${esc(e.note || '')}</td>` +
+            `<td class="r ${/^expense/.test(e.type) ? 'minus' : 'plus'}">${/^expense/.test(e.type) ? '−' : '+'}${fmt(e.amount)}</td>` +
+            `<td class="r">${CB.entCancel === e.id
+              ? `<span class="act" style="justify-content:flex-end"><input type="text" id="cb-ent-reason" placeholder="причина" maxlength="200" value="${esc(CB.entReason)}" style="font:inherit;font-size:12.5px;border:1px solid var(--line-strong);border-radius:8px;padding:5px 8px;width:150px"><button type="button" class="btn sm" id="cb-ent-cancel-save">Отмени движението</button><button type="button" class="link" id="cb-ent-cancel-close">не</button></span>`
+              : `<button type="button" class="link" data-cb-ent-cancel="${esc(e.id)}">отмени</button>`}</td></tr>`).join('')
+        : `<tr><td colspan="5"><div class="empty">Няма други движения.</div></td></tr>`) +
+      `</tbody></table></div></div>`;
+
   return `<div class="cb">` +
     `<div class="row"><div><h2>Пари и приходи</h2><div class="sub">към ${esc(dmy(cb.as_of))}, от началото на работа (${esc(dmy(cb.since))})</div></div></div>` +
-    tiles + owedCard + marksCard + depCard +
+    tiles + owedCard + marksCard + depCard + entCard + stCard +
     `<div class="note">Каса = събраното в брой от шофьорите + платеното в брой при вземане − внесеното в банка. Банка = плащанията с карта + внесеното + платеното с карта и по банка − изплатеното на клиенти. Не включва таксите на ПОС терминала и разходите.</div>` +
     `</div>`;
 }
@@ -394,6 +443,17 @@ function cashbookWire(m) {
   on('cb-reason', 'input', () => { CB.reason = val('cb-reason'); });
   on('cb-cancel-close', 'click', () => { CB.cancel = null; render(); });
   on('cb-cancel-save', 'click', () => { CB.reason = val('cb-reason'); send({ action: 'cb_cancel_deposit', id: CB.cancel, reason: CB.reason }); });
+  on('cb-month', 'change', () => { CB.month = val('cb-month'); render(); });
+  on('cb-ent-open', 'click', () => { CB.ent = !CB.ent; render(); });
+  on('cb-ent-close', 'click', () => { CB.ent = false; render(); });
+  const entRead = () => { CB.entDate = val('cb-ent-date'); CB.entType = val('cb-ent-type'); CB.entAmt = val('cb-ent-amt'); CB.entNote = val('cb-ent-note'); };
+  ['cb-ent-date', 'cb-ent-amt', 'cb-ent-note'].forEach((id) => on(id, 'input', entRead));
+  on('cb-ent-type', 'change', entRead);
+  on('cb-ent-save', 'click', () => { entRead(); send({ action: 'cb_entry', date: CB.entDate, type: CB.entType, amount: CB.entAmt, note: CB.entNote }); });
+  document.querySelectorAll('[data-cb-ent-cancel]').forEach((b) => b.addEventListener('click', () => { CB.entCancel = b.dataset.cbEntCancel; CB.entReason = ''; render(); }));
+  on('cb-ent-reason', 'input', () => { CB.entReason = val('cb-ent-reason'); });
+  on('cb-ent-cancel-close', 'click', () => { CB.entCancel = null; render(); });
+  on('cb-ent-cancel-save', 'click', () => { CB.entReason = val('cb-ent-reason'); send({ action: 'cb_cancel_entry', id: CB.entCancel, reason: CB.entReason }); });
   cbUpdate(m);
 }
 
@@ -465,6 +525,15 @@ function render() {
       `<div class="card kpi ${nothingYet ? '' : (balances ? 'ok' : 'bad')}"><h3>А + Б.2${nothingYet ? '' : (balances ? ' = събраното' : ' ≠ събраното')}</h3>` +
         `<div class="big num">${fmt(ab)} <small>€</small></div>` +
         `<div class="foot">${nothingYet ? 'няма поръчки за този период' : (balances ? 'съвпада — отчетът е верен' : 'разминаване ' + eur(Math.abs(ab - num(t.total))) + ' — провери')}</div></div>` +
+      `</div>`
+    : '';
+
+  // Beside А/Б for the whole company (2026-10-23): income that never was an order, and the bank's fees.
+  const oi = r.other_income || {}; const bf = r.bank_fees || {};
+  const extras = t && (num(oi.total) || num(bf.total))
+    ? `<div class="note">` +
+      (num(oi.total) ? `Други приходи извън поръчки: <strong>${eur(oi.total)}</strong> (в брой ${eur(oi.cash)} · с карта ${eur(oi.card)}${num(oi.bank) ? ' · по банка ' + eur(oi.bank) : ''}). ` : '') +
+      (num(bf.total) ? `Банкови такси (разход): <strong>${eur(bf.total)}</strong> - ПОС терминал ${eur(bf.pos)}, преводи ${eur(bf.transfers)}.` : '') +
       `</div>`
     : '';
 
@@ -610,10 +679,11 @@ function render() {
     : '';
 
   document.getElementById('bo-office').innerHTML =
-    `<div class="wrap">` +
+    // Пари и приходи first: the balances are what the office opens this page for (Maria, 2026-10-23).
+    `<div class="wrap">` + cashbook(m) +
     `<div class="row"><div><h2>Наложен платеж</h2>` +
     `<div class="sub">отчет за периода и изплащане към клиента</div></div></div>` +
-    bar + tiles + table + returns + pay + queueLine + cashbook(m) + history +
+    bar + tiles + extras + table + returns + pay + queueLine + history +
     `<div class="note">Група А е стойността на стоката, Група Б са нашите приходи — доставката и таксата наложен платеж. ` +
     `Б.2 (събрано от получател) плюс Група А е точно това, което шофьорите са събрали; затова плочката А + Б.2 е зелена само когато двете съвпадат. ` +
     `Б.1 (фактурирано към партньор) са нашите такси по поръчки без плащане на място — не минават през шофьорите.</div>` +
@@ -687,7 +757,10 @@ OFFICE_ON = ("{{(async () => { const m = BoOffice.model || {}; "
              "if (m.action === 'cb_undo') { return call(CbUndoFeesPaid, { id: m.id }, () => 'Маркирането е отменено.'); } "
              "if (m.action === 'cb_deposit') { return call(CbDeposit, { body: { date: m.date, amount: m.amount, note: m.note } }, "
              "(b) => 'Записано внасяне ' + money(b.deposit && b.deposit.amount)); } "
-             "if (m.action === 'cb_cancel_deposit') { return call(CbCancelDeposit, { id: m.id, body: { reason: m.reason } }, () => 'Внасянето е отменено.'); } } "
+             "if (m.action === 'cb_cancel_deposit') { return call(CbCancelDeposit, { id: m.id, body: { reason: m.reason } }, () => 'Внасянето е отменено.'); } "
+             "if (m.action === 'cb_entry') { return call(CbEntry, { body: { date: m.date, type: m.type, amount: m.amount, note: m.note } }, "
+             "(b) => 'Записано: ' + ((b.entry && b.entry.label) || '') + ' ' + money(b.entry && b.entry.amount)); } "
+             "if (m.action === 'cb_cancel_entry') { return call(CbCancelEntry, { id: m.id, body: { reason: m.reason } }, () => 'Движението е отменено.'); } } "
              "if (m.action === 'receipt') { await storeValue('receipt_payout_id', m.id || ''); "
              "return OfficeReport.payoutPdf(); } })()}}")
 
@@ -763,6 +836,8 @@ office_rest('CbDeposit', 'POST', '/int/v1/office/cashbook/deposits', body=True)
 office_rest('CbCancelDeposit', 'POST', "/int/v1/office/cashbook/deposits/{{this.params.id}}/cancel", body=True)
 office_rest('CbFeesPaid', 'POST', '/int/v1/office/cashbook/fees-paid', body=True)
 office_rest('CbUndoFeesPaid', 'POST', "/int/v1/office/cashbook/fees-paid/{{this.params.id}}/undo")
+office_rest('CbEntry', 'POST', '/int/v1/office/cashbook/entries', body=True)
+office_rest('CbCancelEntry', 'POST', "/int/v1/office/cashbook/entries/{{this.params.id}}/cancel", body=True)
 
 # The widgets вариант А replaces. Removing the file is how a widget leaves on the next
 # Pull; they are listed rather than globbed so a new one is never swept up by accident.
