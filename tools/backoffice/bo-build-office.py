@@ -438,6 +438,8 @@ function render() {
   // The two date boxes show the days the report actually counts (the server's own bounds, 2026-10-02).
   const shownFrom = (r.period && r.period.from) || m.from || '';
   const shownTo = (r.period && r.period.to) || m.to || '';
+  const since = (m.cashbook && m.cashbook.since) || '2026-09-14';
+  const allTime = period === 'range' && shownFrom === since && shownTo === ((m.cashbook && m.cashbook.as_of) || shownTo);
 
   const bar =
     `<div class="card bar">` +
@@ -450,6 +452,8 @@ function render() {
       `<button type="button" class="chip${period === 'day' ? ' on' : ''}" data-period="day">Днес</button>` +
       `<button type="button" class="chip${period === 'week' ? ' on' : ''}" data-period="week">Тази седмица</button>` +
       `<button type="button" class="chip${period === 'month' ? ' on' : ''}" data-period="month">Този месец</button>` +
+      // Everything since the first delivery (Maria, 2026-10-23: "how much they have collected since the very beginning").
+      `<button type="button" class="chip${allTime ? ' on' : ''}" data-period="all">От началото</button>` +
       `<span class="sep"></span>` +
       `<label for="of-from">от</label><input type="date" id="of-from" min="2026-01-01" max="2099-12-31" value="${esc(shownFrom)}">` +
       `<label for="of-to">до</label><input type="date" id="of-to" min="2026-01-01" max="2099-12-31" value="${esc(shownTo)}">` +
@@ -627,6 +631,7 @@ appsmith.onModelChange(render);
 OFFICE_ON = ("{{(async () => { const m = BoOffice.model || {}; "
              "if (m.action === 'merchant') { await storeValue('office_merchant', m.merchant || 'all'); "
              "return OfficeReport.run(); } "
+             "if (m.action === 'period' && m.period === 'all') { return OfficeReport.useRange((GetCashbook.data && GetCashbook.data.since) || '2026-09-14', OfficeReport.today()); } "
              "if (m.action === 'period') { return OfficeReport.setPeriod(m.period || 'month'); } "
              # A date box accepts 02.01.92026, and the server answered that with Laravel's
              # English and an empty report (tester finding, 2026-10-02) - so a date is checked
