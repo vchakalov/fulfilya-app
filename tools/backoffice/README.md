@@ -22,6 +22,12 @@ over `pages/`, commit, and Ico pulls in the Appsmith editor (Discard & pull) and
   `node import-parse.test.js` — add a shop's column names to its `FIELDS` when a new export arrives.
   Relies on the backend's duplicate guard (409 `duplicate`) so the same file uploaded twice creates nothing twice.
 - `bo-build-office.py` — Office header, shifts the Office widgets, switches Appsmith's navbar off.
+  Since 2026-10-23 also **Каса и банка** inside BoOffice (TODO 85 + 87): balances, revenue, НП, "Дължат ни
+  клиенти" with a per-merchant "Маркирай платено", deposits. Data from `GET int/v1/office/cashbook`
+  (GetCashbook); writes through CbDeposit / CbCancelDeposit / CbFeesPaid / CbUndoFeesPaid (run() params,
+  Appsmith confirmation first). The form state lives in `CB` outside render(); `cb_done` in the store
+  clears it after a successful save. **Copy only BoOffice.json and the five queries** when this is the
+  only change: the generated BoHeader also picks up later header work meant for the merchant pages.
 
 `bo_i18n.py` is shared: every widget embeds the whole dictionary, so adding one phrase rewrites
 **every** widget JSON. That is expected — rerun all the generators together, never one alone.
