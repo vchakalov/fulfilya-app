@@ -12,11 +12,13 @@ SELECT
   ROUND(x.collected, 2) AS collected,
   ROUND(x.delivery, 2) AS delivery,
   ROUND(x.fee, 2) AS fee,
-  -- Група А, clamped exactly as CodReport::split() clamps it: delivery plus fee can never
-  -- take more than the driver actually collected.
+  ROUND(x.declared, 2) AS declared,
+  -- Група А, clamped exactly as CodReport::split() clamps it: our fees (delivery, НП fee and,
+  -- since 2026-10-24 here, the declared-value fee split() always took) can never take more
+  -- than the driver actually collected.
   -- Fees on the monthly фактура (TheBasket, 2026-10-11): all of the НП goes back.
   CASE WHEN x.by_invoice = 1 THEN ROUND(x.collected, 2)
-       ELSE ROUND(x.collected - LEAST(x.delivery + x.fee, x.collected), 2) END AS goods,
+       ELSE ROUND(x.collected - LEAST(x.delivery + x.fee + x.declared, x.collected), 2) END AS goods,
   x.by_invoice
 FROM (
   SELECT
@@ -25,6 +27,7 @@ FROM (
     COALESCE(CAST(NULLIF(JSON_UNQUOTE(JSON_EXTRACT(r.quote_meta, '$.cod_amount')), 'null') AS DECIMAL(14,2)) / 100, r.cf_amount, 0) AS collected,
     COALESCE(CAST(NULLIF(JSON_UNQUOTE(JSON_EXTRACT(r.quote_meta, '$.delivery_amount')), 'null') AS DECIMAL(14,2)) / 100, 0) AS delivery,
     COALESCE(CAST(NULLIF(JSON_UNQUOTE(JSON_EXTRACT(r.quote_meta, '$.cod_commission')), 'null') AS DECIMAL(14,2)) / 100, 0) AS fee,
+    COALESCE(CAST(NULLIF(JSON_UNQUOTE(JSON_EXTRACT(r.quote_meta, '$.declared_value_fee')), 'null') AS DECIMAL(14,2)) / 100, 0) AS declared,
     CASE WHEN JSON_UNQUOTE(JSON_EXTRACT(r.quote_meta, '$.settlement')) = 'invoice' THEN 1 ELSE 0 END AS by_invoice
   FROM (
     SELECT

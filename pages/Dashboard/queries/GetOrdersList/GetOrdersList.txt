@@ -24,6 +24,13 @@ SELECT
     -- Payment information (from custom_field_values)
     COALESCE(MAX(CASE WHEN cf.name = 'payment-method' THEN cfv.value END), 'Not Specified') as payment_method,
     COALESCE(MAX(CASE WHEN cf.name = 'amount:' THEN cfv.value END), '0.00') as total_amount,
+    -- Наложен платеж = the goods alone; our fees (delivery, НП fee, declared-value fee) get a
+    -- column of their own (Maria, 2026-10-24). Read from the order's fee fields, like the
+    -- Детайли breakdown, because quotes from 2026-09-15..29 were purged. A merchant on the
+    -- monthly фактура (quote settlement = invoice) gets the whole sum back as НП.
+    CASE WHEN MAX(JSON_UNQUOTE(JSON_EXTRACT(sq.meta, '$.settlement'))) = 'invoice' THEN CAST(COALESCE(NULLIF(REPLACE(REPLACE(REPLACE(MAX(CASE WHEN cf.name = 'amount:' THEN cfv.value END), '$', ''), ',', ''), '"', ''), ''), '0') AS DECIMAL(12,2))
+         ELSE GREATEST(CAST(COALESCE(NULLIF(REPLACE(REPLACE(REPLACE(MAX(CASE WHEN cf.name = 'amount:' THEN cfv.value END), '$', ''), ',', ''), '"', ''), ''), '0') AS DECIMAL(12,2)) - (CAST(COALESCE(NULLIF(REPLACE(REPLACE(REPLACE(MAX(CASE WHEN cf.name = 'delivery-fee' THEN cfv.value END), '$', ''), ',', ''), '"', ''), ''), '0') AS DECIMAL(12,2)) + CAST(COALESCE(NULLIF(REPLACE(REPLACE(REPLACE(MAX(CASE WHEN cf.name = 'cod-fee' THEN cfv.value END), '$', ''), ',', ''), '"', ''), ''), '0') AS DECIMAL(12,2)) + CAST(COALESCE(NULLIF(REPLACE(REPLACE(REPLACE(MAX(CASE WHEN cf.name = 'declared-value-fee' THEN cfv.value END), '$', ''), ',', ''), '"', ''), ''), '0') AS DECIMAL(12,2))), 0) END as cod_goods,
+    ROUND((CAST(COALESCE(NULLIF(REPLACE(REPLACE(REPLACE(MAX(CASE WHEN cf.name = 'delivery-fee' THEN cfv.value END), '$', ''), ',', ''), '"', ''), ''), '0') AS DECIMAL(12,2)) + CAST(COALESCE(NULLIF(REPLACE(REPLACE(REPLACE(MAX(CASE WHEN cf.name = 'cod-fee' THEN cfv.value END), '$', ''), ',', ''), '"', ''), ''), '0') AS DECIMAL(12,2)) + CAST(COALESCE(NULLIF(REPLACE(REPLACE(REPLACE(MAX(CASE WHEN cf.name = 'declared-value-fee' THEN cfv.value END), '$', ''), ',', ''), '"', ''), ''), '0') AS DECIMAL(12,2))), 2) as our_fees,
 
     -- Store information
     COALESCE(MAX(CASE WHEN cf.name = 'store-type' THEN cfv.value END), 'Unknown') as store_type,

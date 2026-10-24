@@ -170,6 +170,12 @@ EN = {
     'Събрано': 'Collected',
     'Доставка': 'Delivery',
     'Такса НП': 'COD fee',
+    'Такси': 'Fees',
+    'доставка, наложен платеж, обявена стойност': 'delivery, cash on delivery, declared value',
+    'Общо от получателите': 'Total from recipients',
+    'наложен платеж + такси': 'cash on delivery + fees',
+    '€ наложен платеж': '€ cash on delivery',
+    'във фактурата': 'on the invoice',
     'За вас': 'Yours',
     'Ваша поръчка': 'Your order',
     'в брой': 'cash',
@@ -194,8 +200,8 @@ EN = {
     'Разписката не дойде от сървъра.': 'The statement did not come back from the server.',
     'Все още няма доставени поръчки с наложен платеж.':
         'No cash-on-delivery orders have been delivered yet.',
-    'Всяка доставена поръчка с наложен платеж влиза в точно едно изплащане. „За вас" е стойността на стоката — събраното без доставката и таксата, които плаща купувачът.':
-        'Every delivered cash-on-delivery order belongs to exactly one payout. "Yours" is the value of the goods \u2014 what was collected, less the delivery and the fee, which the shopper pays.',
+    'Всяка доставена поръчка с наложен платеж влиза в точно едно изплащане. „За вас" е стойността на стоката. Таксите ни (доставка, наложен платеж, обявена стойност) не са в нея.':
+        'Every delivered cash-on-delivery order belongs to exactly one payout. "Yours" is the value of the goods. Our fees (delivery, cash on delivery, declared value) are not part of it.',
     # Качи поръчки (Import page, 2026-09-30)
     'Качи поръчки': 'Upload orders',
     'от Excel или CSV файл, например експорт от вашия онлайн магазин': 'from an Excel or CSV file, such as an export from your online shop',

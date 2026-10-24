@@ -17,7 +17,7 @@ MARK = open(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)), 'mark.b6
 
 CF = dict(amount='d0b5b899-6cfc-4eef-a898-ec99a23ef039', payment='79707269-ef79-4e2c-b63b-eaf76f4a3f85',
           card='38c677ff-5bd4-4087-bb0e-2f4c031153c7', dfee='ff2aaa12-8e44-4740-9680-f059d3241bba',
-          cfee='0c487151-6d94-4343-8457-95b5b4b26496')
+          cfee='0c487151-6d94-4343-8457-95b5b4b26496', decl='c95cf964-32c5-4fc8-9527-55a18ef57d77')
 
 def gid(name='x'):
     # Reuse the id the repo already has for this query/JS object: Appsmith ties the
@@ -63,7 +63,9 @@ def base(period_filter=True):
             f"       UPPER(COALESCE({cfv('card')}, '')) AS card,\n"
             f"       {money(cfv('amount'))} AS amount,\n"
             f"       {money(cfv('dfee'))} AS dfee,\n"
-            f"       {money(cfv('cfee'))} AS cfee\n"
+            f"       {money(cfv('cfee'))} AS cfee,\n"
+            # Обявена стойност fee (0,25 %): ours too, so it comes off the goods like the two above (Maria, 2026-10-24)
+            f"       {money(cfv('decl'))} AS decl\n"
             f"FROM orders o\n"
             f"WHERE o.customer_uuid = '{{{{appsmith.store.customer_uuid}}}}' AND o.deleted_at <=> NULL{since}")
 
@@ -78,9 +80,9 @@ SELECT
   COALESCE(SUM({LOCAL_CREATED} = '{{{{BoNav.today()}}}}'), 0) AS total_today,
   COALESCE(SUM(o.status IN {DELIVERED} AND {LOCAL_UPDATED} = '{{{{BoNav.today()}}}}'), 0) AS delivered_today,
   ROUND(COALESCE(SUM(CASE WHEN o.status IN {DELIVERED} AND o.pm = 'COD' THEN o.amount ELSE 0 END), 0), 2) AS cod_collected,
-  ROUND(COALESCE(SUM(CASE WHEN o.status IN {DELIVERED} AND o.pm = 'COD' THEN o.amount - o.dfee - o.cfee ELSE 0 END), 0), 2) AS payout,
-  ROUND(COALESCE(SUM(CASE WHEN o.status IN {DELIVERED} AND o.pm = 'COD' AND o.unpaid THEN o.amount - o.dfee - o.cfee ELSE 0 END), 0), 2) AS payout_unpaid,
-  ROUND(COALESCE(SUM(CASE WHEN o.status IN {DELIVERED} AND o.pm = 'COD' AND NOT o.unpaid THEN o.amount - o.dfee - o.cfee ELSE 0 END), 0), 2) AS payout_paid,
+  ROUND(COALESCE(SUM(CASE WHEN o.status IN {DELIVERED} AND o.pm = 'COD' THEN o.amount - o.dfee - o.cfee - o.decl ELSE 0 END), 0), 2) AS payout,
+  ROUND(COALESCE(SUM(CASE WHEN o.status IN {DELIVERED} AND o.pm = 'COD' AND o.unpaid THEN o.amount - o.dfee - o.cfee - o.decl ELSE 0 END), 0), 2) AS payout_unpaid,
+  ROUND(COALESCE(SUM(CASE WHEN o.status IN {DELIVERED} AND o.pm = 'COD' AND NOT o.unpaid THEN o.amount - o.dfee - o.cfee - o.decl ELSE 0 END), 0), 2) AS payout_paid,
   ROUND(COALESCE(SUM(CASE WHEN o.status IN {IN_TRANSIT} AND o.pm = 'COD' THEN o.amount ELSE 0 END), 0), 2) AS cod_in_transit
 FROM (
 {base()}
@@ -92,7 +94,8 @@ SELECT
        WHEN o.pm = 'COD' THEN 'cod_cash'
        ELSE 'prepaid' END AS kind,
   COUNT(*) AS n,
-  ROUND(SUM(o.amount), 2) AS amount
+  -- the goods alone: наложен платеж never includes our fees (Maria, 2026-10-24)
+  ROUND(SUM(GREATEST(o.amount - o.dfee - o.cfee - o.decl, 0)), 2) AS amount
 FROM (
 {base()}
 ) o
@@ -167,7 +170,9 @@ BONAV = r"""export default {
   // handled in the widgets' own onAction bindings.
   tz: () => moment().tz('Europe/Sofia').utcOffset() / 60,
   today: () => moment().tz('Europe/Sofia').format('YYYY-MM-DD'),
-  period: () => appsmith.store.bo_period || 'week',
+  // Месец by default (Maria, 2026-10-24: most merchants do not ship every day, so Днес was zeroes).
+  // A new key, kept for the session only: a choice saved under the old one would have won forever.
+  period: () => appsmith.store.bo_view_period || 'month',
   since: () => {
     const p = BoNav.period();
     const now = moment().tz('Europe/Sofia');
@@ -385,7 +390,7 @@ function render() {
   C = PAL.light;
   const INK = '#1D1D1F';
   document.body.style.color = INK;
-  const period = m.period || 'week';
+  const period = m.period || 'month';
   const st = (Array.isArray(m.stats) ? m.stats[0] : m.stats) || {};
   const pay = Array.isArray(m.payment) ? m.payment : [];
   const status = Array.isArray(m.status) ? m.status : [];
@@ -416,7 +421,10 @@ function render() {
     // Split by the payout stamp, not by the period's whole takings: until 2026-09-19 this
     // read "за изплащане X €" whether or not the money had already been transferred, so a
     // merchant who had just been paid was still shown the same sum as owed.
-    `<div class="card kpi hero link" data-nav="Payouts" role="button" tabindex="0"><h3>Наложен платеж събран</h3><div class="big num">${fmt(st.cod_collected)} <small>€</small></div><div class="foot"><span class="delta up">изплатено ${fmt(st.payout_paid)} €</span><span class="delta flat">предстои ${fmt(st.payout_unpaid)} €</span></div></div>` +
+    // The big number is the goods alone (Maria, 2026-10-24): what the merchant gets from us,
+    // so изплатено + предстои add up to it. It used to be the whole sum the driver took,
+    // fees included, which no merchant ever receives.
+    `<div class="card kpi hero link" data-nav="Payouts" role="button" tabindex="0"><h3>Наложен платеж събран</h3><div class="big num">${fmt(st.payout)} <small>€</small></div><div class="foot"><span class="delta up">изплатено ${fmt(st.payout_paid)} €</span><span class="delta flat">предстои ${fmt(st.payout_unpaid)} €</span></div></div>` +
     `</div>` +
     `<div class="grid g3">` +
     `<div class="card"><div class="hd"><h3>Плащане</h3><span class="hint">${pl} · ${int(total)} поръчки</span></div>${donut([
@@ -449,7 +457,7 @@ appsmith.onModelChange(render);
 """
 
 HEADER_ON = "{{(async () => { const m = BoHeader.model || {}; if (m.action === 'lang') { return storeValue('bo_lang', m.lang || 'bg'); } if (m.action === 'logout') { return AuthManager.logout(); } if (m.action === 'account') { await storeValue('pw_result', { at: Date.now(), reset: true }); return showModal('BoAccountModal'); } if (m.action === 'new') { return LocationManager.openNewOrder(); } if (m.action === 'nav') { if (m.tab === 'orders') { return navigateTo('Dashboard', { tab: 'orders' }); } if (m.tab === 'tablo') { return navigateTo('Dashboard'); } if (m.page) { return navigateTo(m.page); } } })()}}"
-TABLO_ON = "{{(async () => { const m = BoTablo.model || {}; if (m.action === 'period' && m.period) { await storeValue('bo_period', m.period); await Promise.all([BoStats.run(), BoPayment.run(), BoStatus.run()]); return; } if (m.action === 'new') { return LocationManager.openNewOrder(); } if (m.action === 'nav' && m.page) { return navigateTo(m.page); } })()}}"
+TABLO_ON = "{{(async () => { const m = BoTablo.model || {}; if (m.action === 'period' && m.period) { await storeValue('bo_view_period', m.period, false); await Promise.all([BoStats.run(), BoPayment.run(), BoStatus.run()]); return; } if (m.action === 'new') { return LocationManager.openNewOrder(); } if (m.action === 'nav' && m.page) { return navigateTo(m.page); } })()}}"
 
 # ---------------------------------------------------------------- товарителница (TODO 42)
 # "Генерирай товарителница": the backend builds the PDF from the merchant's own orders only
@@ -525,7 +533,7 @@ custom('BoHeader', 0, 8, HEADER_HTML, HEADER_CSS, HEADER_JS,
        "{{ { page: (appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders') ? 'orders' : 'tablo', merchant: appsmith.store.customer_name || '', " + ACCOUNT_FLAG + " } }}",
        "FIXED", "hdrq1w2e3r")
 custom('BoTablo', 9, 58, TABLO_HTML, TABLO_CSS, TABLO_JS,
-       "{{ { period: appsmith.store.bo_period || 'week', merchant: appsmith.store.customer_name || '', stats: BoStats.data, payment: BoPayment.data, status: BoStatus.data, days: BoDays.data } }}",
+       "{{ { period: appsmith.store.bo_view_period || 'month', merchant: appsmith.store.customer_name || '', stats: BoStats.data, payment: BoPayment.data, status: BoStatus.data, days: BoDays.data } }}",
        "FIXED", "tblz9x8c7v", visible="{{!(appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders')}}")
 
 TITLE_HTML = FONT_LINK + '<div id="bo-title"></div>'
@@ -812,7 +820,7 @@ tb.update(topRow=66, bottomRow=116, originalTopRow=66, originalBottomRow=116, mo
           accentColor='#FFC400', boxShadow='0 1px 2px rgba(0,0,0,.04), 0 12px 32px -12px rgba(29,29,31,.14)', borderRadius='18px')
 cols = tb['primaryColumns']
 labels = dict(order_id='Поръчка', status='Статус', created_date='Създадена', delivery_address='Адрес', customer_name='Получател',
-              total_amount='Сума', customColumn4='Плащане', external_order_id='№ в магазина', customColumn2='Възраст')
+              total_amount='Наложен платеж', customColumn4='Плащане', external_order_id='№ в магазина', customColumn2='Възраст')
 binds = {e['key'] for e in tb.get('dynamicBindingPathList', [])}
 for k, l in labels.items():
     if k in cols:
@@ -836,7 +844,7 @@ for new_id, label in (('recipient_phone', bi('Телефон')), ('delivery_full
     tb['dynamicBindingPathList'].append({"key": f"primaryColumns.{new_id}.computedValue"})
     tb['dynamicBindingPathList'].append({"key": f"primaryColumns.{new_id}.label"})
 # Every key the query returns that the merchant should not see as a raw column.
-for hidden_id in ('cod_amount', 'goods_amount', 'delivery_amount', 'cod_fee', 'recipient_notes', 'shop_order_id'):
+for hidden_id in ('cod_amount', 'goods_amount', 'delivery_amount', 'cod_fee', 'recipient_notes', 'shop_order_id', 'cod_goods'):
     if hidden_id not in cols:
         c = copy.deepcopy(cols['delivery_address']); c.update(id=hidden_id, alias=hidden_id, originalId=hidden_id, label=hidden_id)
         c['computedValue'] = c['computedValue'].replace('delivery_address', hidden_id)
@@ -854,7 +862,7 @@ for e in list(tb.get('dynamicBindingPathList', [])):
     if e['key'].startswith('primaryColumns.customColumn1.') and not e['key'].endswith(('.buttonLabel', '.onClick')):
         tb['dynamicBindingPathList'].append({'key': e['key'].replace('customColumn1', 'waybill')})
 tb['dynamicTriggerPathList'] = [x for x in tb.get('dynamicTriggerPathList', []) if x.get('key') != 'primaryColumns.waybill.onClick'] + [{'key': 'primaryColumns.waybill.onClick'}]
-tb['columnOrder'] = ['customColumn1', 'waybill', 'internal_reference', 'status', 'created_date', 'delivery_address', 'recipient_phone', 'delivery_full_address', 'total_amount', 'customColumn4', 'order_id', 'customer_name', 'external_order_id', 'customColumn2', 'customer_email', 'customer_phone', 'pickup_location', 'driver_name', 'tracking_number', 'payment_method', 'store_type', 'status_display', 'cod_amount', 'goods_amount', 'delivery_amount', 'cod_fee', 'recipient_notes', 'shop_order_id']
+tb['columnOrder'] = ['customColumn1', 'waybill', 'internal_reference', 'status', 'created_date', 'delivery_address', 'recipient_phone', 'delivery_full_address', 'total_amount', 'our_fees', 'customColumn4', 'order_id', 'customer_name', 'external_order_id', 'customColumn2', 'customer_email', 'customer_phone', 'pickup_location', 'driver_name', 'tracking_number', 'payment_method', 'store_type', 'status_display', 'cod_amount', 'goods_amount', 'delivery_amount', 'cod_fee', 'recipient_notes', 'shop_order_id', 'cod_goods']
 for i, k in enumerate(tb['columnOrder']):
     if k in cols: cols[k]['index'] = i
 # A viewer's browser remembers a table's column order (localStorage tableWidgetColumnOrder)
@@ -909,8 +917,18 @@ PAY = r"""(() => {
       return '—';
     })()"""
 cols['customColumn4']['computedValue'] = "{{(() => { const tableData = OrdersTable.processedTableData || []; return tableData.length > 0 ? tableData.map((currentRow, currentIndex) => (" + PAY + ")) : " + PAY + " })()}}"
-AMT = r"""(() => { const a = String(currentRow.total_amount || '0').replace(/[\"$]/g, ''); const n = Number(a); return (isFinite(n) ? n.toLocaleString('bg-BG', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : a) + ' €'; })()"""
-cols['total_amount']['computedValue'] = "{{(() => { const tableData = OrdersTable.processedTableData || []; return tableData.length > 0 ? tableData.map((currentRow, currentIndex) => (" + AMT + ")) : " + AMT + " })()}}"
+# "Наложен платеж" is the goods alone and our fees have their own column (Maria, 2026-10-24) -
+# both worked out in GetOrdersList (cod_goods / our_fees). The column keeps its old id,
+# total_amount, so a viewer's remembered column order still finds it.
+def eur(key):
+    return r"""(() => { const n = Number(currentRow.%s || 0); return (isFinite(n) ? n : 0).toLocaleString('bg-BG', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €'; })()""" % key
+for col_id, key in (('total_amount', 'cod_goods'), ('our_fees', 'our_fees')):
+    if col_id not in cols:
+        c = copy.deepcopy(cols['total_amount']); c.update(id=col_id, alias=col_id, originalId=col_id, label=bi('Такси'), isVisible=True)
+        cols[col_id] = c
+        tb['dynamicBindingPathList'] += [{'key': f'primaryColumns.{col_id}.computedValue'}, {'key': f'primaryColumns.{col_id}.label'}]
+    cols[col_id]['index'] = tb['columnOrder'].index(col_id)
+    cols[col_id]['computedValue'] = "{{(() => { const tableData = OrdersTable.processedTableData || []; return tableData.length > 0 ? tableData.map((currentRow, currentIndex) => (" + eur(key) + ")) : " + eur(key) + " })()}}"
 # Any column label that ended up a binding must be listed as one, wherever in this
 # script it was set - three were missed when the later relabels overwrote the first
 # pass and their paths were not registered.
@@ -943,12 +961,16 @@ w('Authentication/queries/GetCustomerByEmail/metadata.json', q)
 w('Authentication/queries/GetCustomerByEmail/GetCustomerByEmail.txt', SQL_LOGIN)
 
 am = open(os.path.join(REPO, 'Authentication/jsobjects/AuthManager/AuthManager.js'), encoding='utf-8').read()
-old = "          storeValue('customer_email', customer.customer_email);\n"
-assert old in am
-am = am if 'customer_logo' in am else am.replace(old, old + "          // The merchant's logo: the photo on their Contact in the console, if one was uploaded.\n          storeValue('customer_logo', customer.customer_logo || '');\n", 1)
-old = "          storeValue('customer_logo', customer.customer_logo || '');\n"
-assert old in am
-am = am if 'can_change_password' in am else am.replace(old, old + "          // \"Смяна на парола\" in the header, for merchants the office switched on (2026-10-21).\n          storeValue('can_change_password', ['true', '1'].includes(String(customer.password_change)));\n", 1)
+# Both patches are already in the committed AuthManager, whose storeValue calls have been
+# awaited since 2026-10-21 - so the lines below match only an older copy, and are skipped.
+if 'customer_logo' not in am:
+    old = "          storeValue('customer_email', customer.customer_email);\n"
+    assert old in am
+    am = am.replace(old, old + "          // The merchant's logo: the photo on their Contact in the console, if one was uploaded.\n          storeValue('customer_logo', customer.customer_logo || '');\n", 1)
+if 'can_change_password' not in am:
+    old = "          storeValue('customer_logo', customer.customer_logo || '');\n"
+    assert old in am
+    am = am.replace(old, old + "          // \"Смяна на парола\" in the header, for merchants the office switched on (2026-10-21).\n          storeValue('can_change_password', ['true', '1'].includes(String(customer.password_change)));\n", 1)
 w('Authentication/jsobjects/AuthManager/AuthManager.js', am)
 
 print('built into', OUT)

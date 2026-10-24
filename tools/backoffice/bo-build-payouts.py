@@ -105,11 +105,13 @@ SELECT
   ROUND(x.collected, 2) AS collected,
   ROUND(x.delivery, 2) AS delivery,
   ROUND(x.fee, 2) AS fee,
-  -- Група А, clamped exactly as CodReport::split() clamps it: delivery plus fee can never
-  -- take more than the driver actually collected.
+  ROUND(x.declared, 2) AS declared,
+  -- Група А, clamped exactly as CodReport::split() clamps it: our fees (delivery, НП fee and,
+  -- since 2026-10-24 here, the declared-value fee split() always took) can never take more
+  -- than the driver actually collected.
   -- Fees on the monthly фактура (TheBasket, 2026-10-11): all of the НП goes back.
   CASE WHEN x.by_invoice = 1 THEN ROUND(x.collected, 2)
-       ELSE ROUND(x.collected - LEAST(x.delivery + x.fee, x.collected), 2) END AS goods,
+       ELSE ROUND(x.collected - LEAST(x.delivery + x.fee + x.declared, x.collected), 2) END AS goods,
   x.by_invoice
 FROM (
   SELECT
@@ -118,6 +120,7 @@ FROM (
     COALESCE({cents('cod_amount')}, r.cf_amount, 0) AS collected,
     COALESCE({cents('delivery_amount')}, 0) AS delivery,
     COALESCE({cents('cod_commission')}, 0) AS fee,
+    COALESCE({cents('declared_value_fee')}, 0) AS declared,
     CASE WHEN JSON_UNQUOTE(JSON_EXTRACT(r.quote_meta, '$.settlement')) = 'invoice' THEN 1 ELSE 0 END AS by_invoice
   FROM (
     SELECT
@@ -439,14 +442,20 @@ function monthCsv(st) {
   return rows.map((r) => r.map((v) => /[;"\n]/.test(String(v == null ? '' : v)) ? '"' + String(v).replace(/"/g, '""') + '"' : String(v == null ? '' : v)).join(';')).join('\r\n');
 }
 
+// Our fees on one order: delivery + НП fee + declared-value fee, never part of the НП.
+function fees(r) { return Number(r.delivery || 0) + Number(r.fee || 0) + Number(r.declared || 0); }
+
 function linesTable(rows) {
   return `<div class="tablewrap"><table>` +
     `<thead><tr><th>Доставена</th><th>Ваша поръчка</th><th>Получател</th><th>Плащане</th>` +
-    `<th class="r">Събрано</th><th class="r">Доставка</th><th class="r">Такса НП</th><th class="r">За вас</th></tr></thead>` +
+    `<th class="r">Събрано</th><th class="r">Такси</th><th class="r">За вас</th></tr></thead>` +
     `<tbody class="num">` + rows.map((r) =>
       `<tr><td>${shortWhen(r.delivered_at)}</td><td><strong>${esc(r.source_id)}</strong></td><td>${esc(r.recipient)}</td>` +
       `<td><span class="pill ${r.paid_with}">${r.paid_with === 'card' ? 'с карта' : 'в брой'}</span></td>` +
-      `<td class="r">${fmt(r.collected)} €</td><td class="r">${fmt(r.delivery)} €</td><td class="r">${fmt(r.fee)} €</td>` +
+      `<td class="r">${fmt(r.collected)} €</td>` +
+      // Our fees in one figure (Maria, 2026-10-24): delivery + НП fee + declared-value fee. On a
+      // monthly-фактура merchant they are invoiced, not taken out, so the cell says so.
+      `<td class="r">${Number(r.by_invoice) ? '<span class="sub">във фактурата</span>' : fmt(fees(r)) + ' €'}</td>` +
       `<td class="r"><strong>${fmt(r.goods)} €</strong></td></tr>`).join('') +
     `</tbody></table></div>`;
 }
@@ -490,13 +499,12 @@ function render() {
     if (!r.payout_id) { pending.push(r); return; }
     let run = byId[r.payout_id];
     if (!run) {
-      run = byId[r.payout_id] = { id: r.payout_id, at: r.payout_at, rows: [], collected: 0, delivery: 0, fee: 0, goods: 0 };
+      run = byId[r.payout_id] = { id: r.payout_id, at: r.payout_at, rows: [], collected: 0, fees: 0, goods: 0 };
       runs.push(run);
     }
     run.rows.push(r);
     run.collected += num(r, 'collected');
-    run.delivery += num(r, 'delivery');
-    run.fee += num(r, 'fee');
+    run.fees += Number(r.by_invoice) ? 0 : fees(r);
     run.goods += num(r, 'goods');
   });
   runs.sort((a, b) => String(b.at || '').localeCompare(String(a.at || '')));
@@ -553,20 +561,20 @@ function render() {
   const runsCard = runs.length
     ? `<div class="card"><div class="hd"><h3>Изплащания</h3><span class="hint">натиснете ред, за да видите поръчките в него</span></div>` +
       `<div class="tablewrap"><table><thead><tr><th>Дата</th><th>Поръчки</th>` +
-      `<th class="r">Събрано</th><th class="r">Доставка</th><th class="r">Такса НП</th><th class="r">Изплатено</th><th class="r"></th></tr></thead><tbody class="num">` +
+      `<th class="r">Събрано</th><th class="r">Такси</th><th class="r">Изплатено</th><th class="r"></th></tr></thead><tbody class="num">` +
       runs.map((r) => {
         const on = !!open[r.id];
         const w = whenParts(r.at);
         return `<tr class="runrow${on ? ' on' : ''}" data-run="${esc(r.id)}">` +
           `<td><div class="when">${w.date}</div><div class="sub">${w.time}</div></td>` +
           `<td><span class="caret">${CARET}${plural(r.rows.length, 'поръчка', 'поръчки')}</span></td>` +
-          `<td class="r">${fmt(r.collected)} €</td><td class="r">${fmt(r.delivery)} €</td><td class="r">${fmt(r.fee)} €</td>` +
+          `<td class="r">${fmt(r.collected)} €</td><td class="r">${fmt(r.fees)} €</td>` +
           `<td class="r paid">${fmt(r.goods - (r.withheld || 0))}${r.withheld ? '*' : ''} €</td>` +
           `<td class="r"><button type="button" class="pdf" data-pdf="${esc(r.id)}">${DOWNLOAD}Разписка</button></td></tr>` +
           // No extra column for the deduction: most runs withhold nothing and an empty
           // column on every row would cost more than it tells. It lives in the detail,
           // under the orders it was taken from.
-          (on ? `<tr><td class="lines" colspan="7">${linesTable(r.rows)}` +
+          (on ? `<tr><td class="lines" colspan="6">${linesTable(r.rows)}` +
                 (r.returns && r.returns.length
                   ? `<div class="note">Удържано за върнати пратки: − ${fmt(r.withheld)} €</div>` + returnsTable(r.returns)
                   : '') +
@@ -577,8 +585,7 @@ function render() {
       (runs.length > 1
         ? `<tfoot class="num"><tr><td>Общо</td><td>${plural(runs.reduce((a, r) => a + r.rows.length, 0), 'поръчка', 'поръчки')}</td>` +
           `<td class="r">${fmt(runs.reduce((a, r) => a + r.collected, 0))} €</td>` +
-          `<td class="r">${fmt(runs.reduce((a, r) => a + r.delivery, 0))} €</td>` +
-          `<td class="r">${fmt(runs.reduce((a, r) => a + r.fee, 0))} €</td>` +
+          `<td class="r">${fmt(runs.reduce((a, r) => a + r.fees, 0))} €</td>` +
           `<td class="r">${fmt(paidTotal)} €</td><td></td></tr></tfoot>`
         : '') +
       `</table></div></div>`
@@ -595,7 +602,7 @@ function render() {
     tiles + pendingCard + returnsCard + runsCard +
     (byInvoice
       ? `<div class="note">Всяка доставена поръчка с наложен платеж влиза в точно едно изплащане. Наложеният платеж ви се превежда изцяло; доставката и таксите ни са в месечната фактура.`
-      : `<div class="note">Всяка доставена поръчка с наложен платеж влиза в точно едно изплащане. „За вас" е стойността на стоката — събраното без доставката и таксата, които плаща купувачът.`) +
+      : `<div class="note">Всяка доставена поръчка с наложен платеж влиза в точно едно изплащане. „За вас" е стойността на стоката. Таксите ни (доставка, наложен платеж, обявена стойност) не са в нея.`) +
     (runs.some((r) => r.withheld) ? ' Звездичка (*) означава изплащане, от което е удържано за върната пратка.' : '') +
     `</div>` +
     `</div>`;

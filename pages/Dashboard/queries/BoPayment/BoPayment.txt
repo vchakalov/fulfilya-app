@@ -4,7 +4,8 @@ SELECT
        WHEN o.pm = 'COD' THEN 'cod_cash'
        ELSE 'prepaid' END AS kind,
   COUNT(*) AS n,
-  ROUND(SUM(o.amount), 2) AS amount
+  -- the goods alone: наложен платеж never includes our fees (Maria, 2026-10-24)
+  ROUND(SUM(GREATEST(o.amount - o.dfee - o.cfee - o.decl, 0)), 2) AS amount
 FROM (
 SELECT o.uuid, o.status, o.created_at, o.updated_at,
        (JSON_EXTRACT(o.meta, '$.fulfilya_payout.id') <=> NULL) AS unpaid,
@@ -12,7 +13,8 @@ SELECT o.uuid, o.status, o.created_at, o.updated_at,
        UPPER(COALESCE((SELECT v.value FROM custom_field_values v WHERE v.subject_uuid = o.uuid AND v.custom_field_uuid = '38c677ff-5bd4-4087-bb0e-2f4c031153c7' AND v.deleted_at <=> NULL ORDER BY v.created_at DESC LIMIT 1), '')) AS card,
        CAST(COALESCE(REPLACE(REPLACE((SELECT v.value FROM custom_field_values v WHERE v.subject_uuid = o.uuid AND v.custom_field_uuid = 'd0b5b899-6cfc-4eef-a898-ec99a23ef039' AND v.deleted_at <=> NULL ORDER BY v.created_at DESC LIMIT 1), '$', ''), ',', ''), '0') AS DECIMAL(12,2)) AS amount,
        CAST(COALESCE(REPLACE(REPLACE((SELECT v.value FROM custom_field_values v WHERE v.subject_uuid = o.uuid AND v.custom_field_uuid = 'ff2aaa12-8e44-4740-9680-f059d3241bba' AND v.deleted_at <=> NULL ORDER BY v.created_at DESC LIMIT 1), '$', ''), ',', ''), '0') AS DECIMAL(12,2)) AS dfee,
-       CAST(COALESCE(REPLACE(REPLACE((SELECT v.value FROM custom_field_values v WHERE v.subject_uuid = o.uuid AND v.custom_field_uuid = '0c487151-6d94-4343-8457-95b5b4b26496' AND v.deleted_at <=> NULL ORDER BY v.created_at DESC LIMIT 1), '$', ''), ',', ''), '0') AS DECIMAL(12,2)) AS cfee
+       CAST(COALESCE(REPLACE(REPLACE((SELECT v.value FROM custom_field_values v WHERE v.subject_uuid = o.uuid AND v.custom_field_uuid = '0c487151-6d94-4343-8457-95b5b4b26496' AND v.deleted_at <=> NULL ORDER BY v.created_at DESC LIMIT 1), '$', ''), ',', ''), '0') AS DECIMAL(12,2)) AS cfee,
+       CAST(COALESCE(REPLACE(REPLACE((SELECT v.value FROM custom_field_values v WHERE v.subject_uuid = o.uuid AND v.custom_field_uuid = 'c95cf964-32c5-4fc8-9527-55a18ef57d77' AND v.deleted_at <=> NULL ORDER BY v.created_at DESC LIMIT 1), '$', ''), ',', ''), '0') AS DECIMAL(12,2)) AS decl
 FROM orders o
 WHERE o.customer_uuid = '{{appsmith.store.customer_uuid}}' AND o.deleted_at <=> NULL AND DATE(DATE_ADD(o.created_at, INTERVAL {{BoNav.tz()}} HOUR)) >= '{{BoNav.since()}}'
 ) o
