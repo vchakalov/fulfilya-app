@@ -1,0 +1,4 @@
+{
+  "identity": {{JSON.stringify(this.params.identity || "")}},
+  "password": {{JSON.stringify(this.params.password || "")}}
+}
