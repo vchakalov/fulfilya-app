@@ -63,7 +63,9 @@ def base():
             f"       LOWER(COALESCE({cfv('tier')}, 'standard')) AS tier,\n"
             f"       {money(cfv('amount'))} AS amount,\n"
             f"       {money(cfv('dfee'))} AS dfee,\n"
-            f"       {money(cfv('cfee'))} AS cfee\n"
+            f"       {money(cfv('cfee'))} AS cfee,\n"
+            # Обявена стойност fee (0,25 %): ours too, so it comes off the goods like the two above (Maria, 2026-10-24)
+            f"       {money(cfv('decl'))} AS decl\n"
             f"FROM orders o\n"
             f"WHERE o.customer_uuid = '{{{{appsmith.store.customer_uuid}}}}' AND o.deleted_at <=> NULL\n"
             f"  AND o.status IN {FINISHED}\n"
@@ -77,8 +79,8 @@ SELECT
   COALESCE(SUM(o.status IN {CANCELLED}), 0) AS cancelled,
   COALESCE(SUM(o.status IN {DELIVERED} AND o.pm = 'COD'), 0) AS cod_orders,
   ROUND(COALESCE(SUM(CASE WHEN o.status IN {DELIVERED} AND o.pm = 'COD' THEN o.amount ELSE 0 END), 0), 2) AS cod_collected,
-  ROUND(COALESCE(SUM(CASE WHEN o.status IN {DELIVERED} AND o.pm = 'COD' THEN o.dfee + o.cfee ELSE 0 END), 0), 2) AS fees,
-  ROUND(COALESCE(SUM(CASE WHEN o.status IN {DELIVERED} AND o.pm = 'COD' THEN o.amount - o.dfee - o.cfee ELSE 0 END), 0), 2) AS payout,
+  ROUND(COALESCE(SUM(CASE WHEN o.status IN {DELIVERED} AND o.pm = 'COD' THEN o.dfee + o.cfee + o.decl ELSE 0 END), 0), 2) AS fees,
+  ROUND(COALESCE(SUM(CASE WHEN o.status IN {DELIVERED} AND o.pm = 'COD' THEN o.amount - o.dfee - o.cfee - o.decl ELSE 0 END), 0), 2) AS payout,
   ROUND(COALESCE(SUM(CASE WHEN o.status IN {DELIVERED} AND o.pm <> 'COD' THEN o.amount ELSE 0 END), 0), 2) AS prepaid
 FROM (
 {base()}
@@ -88,7 +90,8 @@ SQL_PAYMENT = f"""-- Справки: наложен платеж by how it was p
 SELECT
   CASE WHEN o.card IN ('TRUE', '1', 'YES') THEN 'cod_card' ELSE 'cod_cash' END AS kind,
   COUNT(*) AS n,
-  ROUND(SUM(o.amount), 2) AS amount
+  -- the goods alone: наложен платеж never includes our fees (Maria, 2026-10-24)
+  ROUND(SUM(GREATEST(o.amount - o.dfee - o.cfee - o.decl, 0)), 2) AS amount
 FROM (
 {base()}
 ) o
@@ -142,12 +145,12 @@ SELECT
   o.done_day AS day,
   COALESCE(SUM(o.status IN {DELIVERED}), 0) AS delivered,
   COALESCE(SUM(o.status IN {RETURNED}), 0) AS returned,
-  ROUND(COALESCE(SUM(CASE WHEN o.status IN {DELIVERED} AND o.pm = 'COD' AND o.card NOT IN ('TRUE', '1', 'YES') THEN o.amount ELSE 0 END), 0), 2) AS cod_cash,
-  ROUND(COALESCE(SUM(CASE WHEN o.status IN {DELIVERED} AND o.pm = 'COD' AND o.card IN ('TRUE', '1', 'YES') THEN o.amount ELSE 0 END), 0), 2) AS cod_card,
+  ROUND(COALESCE(SUM(CASE WHEN o.status IN {DELIVERED} AND o.pm = 'COD' AND o.card NOT IN ('TRUE', '1', 'YES') THEN GREATEST(o.amount - o.dfee - o.cfee - o.decl, 0) ELSE 0 END), 0), 2) AS cod_cash,
+  ROUND(COALESCE(SUM(CASE WHEN o.status IN {DELIVERED} AND o.pm = 'COD' AND o.card IN ('TRUE', '1', 'YES') THEN GREATEST(o.amount - o.dfee - o.cfee - o.decl, 0) ELSE 0 END), 0), 2) AS cod_card,
   ROUND(COALESCE(SUM(CASE WHEN o.status IN {DELIVERED} AND o.pm <> 'COD' THEN o.amount ELSE 0 END), 0), 2) AS prepaid,
   ROUND(COALESCE(SUM(CASE WHEN o.status IN {DELIVERED} AND o.pm = 'COD' THEN o.amount ELSE 0 END), 0), 2) AS collected,
-  ROUND(COALESCE(SUM(CASE WHEN o.status IN {DELIVERED} AND o.pm = 'COD' THEN o.dfee + o.cfee ELSE 0 END), 0), 2) AS fees,
-  ROUND(COALESCE(SUM(CASE WHEN o.status IN {DELIVERED} AND o.pm = 'COD' THEN o.amount - o.dfee - o.cfee ELSE 0 END), 0), 2) AS payout
+  ROUND(COALESCE(SUM(CASE WHEN o.status IN {DELIVERED} AND o.pm = 'COD' THEN o.dfee + o.cfee + o.decl ELSE 0 END), 0), 2) AS fees,
+  ROUND(COALESCE(SUM(CASE WHEN o.status IN {DELIVERED} AND o.pm = 'COD' THEN o.amount - o.dfee - o.cfee - o.decl ELSE 0 END), 0), 2) AS payout
 FROM (
 {base()}
 ) o
@@ -335,7 +338,7 @@ function render() {
   const prodHtml = products.length ? products.map((p, i) => `<div class="r"><div class="name"><span title="${esc(p.product)}">${esc(p.product)}</span><div class="track"><div class="fill" style="width:${Number(p.qty) / pmax * 100}%;background:${i === 0 ? C[0] : C[1]}"></div></div></div><span class="v num">${int(p.qty)} бр.</span></div>`).join('') : `<div class="empty">Няма доставени артикули за периода</div>`;
 
   const tot = daily.reduce((a, r) => { ['delivered', 'returned', 'cod_cash', 'cod_card', 'prepaid', 'collected', 'fees', 'payout'].forEach((k) => { a[k] = (a[k] || 0) + Number(r[k] || 0); }); return a; }, {});
-  const dailyHtml = daily.length ? `<div class="tablewrap"><table><thead><tr><th>Ден</th><th class="r">Доставени</th><th class="r">Върнати</th><th class="r">НП в брой</th><th class="r">НП с карта</th><th class="r">Платени онлайн</th><th class="r">Общо събрано</th><th class="r">Доставка и такса НП</th><th class="r">За изплащане</th></tr></thead><tbody class="num">` +
+  const dailyHtml = daily.length ? `<div class="tablewrap"><table><thead><tr><th>Ден</th><th class="r">Доставени</th><th class="r">Върнати</th><th class="r">НП в брой</th><th class="r">НП с карта</th><th class="r">Платени онлайн</th><th class="r">Общо събрано</th><th class="r">Такси</th><th class="r">За изплащане</th></tr></thead><tbody class="num">` +
     daily.map((r) => `<tr><td>${dayLabel(r.day)}</td><td class="r">${int(r.delivered)}</td><td class="r">${int(r.returned)}</td><td class="r">${fmt(r.cod_cash)} €</td><td class="r">${fmt(r.cod_card)} €</td><td class="r">${fmt(r.prepaid)} €</td><td class="r">${fmt(r.collected)} €</td><td class="r">${fmt(r.fees)} €</td><td class="r">${fmt(r.payout)} €</td></tr>`).join('') +
     `</tbody><tfoot class="num"><tr><td>Общо</td><td class="r">${int(tot.delivered)}</td><td class="r">${int(tot.returned)}</td><td class="r">${fmt(tot.cod_cash)} €</td><td class="r">${fmt(tot.cod_card)} €</td><td class="r">${fmt(tot.prepaid)} €</td><td class="r">${fmt(tot.collected)} €</td><td class="r">${fmt(tot.fees)} €</td><td class="r">${fmt(tot.payout)} €</td></tr></tfoot></table></div>` : `<div class="empty">Няма доставки за периода</div>`;
 
@@ -346,13 +349,15 @@ function render() {
     `<span class="range${period === 'range' ? ' on' : ''}"><input type="date" id="from" value="${esc(period === 'range' ? since : '')}"> – <input type="date" id="to" value="${esc(period === 'range' ? until : '')}"><button id="apply">Покажи</button></span>` +
     `<button class="btn" id="csv">Свали CSV</button></div></div>` +
     `<div class="grid g4">` +
-    `<div class="card kpi hero"><h3>Наложен платеж събран</h3><div class="big num">${fmt(st.cod_collected)} <small>€</small></div><div class="foot">${int(st.cod_orders)} поръчки с НП</div></div>` +
-    `<div class="card kpi"><h3>За изплащане</h3><div class="big num">${fmt(st.payout)} <small>€</small></div><div class="foot"><span class="delta">стойност на стоките</span></div></div>` +
-    `<div class="card kpi"><h3>Доставка и такса НП</h3><div class="big num">${fmt(st.fees)} <small>€</small></div><div class="foot">платени от купувачите</div></div>` +
+    // Наложен платеж is the goods alone and our fees have their own tile (Maria, 2026-10-24);
+    // the whole sum the driver took is shown only under its own name, as the two added up.
+    `<div class="card kpi hero"><h3>Наложен платеж</h3><div class="big num">${fmt(st.payout)} <small>€</small></div><div class="foot"><span class="delta">стойност на стоките</span> ${int(st.cod_orders)} поръчки с НП</div></div>` +
+    `<div class="card kpi"><h3>Такси</h3><div class="big num">${fmt(st.fees)} <small>€</small></div><div class="foot">доставка, наложен платеж, обявена стойност</div></div>` +
+    `<div class="card kpi"><h3>Общо от получателите</h3><div class="big num">${fmt(st.cod_collected)} <small>€</small></div><div class="foot">наложен платеж + такси</div></div>` +
     `<div class="card kpi"><h3>Доставени</h3><div class="big num">${int(st.delivered)}</div><div class="foot"><span class="delta">${int(st.returned)} върнати · ${int(st.cancelled)} отказани</span></div></div>` +
     `</div>` +
     `<div class="grid g3">` +
-    `<div class="card"><div class="hd"><h3>НП по начин на плащане</h3></div>${donut([{ l: 'В брой', v: payMap.cod_cash ? payMap.cod_cash.amount : 0 }, { l: 'С карта на място', v: payMap.cod_card ? payMap.cod_card.amount : 0 }], '€ събрани', '€')}</div>` +
+    `<div class="card"><div class="hd"><h3>НП по начин на плащане</h3></div>${donut([{ l: 'В брой', v: payMap.cod_cash ? payMap.cod_cash.amount : 0 }, { l: 'С карта на място', v: payMap.cod_card ? payMap.cod_card.amount : 0 }], '€ наложен платеж', '€')}</div>` +
     `<div class="card"><div class="hd"><h3>Доставки по услуга</h3></div>${donut([{ l: 'Стандартна', v: svcMap.standard || 0 }, { l: 'Експресна', v: svcMap.express || 0 }], 'доставки', 'n')}</div>` +
     `<div class="card"><div class="hd"><h3>Резултат от доставките</h3></div>${donut([{ l: 'Доставени', v: outMap.delivered || 0 }, { l: 'Върнати', v: outMap.returned || 0 }, { l: 'Отказани', v: outMap.cancelled || 0 }].filter((d) => d.v > 0), 'резултат', 'n')}</div>` +
     `</div>` +
@@ -373,7 +378,7 @@ appsmith.onModelChange(render);
 """
 
 RP_HEADER_ON = "{{(async () => { const m = BoHeader.model || {}; if (m.action === 'lang') { return storeValue('bo_lang', m.lang || 'bg'); } if (m.action === 'logout') { return AuthManager.logout(); } if (m.action === 'account') { return navigateTo('Dashboard', { account: '1' }); } if (m.action === 'new') { return navigateTo('Dashboard', { new: '1' }); } if (m.action === 'nav') { if (m.tab === 'orders') { return navigateTo('Dashboard', { tab: 'orders' }); } if (m.page) { return navigateTo(m.page); } } })()}}"
-RP_REPORTS_ON = "{{(async () => { const m = BoReports.model || {}; const reload = () => Promise.all([RpStats.run(), RpPayment.run(), RpService.run(), RpOutcome.run(), RpProducts.run(), RpDaily.run()]); if (m.action === 'period' && m.period) { await storeValue('rp_period', m.period); await reload(); return; } if (m.action === 'range' && m.from && m.to) { await storeValue('rp_from', m.from); await storeValue('rp_to', m.to); await storeValue('rp_period', 'range'); await reload(); return; } if (m.action === 'csv') { const rows = RpDaily.data || []; const head = ['Ден', 'Доставени', 'Върнати', 'НП в брой', 'НП с карта', 'Платени онлайн', 'Общо събрано', 'Доставка и такса НП', 'За изплащане']; const cell = (v) => String(v == null ? '' : v).replace('.', ','); const lines = [head.join(';')].concat(rows.map((r) => [r.day, r.delivered, r.returned, cell(r.cod_cash), cell(r.cod_card), cell(r.prepaid), cell(r.collected), cell(r.fees), cell(r.payout)].join(';'))); return download('\\ufeff' + lines.join('\\r\\n'), 'fulfilya-otchet-' + RpNav.since() + '-' + RpNav.until() + '.csv', 'text/csv'); } })()}}"
+RP_REPORTS_ON = "{{(async () => { const m = BoReports.model || {}; const reload = () => Promise.all([RpStats.run(), RpPayment.run(), RpService.run(), RpOutcome.run(), RpProducts.run(), RpDaily.run()]); if (m.action === 'period' && m.period) { await storeValue('rp_period', m.period); await reload(); return; } if (m.action === 'range' && m.from && m.to) { await storeValue('rp_from', m.from); await storeValue('rp_to', m.to); await storeValue('rp_period', 'range'); await reload(); return; } if (m.action === 'csv') { const rows = RpDaily.data || []; const head = ['Ден', 'Доставени', 'Върнати', 'НП в брой', 'НП с карта', 'Платени онлайн', 'Общо събрано', 'Такси', 'За изплащане']; const cell = (v) => String(v == null ? '' : v).replace('.', ','); const lines = [head.join(';')].concat(rows.map((r) => [r.day, r.delivered, r.returned, cell(r.cod_cash), cell(r.cod_card), cell(r.prepaid), cell(r.collected), cell(r.fees), cell(r.payout)].join(';'))); return download('\\ufeff' + lines.join('\\r\\n'), 'fulfilya-otchet-' + RpNav.since() + '-' + RpNav.until() + '.csv', 'text/csv'); } })()}}"
 
 def custom(page, name, top, bottom, html, css, js, model, height, key_seed, handler):
     js = js + bo_i18n.translator_js() + ns['BO_WATCH']
@@ -408,6 +413,10 @@ c2 = json.load(open(os.path.join(REPO, 'Reporting/widgets/Container2/Container2.
 shift = 96 - int(c2['topRow'])
 for k in ('topRow', 'bottomRow', 'originalTopRow', 'originalBottomRow', 'mobileTopRow', 'mobileBottomRow'):
     if k in c2 and c2[k] is not None: c2[k] = int(c2[k]) + shift
+# Hidden, not deleted (Maria, 2026-10-24): every one of the old English reports mixed our fees
+# into the наложен платеж, and the Справки above shows the same figures the right way. The one
+# thing only they had is "All orders" over a date range with a CSV. Back with isVisible True.
+c2['isVisible'] = False
 w('Reporting/widgets/Container2/Container2.json', c2)
 
 # The Dashboard's guard opens the create form when the Справки header sends ?new=1

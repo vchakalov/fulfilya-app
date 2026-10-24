@@ -64,7 +64,7 @@
   "flexVerticalAlignment": "stretch",
   "isCanvas": true,
   "isLoading": false,
-  "isVisible": true,
+  "isVisible": false,
   "key": "qgbt4ep4i7",
   "leftColumn": 0,
   "maxDynamicHeight": 9000,

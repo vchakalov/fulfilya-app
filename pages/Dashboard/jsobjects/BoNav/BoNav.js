@@ -10,7 +10,9 @@ export default {
   // handled in the widgets' own onAction bindings.
   tz: () => moment().tz('Europe/Sofia').utcOffset() / 60,
   today: () => moment().tz('Europe/Sofia').format('YYYY-MM-DD'),
-  period: () => appsmith.store.bo_period || 'week',
+  // Месец by default (Maria, 2026-10-24: most merchants do not ship every day, so Днес was zeroes).
+  // A new key, kept for the session only: a choice saved under the old one would have won forever.
+  period: () => appsmith.store.bo_view_period || 'month',
   since: () => {
     const p = BoNav.period();
     const now = moment().tz('Europe/Sofia');
