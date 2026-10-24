@@ -311,6 +311,12 @@ TABLO_CSS = TOKENS + """
 .kpi.hero h3,.kpi.hero .foot{color:var(--accent-ink)}
 .kpi.hero .delta.up{background:rgba(255,255,255,.6);color:var(--accent-ink)}
 .kpi.hero .delta.flat{background:rgba(255,255,255,.6);color:var(--accent-ink)}
+/* "Дължите ни": red while something is owed, green at zero (Maria picked layout C, 2026-10-24) */
+.kpi.owe{background:var(--bad-soft);border-color:transparent}
+.kpi.owe h3,.kpi.owe .foot{color:var(--bad)}
+.kpi.owe .delta{background:rgba(255,255,255,.65);color:var(--bad)}
+.kpi.zero{background:var(--ok-soft);border-color:transparent}
+.kpi.zero h3,.kpi.zero .foot{color:var(--ok)}
 .kpi.link{cursor:pointer}
 .kpi.link:hover{box-shadow:0 1px 2px rgba(0,0,0,.06),0 16px 36px -12px rgba(29,29,31,.22)}
 .kpi.link:focus-visible{outline:2px solid var(--accent-ink);outline-offset:2px}
@@ -395,6 +401,9 @@ function render() {
   const pay = Array.isArray(m.payment) ? m.payment : [];
   const status = Array.isArray(m.status) ? m.status : [];
   const days = Array.isArray(m.days) ? m.days : [];
+  // int/v1/portal/balance - the office's own two balances, as of now for all dates (TODO 90).
+  // Missing (the server not answering yet, or an error) shows a dash, never a made-up 0.
+  const bal = m.balance && m.balance.we_owe ? m.balance : null;
   const total = Number(st.total || 0), delivered = Number(st.delivered || 0);
   const rate = total ? Math.round(delivered / total * 100) : 0;
   const pl = PERIOD_LABEL[period] || '';
@@ -414,17 +423,20 @@ function render() {
     `<div class="wrap">` +
     `<div class="row"><div><h2 style="color:${INK}">${greeting()}, ${esc(m.merchant || '')}</h2><div class="sub">${todayLine()}</div></div>` +
     `<div class="chips">${PERIODS.map(([k, l]) => `<button class="chip${k === period ? ' on' : ''}" data-period="${k}">${l}</button>`).join('')}</div></div>` +
+    // Layout C (Maria, 2026-10-24): what we owe them and what they owe us first, then their orders.
+    // "В път" moved into the Статус donut. The two balances ignore the Днес / 7 дни / Месец chips.
     `<div class="grid g4">` +
+    (bal
+      ? `<div class="card kpi hero link" data-nav="Payouts" role="button" tabindex="0"><h3>Дължим ви</h3><div class="big num">${fmt(bal.we_owe.amount)} <small>€</small></div><div class="foot"><span class="delta flat">наложен платеж за ${int(bal.we_owe.orders)} ${Number(bal.we_owe.orders) === 1 ? 'поръчка' : 'поръчки'}</span>` +
+        (Number(bal.we_owe.withheld) ? `<span class="delta flat">− ${fmt(bal.we_owe.withheld)} € за върнати</span>` : '') + `</div></div>`
+      : `<div class="card kpi hero link" data-nav="Payouts" role="button" tabindex="0"><h3>Дължим ви</h3><div class="big num">—</div><div class="foot">вижте Изплащания</div></div>`) +
+    (bal
+      ? (Number(bal.they_owe.amount)
+          ? `<div class="card kpi owe"><h3>Дължите ни</h3><div class="big num">${fmt(bal.they_owe.amount)} <small>€</small></div><div class="foot"><span class="delta">такси по ${int(bal.they_owe.orders)} ${Number(bal.they_owe.orders) === 1 ? 'поръчка' : 'поръчки'}, по фактура</span></div></div>`
+          : `<div class="card kpi zero"><h3>Дължите ни</h3><div class="big num">0,00 <small>€</small></div><div class="foot">нищо не дължите</div></div>`)
+      : `<div class="card kpi"><h3>Дължите ни</h3><div class="big num">—</div><div class="foot">&nbsp;</div></div>`) +
     `<div class="card kpi"><h3>Поръчки</h3><div class="big num">${int(total)}</div><div class="foot"><span class="delta ${Number(st.total_today) ? 'up' : 'flat'}">+${int(st.total_today)} днес</span> ${pl}</div></div>` +
     `<div class="card kpi"><h3>Доставени</h3><div class="big num">${int(delivered)} <small>${rate}%</small></div><div class="foot"><span class="delta ${Number(st.delivered_today) ? 'up' : 'flat'}">+${int(st.delivered_today)} днес</span> успешни</div></div>` +
-    `<div class="card kpi"><h3>В път</h3><div class="big num">${int(st.in_transit)}</div><div class="foot"><span class="delta flat">${int(st.pending)} чакат куриер</span></div></div>` +
-    // Split by the payout stamp, not by the period's whole takings: until 2026-09-19 this
-    // read "за изплащане X €" whether or not the money had already been transferred, so a
-    // merchant who had just been paid was still shown the same sum as owed.
-    // The big number is the goods alone (Maria, 2026-10-24): what the merchant gets from us,
-    // so изплатено + предстои add up to it. It used to be the whole sum the driver took,
-    // fees included, which no merchant ever receives.
-    `<div class="card kpi hero link" data-nav="Payouts" role="button" tabindex="0"><h3>Наложен платеж събран</h3><div class="big num">${fmt(st.payout)} <small>€</small></div><div class="foot"><span class="delta up">изплатено ${fmt(st.payout_paid)} €</span><span class="delta flat">предстои ${fmt(st.payout_unpaid)} €</span></div></div>` +
     `</div>` +
     `<div class="grid g3">` +
     `<div class="card"><div class="hd"><h3>Плащане</h3><span class="hint">${pl} · ${int(total)} поръчки</span></div>${donut([
@@ -533,7 +545,7 @@ custom('BoHeader', 0, 8, HEADER_HTML, HEADER_CSS, HEADER_JS,
        "{{ { page: (appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders') ? 'orders' : 'tablo', merchant: appsmith.store.customer_name || '', " + ACCOUNT_FLAG + " } }}",
        "FIXED", "hdrq1w2e3r")
 custom('BoTablo', 9, 58, TABLO_HTML, TABLO_CSS, TABLO_JS,
-       "{{ { period: appsmith.store.bo_view_period || 'month', merchant: appsmith.store.customer_name || '', stats: BoStats.data, payment: BoPayment.data, status: BoStatus.data, days: BoDays.data } }}",
+       "{{ { period: appsmith.store.bo_view_period || 'month', merchant: appsmith.store.customer_name || '', stats: BoStats.data, payment: BoPayment.data, status: BoStatus.data, days: BoDays.data, balance: BoBalance.data } }}",
        "FIXED", "tblz9x8c7v", visible="{{!(appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders')}}")
 
 TITLE_HTML = FONT_LINK + '<div id="bo-title"></div>'
@@ -607,6 +619,26 @@ w('Dashboard/queries/WaybillPDF/metadata.json', {
         "dynamicBindingPathList": [{"key": "headers[0].value"}, {"key": "queryParameters[0].value"},
                                    {"key": "queryParameters[1].value"}, {"key": "queryParameters[2].value"}],
         "name": "WaybillPDF", "pageId": "Dashboard", "runBehaviour": "MANUAL", "userSetOnLoad": False}})
+
+# "Дължим ви" / "Дължите ни" on the Табло (TODO 90): the office's own two balances, worked out by
+# the server for the merchant the token belongs to. On page load; the merchant's own token.
+w('Dashboard/queries/BoBalance/metadata.json', {
+    "gitSyncId": gid('Dashboard/BoBalance'), "id": "Dashboard_BoBalance", "pluginId": "restapi-plugin", "pluginType": "API",
+    "unpublishedAction": {
+        "actionConfiguration": {
+            "encodeParamsToggle": True,
+            "headers": [
+                {"key": "Authorization", "value": "Bearer {{appsmith.store.authToken}}"},
+                {"key": "Accept", "value": "application/json"},
+            ],
+            "httpMethod": "GET", "paginationType": "NONE", "path": "/int/v1/portal/balance",
+            "queryParameters": [], "timeoutInMillisecond": 30000,
+        },
+        "confirmBeforeExecute": False,
+        "datasource": {"datasourceConfiguration": {"url": "https://api.operations.fulfilya.com"},
+                       "isAutoGenerated": False, "name": "DEFAULT_REST_DATASOURCE", "pluginId": "restapi-plugin"},
+        "dynamicBindingPathList": [{"key": "headers[0].value"}],
+        "name": "BoBalance", "pageId": "Dashboard", "runBehaviour": "ON_PAGE_LOAD", "userSetOnLoad": True}})
 
 # ---------------------------------------------------------------- "Смяна на парола" (2026-10-21)
 # The merchant changes their own password, knowing the old one. Only for merchants the
