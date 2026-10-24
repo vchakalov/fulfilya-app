@@ -5,7 +5,7 @@
   "pluginType": "DB",
   "unpublishedAction": {
     "actionConfiguration": {
-      "body": "SELECT JSON_UNQUOTE(JSON_EXTRACT(s.value, '$.options')) AS options\nFROM settings s\nWHERE s.`key` = CONCAT('fulfilya.payer_options.', '{{appsmith.store.customer_uuid}}')\nLIMIT 1",
+      "body": "SELECT JSON_UNQUOTE(JSON_EXTRACT(s.value, '$.options')) AS options\nFROM appsmith_portal_settings s\nWHERE s.`key` = CONCAT('fulfilya.payer_options.', '{{appsmith.store.customer_uuid}}')\nLIMIT 1",
       "encodeParamsToggle": true,
       "paginationType": "NONE",
       "pluginSpecifiedTemplates": [
