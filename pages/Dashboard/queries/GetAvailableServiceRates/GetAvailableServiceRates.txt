@@ -25,7 +25,7 @@ SELECT
 FROM service_rates sr
 JOIN contacts c ON c.uuid = '{{appsmith.store.customer_uuid}}'
 -- The merchant's own services, saved from the console box: one row per service.
-LEFT JOIN settings st ON st.`key` = CONCAT('fulfilya.services.', c.uuid) AND JSON_VALID(st.value)
+LEFT JOIN appsmith_portal_settings st ON st.`key` = CONCAT('fulfilya.services.', c.uuid) AND JSON_VALID(st.value)
 LEFT JOIN JSON_TABLE(COALESCE(st.value, '{}'), '$.services[*]' COLUMNS (svc_key VARCHAR(64) CHARSET utf8mb4 COLLATE utf8mb4_unicode_ci PATH '$.key', name VARCHAR(80) CHARSET utf8mb4 COLLATE utf8mb4_unicode_ci PATH '$.name')) svc
   ON sr.service_name = CONCAT(c.email, '-', svc.svc_key)
 WHERE sr.company_uuid = c.company_uuid
