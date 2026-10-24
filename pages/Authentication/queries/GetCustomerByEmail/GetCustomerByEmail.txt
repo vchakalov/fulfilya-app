@@ -7,7 +7,7 @@ SELECT
             WHERE s.`key` = CONCAT('fulfilya.portal_password.', c.uuid) LIMIT 1), 'false') as password_change
 FROM contacts c
 LEFT JOIN files f ON f.uuid = c.photo_uuid AND f.deleted_at <=> NULL
-WHERE c.email = '{{EmailInput.text}}'
+WHERE c.email = {{EmailInput.text}}
   AND c.type = 'customer'
   AND c.deleted_at <=> NULL
 LIMIT 1;
