@@ -52,6 +52,10 @@
     {
       "id": "Office",
       "isDefault": false
+    },
+    {
+      "id": "LoginTest",
+      "isDefault": false
     }
   ],
   "unpublishedAppLayout": {
