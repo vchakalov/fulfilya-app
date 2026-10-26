@@ -102,6 +102,20 @@
        WHERE cfv.subject_uuid IN (o.uuid, o.public_id) AND cf.name = 'declared-value-fee' AND cfv.deleted_at <=> NULL
        ORDER BY cfv.created_at DESC LIMIT 1) as declared_fee,
 
+      -- Weight and size as the office corrected them in the console box (2026-10-26, TheBasket's Kaufland
+      -- orders): the Детайли summary shows these first, and the sums of the products only when they are empty.
+      (SELECT cfv.value FROM custom_field_values cfv
+       WHERE cfv.subject_uuid IN (o.uuid, o.public_id) AND cfv.custom_field_uuid = '4e0cc5ba-521d-4f3b-8395-4687b8025596' AND cfv.deleted_at <=> NULL
+       ORDER BY cfv.created_at DESC LIMIT 1) as total_weight,
+
+      (SELECT cfv.value FROM custom_field_values cfv
+       WHERE cfv.subject_uuid IN (o.uuid, o.public_id) AND cfv.custom_field_uuid = 'a2755933-f5d6-4aa1-87dd-1c003ded0fad' AND cfv.deleted_at <=> NULL
+       ORDER BY cfv.created_at DESC LIMIT 1) as total_volume,
+
+      (SELECT cfv.value FROM custom_field_values cfv
+       WHERE cfv.subject_uuid IN (o.uuid, o.public_id) AND cfv.custom_field_uuid = 'b9a0d436-4c7c-48ba-8bc9-63b05f57a7ea' AND cfv.deleted_at <=> NULL
+       ORDER BY cfv.created_at DESC LIMIT 1) as largest_item,
+
       (SELECT cfv.value FROM custom_field_values cfv
        JOIN custom_fields cf ON cfv.custom_field_uuid = cf.uuid
        WHERE cfv.subject_uuid = o.uuid AND cf.name = 'order-source-id' LIMIT 1) as order_source_id,
