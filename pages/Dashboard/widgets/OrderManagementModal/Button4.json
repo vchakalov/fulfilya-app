@@ -1,7 +1,7 @@
 {
   "animateLoading": true,
   "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
-  "bottomRow": 43,
+  "bottomRow": 52,
   "boxShadow": "none",
   "buttonColor": "{{appsmith.theme.colors.primaryColor}}",
   "buttonStyle": "PRIMARY_BUTTON",
@@ -51,7 +51,7 @@
   "responsiveBehavior": "hug",
   "rightColumn": 64,
   "text": "{{appsmith.store.bo_lang === 'en' ? \"🔍 Track order\" : \"🔍 Проследи\"}}",
-  "topRow": 39,
+  "topRow": 48,
   "type": "BUTTON_WIDGET",
   "version": 1,
   "widgetId": "0rjdt9daqg",

@@ -83,7 +83,7 @@
     ],
     "name": "GetCodReport",
     "pageId": "Office",
-    "runBehaviour": "MANUAL",
+    "runBehaviour": "AUTOMATIC",
     "userSetOnLoad": false
   }
 }

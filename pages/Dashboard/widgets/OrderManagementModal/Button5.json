@@ -1,7 +1,7 @@
 {
   "animateLoading": true,
   "borderRadius": "{{appsmith.theme.borderRadius.appBorderRadius}}",
-  "bottomRow": 43,
+  "bottomRow": 52,
   "boxShadow": "none",
   "buttonColor": "#ef4444",
   "buttonVariant": "PRIMARY",
@@ -50,7 +50,7 @@
   "responsiveBehavior": "hug",
   "rightColumn": 16,
   "text": "{{appsmith.store.bo_lang === 'en' ? \"Cancel order\" : \"Откажи поръчката\"}}",
-  "topRow": 39,
+  "topRow": 48,
   "type": "BUTTON_WIDGET",
   "version": 1,
   "widgetId": "u4e4i6tg6k",
