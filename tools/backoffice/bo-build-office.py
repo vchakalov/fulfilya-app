@@ -192,6 +192,9 @@ thead th{vertical-align:bottom}
 .row h2{font-size:22px}
 tr.off td{color:var(--faint);text-decoration:line-through}
 tr.off td.keep{text-decoration:none}
+/* Диспечер login (2026-10-31): the page is read-only - every button that writes money is hidden. The server refuses
+   those actions for this login anyway (App\\Support\\OfficeAccess); hiding them only spares a pointless 403. */
+.view-only .btn.go:not(#of-show), .view-only #cb-ent-open, .view-only [data-cb-cancel], .view-only [data-cb-undo] { display: none !important; }
 """
 
 OFFICE_JS = r"""
@@ -437,6 +440,7 @@ function historyBlock(m) {
 function render() {
   const m = appsmith.model || {};
   document.documentElement.dataset.theme = 'light';
+  document.documentElement.classList.toggle('view-only', !!m.viewOnly);
 
   const r = m.report || {};
   const t = r.totals || null;
@@ -704,7 +708,7 @@ OFFICE_MODEL = ("{{ { " + bo_i18n.MODEL_LANG + ", report: GetCodReport.data, mer
                 "sel: appsmith.store.office_merchant || 'all', period: appsmith.store.office_period || 'month', "
                 "from: appsmith.store.office_date || '', to: appsmith.store.office_to || '', "
                 "lastPayout: appsmith.store.last_payout_id || '', "
-                "cashbook: GetCashbook.data, cbDone: appsmith.store.cb_done || 0 } }}")
+                "cashbook: GetCashbook.data, cbDone: appsmith.store.cb_done || 0, viewOnly: !!appsmith.store.office_view_only } }}")
 
 office = {
     "animateLoading": True, "backgroundColor": "transparent", "borderColor": "transparent", "borderRadius": "0px", "borderWidth": "0",

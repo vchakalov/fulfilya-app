@@ -21,12 +21,28 @@ export default {
         // merchant's orders - they get the office page. The API says who is who: the
         // login answer carries the user's type ('admin' for the office account).
         if (FleetbaseAuth.data?.type === 'admin') {
+          await storeValue('office_view_only', false);
           await storeValue('is_admin', true);
           await storeValue('customer_name', 'Fulfilya');
           navigateTo('Office');
           return;
         }
         await storeValue('is_admin', false);
+        await storeValue('office_view_only', false);
+
+        // A "Диспечер" login (2026-10-31) is neither the office account nor a merchant: the server says which
+        // (int/v1/portal/me, App\Support\OfficeAccess). It gets the Office page with the money buttons hidden -
+        // the server refuses those actions for it anyway. Any failure here just carries on as a merchant login.
+        try {
+          await OfficeMe.run();
+          if (OfficeMe.data?.role === 'dispatcher') {
+            await storeValue('is_admin', true);
+            await storeValue('office_view_only', true);
+            await storeValue('customer_name', 'Fulfilya · Диспечер');
+            navigateTo('Office');
+            return;
+          }
+        } catch (e) { /* not the office */ }
 
         // Get customer data
         await GetCustomerByEmail.run();
