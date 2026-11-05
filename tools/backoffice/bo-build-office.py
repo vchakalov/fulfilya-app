@@ -185,6 +185,7 @@ select:disabled{color:var(--faint);background:var(--ground)}
 .kind{font-size:12px;font-weight:600;border-radius:6px;padding:2px 8px;background:var(--info-soft);color:var(--c2)}
 th.grp{text-align:center;border-bottom:2px solid var(--line-strong);text-transform:none;letter-spacing:0;font-size:12px}
 th.rec{background:var(--ok-soft);color:var(--ok)}th.mer{background:var(--accent-soft);color:var(--accent-ink)}
+th.rinv{background:var(--info-soft);color:var(--c2)}
 thead th{vertical-align:bottom}
 .badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;margin-top:10px}
 .badge.ok{background:var(--ok-soft);color:var(--ok)}.badge.bad{background:var(--bad-soft);color:var(--bad)}
@@ -213,7 +214,7 @@ function send(payload) {
 // model change; `cbDone` moves only after a successful save, which is when the open form clears.
 const CB_RESET = { open: null, scope: 'all', how: '', kind: '', ids: '', pay: null, payScope: 'all', payIds: '',
   dep: false, depDate: '', depAmt: '', depNote: '', ent: false, entDate: '', entType: '', entAmt: '', entNote: '',
-  cancel: null, cancelKind: '', reason: '' };
+  inv: false, invOrder: '', invNo: '', cancel: null, cancelKind: '', reason: '' };
 const CB = Object.assign({ done: null, hKind: '', hMore: false }, CB_RESET);
 const HOW = { bank: 'по банка', cash: 'при вземане · в брой', card: 'при вземане · с карта' };
 const dmy = (d) => String(d || '').slice(0, 10).split('-').reverse().join('.');
@@ -378,14 +379,15 @@ function historyBlock(m) {
   const h = m.hist || {};
   const types = cb.entry_types || {};
   const all = Array.isArray(h.rows) ? h.rows : [];
-  const kinds = { payout: 'Изплащания', deposit: 'Внесени в банка', entry: 'Други движения', mark: 'Маркирано платено' };
+  const kinds = { payout: 'Изплащания', deposit: 'Внесени в банка', entry: 'Други движения', mark: 'Маркирано платено', invoice: 'Фактури на получатели' };
   const shown = all.filter((x) => !CB.hKind || x.kind === CB.hKind);
   const list = CB.hMore ? shown : shown.slice(0, 20);
-  const pill = { payout: 'pill', deposit: 'kind', entry: 'pill', mark: 'pill ok' };
+  const pill = { payout: 'pill', deposit: 'kind', entry: 'pill', mark: 'pill ok', invoice: 'kind' };
   const amt = (v) => (v === null || v === undefined) ? '' : `<span class="${num(v) < 0 ? 'minus' : 'plus'}">${num(v) > 0 ? '+' : '−'}${fmt(Math.abs(num(v)))}</span>`;
   const action = (x) => {
     if (x.kind === 'payout') return `<button type="button" class="link" data-receipt="${esc(x.id)}">Разписка</button>`;
     if (x.kind === 'mark') return `<button type="button" class="link" data-cb-undo="${esc(x.id)}">отмени</button>`;
+    if (x.kind === 'invoice') return `<button type="button" class="link" data-cb-inv-undo="${esc(x.id)}">отмени</button>`;
     if (CB.cancel === x.id) {
       return `<span class="act" style="justify-content:flex-end"><input type="text" id="cb-reason" placeholder="причина" maxlength="200" value="${esc(CB.reason)}" ` +
         `style="font:inherit;font-size:12.5px;border:1px solid var(--line-strong);border-radius:8px;padding:5px 8px;width:150px">` +
@@ -411,9 +413,18 @@ function historyBlock(m) {
           `<label class="fld" for="cb-ent-note"><span>Бележка</span><input type="text" id="cb-ent-note" placeholder="какво е това" maxlength="200" value="${esc(CB.entNote)}"></label>` +
         `</div><div class="note">Не е за внасяне в банка - за това е "Внесени в банка". Приход с карта: таксата на ПОС терминала се смята сама.</div>` +
         `<div class="act"><button type="button" class="btn go" id="cb-ent-save">Запиши движението</button><button type="button" class="link" id="cb-ent-close">откажи</button></div></div>`
+      : '') +
+    // "Фактура на получател" (Maria, 2026-11-05): the recipient paid our fees at the door and asked for a фактура.
+    // The order number is enough - the server finds the fees and whether they were cash or card.
+    (CB.inv
+      ? `<div class="mform"><div class="steps">` +
+          `<label class="fld" for="cb-inv-order"><span>Номер на поръчката</span><input type="text" id="cb-inv-order" placeholder="FO053602" maxlength="64" value="${esc(CB.invOrder)}"></label>` +
+          `<label class="fld" for="cb-inv-no"><span>№ на фактурата (по желание)</span><input type="text" id="cb-inv-no" placeholder="0000000123" maxlength="40" value="${esc(CB.invNo)}"></label>` +
+        `</div><div class="note">Таксите, които получателят е платил по тази поръчка, минават от "Платено от получателя · без фактура" в "с фактура". Парите не се местят - в брой или с карта остава както е платено.</div>` +
+        `<div class="act"><button type="button" class="btn go" id="cb-inv-save">Запиши фактурата</button><button type="button" class="link" id="cb-inv-close">откажи</button></div></div>`
       : '');
 
-  return `<div class="row" style="margin-top:22px"><div><h2>История</h2><div class="sub">всичко въведено на ръка: изплащания, внесени в банка, други движения, маркирани плащания</div></div></div>` +
+  return `<div class="row" style="margin-top:22px"><div><h2>История</h2><div class="sub">всичко въведено на ръка: изплащания, внесени в банка, други движения, маркирани плащания, фактури на получатели</div></div></div>` +
     `<div class="card">` +
       `<div class="hd">` +
         `<div class="act"><label class="hint" for="h-from">от</label><input type="date" id="h-from" value="${esc(h.from || '')}">` +
@@ -421,7 +432,8 @@ function historyBlock(m) {
           `<button type="button" class="btn sm" id="h-show">Покажи</button>` +
           `<select id="h-kind" style="min-width:150px"><option value="">Всички</option>` +
             Object.keys(kinds).map((k) => `<option value="${k}"${CB.hKind === k ? ' selected' : ''}>${kinds[k]}</option>`).join('') + `</select></div>` +
-        `<div class="act"><button type="button" class="btn go sm" id="cb-dep-open">+ Внесени в банка</button><button type="button" class="btn sm" id="cb-ent-open">+ Друго движение</button></div>` +
+        `<div class="act"><button type="button" class="btn go sm" id="cb-dep-open">+ Внесени в банка</button><button type="button" class="btn sm" id="cb-ent-open">+ Друго движение</button>` +
+          `<button type="button" class="btn sm" id="cb-inv-open">+ Фактура на получател</button></div>` +
       `</div>` + forms +
       `<div class="tablewrap" style="margin-top:8px"><table><thead><tr><th>Дата</th><th>Вид</th><th>Описание</th><th class="r">В брой</th><th class="r">Банка</th><th></th></tr></thead><tbody class="num">` +
       (h.error ? `<tr><td colspan="6"><div class="empty">${esc(h.error)}</div></td></tr>`
@@ -512,21 +524,30 @@ function render() {
       `</table></div><div class="note" style="padding:0 18px 14px">За поръчките от избрания период.</div></div>`
     : `<div class="card"><div class="empty">Избери период, за да видиш отчета.</div></div>`;
 
+  // Платено от получателя, split by whether the office logged a фактура for the order (Maria, 2026-11-05,
+  // "Фактура на получател" in История). The two add up to revenue_cash / revenue_card, which stay Група Б.2.
+  // A server from before the split sends neither: everything is "без фактура", as it was.
+  const rNo = (x, k) => x['revenue_no_invoice_' + k] === undefined ? num(x['revenue_' + k]) : num(x['revenue_no_invoice_' + k]);
+  const rInv = (x, k) => num(x['revenue_with_invoice_' + k]);
   const incomeTable = t
     ? `<div class="card" style="padding:0">` + head('Приходи по клиенти', 'нашите такси - кой ги е платил и как') +
       `<div class="tablewrap" style="padding:10px 8px 6px"><table><thead>` +
         `<tr><th rowspan="2">Клиент</th><th rowspan="2" class="r">Общо поръчки</th><th colspan="2" class="grp rec">Платено от получателя · без фактура</th>` +
+        `<th colspan="2" class="grp rinv">Платено от получателя · с фактура</th>` +
         `<th colspan="3" class="grp mer">Платено от партньора · с фактура</th><th rowspan="2" class="r">Партньорът ни дължи</th></tr>` +
-        `<tr><th class="r rec">В брой</th><th class="r rec">С карта</th><th class="r mer">По банка</th><th class="r mer">В брой</th><th class="r mer">С карта</th></tr></thead><tbody class="num">` +
+        `<tr><th class="r rec">В брой</th><th class="r rec">С карта</th><th class="r rinv">В брой</th><th class="r rinv">С карта</th>` +
+        `<th class="r mer">По банка</th><th class="r mer">В брой</th><th class="r mer">С карта</th></tr></thead><tbody class="num">` +
       (rows.length
         ? rows.map((x) => `<tr><td><strong>${esc(x.name)}</strong></td><td class="r">${num(x.all_orders === undefined ? x.orders : x.all_orders)}</td>` +
-            `<td class="r cash">${eur(x.revenue_cash)}</td><td class="r card-c">${eur(x.revenue_card)}</td>` +
+            `<td class="r cash">${eur(rNo(x, 'cash'))}</td><td class="r card-c">${eur(rNo(x, 'card'))}</td>` +
+            `<td class="r cash">${eur(rInv(x, 'cash'))}</td><td class="r card-c">${eur(rInv(x, 'card'))}</td>` +
             `<td class="r">${eur(x.invoiced_bank)}</td><td class="r cash">${eur(x.invoiced_cash)}</td><td class="r card-c">${eur(x.invoiced_card)}</td>` +
             `<td class="r inv"><strong>${eur(x.invoiced_unpaid)}</strong></td></tr>`).join('')
-        : `<tr><td colspan="8"><div class="empty">Няма поръчки за този период.</div></td></tr>`) +
+        : `<tr><td colspan="10"><div class="empty">Няма поръчки за този период.</div></td></tr>`) +
       `</tbody>` +
       (rows.length > 1
-        ? `<tfoot><tr><td>Общо</td><td class="r">${num(t.all_orders === undefined ? t.orders : t.all_orders)}</td><td class="r">${eur(t.revenue_cash)}</td><td class="r">${eur(t.revenue_card)}</td>` +
+        ? `<tfoot><tr><td>Общо</td><td class="r">${num(t.all_orders === undefined ? t.orders : t.all_orders)}</td><td class="r">${eur(rNo(t, 'cash'))}</td><td class="r">${eur(rNo(t, 'card'))}</td>` +
+          `<td class="r">${eur(rInv(t, 'cash'))}</td><td class="r">${eur(rInv(t, 'card'))}</td>` +
           `<td class="r">${eur(t.invoiced_bank)}</td><td class="r">${eur(t.invoiced_cash)}</td><td class="r">${eur(t.invoiced_card)}</td><td class="r">${eur(t.invoiced_unpaid)}</td></tr></tfoot>`
         : '') +
       `</table></div><div class="note" style="padding:0 18px 14px">Всички приходи за периода = платено от получателя + платено от партньора + партньорът ни дължи.</div></div>`
@@ -607,6 +628,7 @@ function wireOffice(m) {
   click('h-more', () => { CB.hMore = true; render(); });
   document.querySelectorAll('[data-receipt]').forEach((b) => b.addEventListener('click', () => send({ action: 'receipt', id: b.dataset.receipt })));
   document.querySelectorAll('[data-cb-undo]').forEach((b) => b.addEventListener('click', () => send({ action: 'cb_undo', id: b.dataset.cbUndo })));
+  document.querySelectorAll('[data-cb-inv-undo]').forEach((b) => b.addEventListener('click', () => send({ action: 'cb_invoice_undo', id: b.dataset.cbInvUndo })));
   document.querySelectorAll('[data-cb-cancel]').forEach((b) => b.addEventListener('click', () => {
     CB.cancel = b.dataset.cbCancel; CB.cancelKind = b.dataset.cbCancelKind; CB.reason = ''; render();
   }));
@@ -616,17 +638,22 @@ function wireOffice(m) {
     CB.reason = val('cb-reason');
     send({ action: CB.cancelKind === 'entry' ? 'cb_cancel_entry' : 'cb_cancel_deposit', id: CB.cancel, reason: CB.reason });
   });
-  click('cb-dep-open', () => { CB.dep = !CB.dep; CB.ent = false; render(); });
+  click('cb-dep-open', () => { CB.dep = !CB.dep; CB.ent = false; CB.inv = false; render(); });
   click('cb-dep-close', () => { CB.dep = false; render(); });
   const depRead = () => { CB.depDate = val('cb-dep-date'); CB.depAmt = val('cb-dep-amt'); CB.depNote = val('cb-dep-note'); };
   ['cb-dep-date', 'cb-dep-amt', 'cb-dep-note'].forEach((id) => on(id, 'input', depRead));
   click('cb-dep-save', () => { depRead(); send({ action: 'cb_deposit', date: CB.depDate, amount: CB.depAmt, note: CB.depNote }); });
-  click('cb-ent-open', () => { CB.ent = !CB.ent; CB.dep = false; render(); });
+  click('cb-ent-open', () => { CB.ent = !CB.ent; CB.dep = false; CB.inv = false; render(); });
   click('cb-ent-close', () => { CB.ent = false; render(); });
   const entRead = () => { CB.entDate = val('cb-ent-date'); CB.entType = val('cb-ent-type'); CB.entAmt = val('cb-ent-amt'); CB.entNote = val('cb-ent-note'); };
   ['cb-ent-date', 'cb-ent-amt', 'cb-ent-note'].forEach((id) => on(id, 'input', entRead));
   on('cb-ent-type', 'change', entRead);
   click('cb-ent-save', () => { entRead(); send({ action: 'cb_entry', date: CB.entDate, type: CB.entType, amount: CB.entAmt, note: CB.entNote }); });
+  click('cb-inv-open', () => { CB.inv = !CB.inv; CB.dep = false; CB.ent = false; render(); });
+  click('cb-inv-close', () => { CB.inv = false; render(); });
+  const invRead = () => { CB.invOrder = val('cb-inv-order'); CB.invNo = val('cb-inv-no'); };
+  ['cb-inv-order', 'cb-inv-no'].forEach((id) => on(id, 'input', invRead));
+  click('cb-inv-save', () => { invRead(); send({ action: 'cb_invoice', order: CB.invOrder, invoice_no: CB.invNo }); });
 
   formUpdate(m);
 }
@@ -695,7 +722,14 @@ OFFICE_ON = ("{{(async () => { const m = BoOffice.model || {}; "
              "if (m.action === 'cb_cancel_deposit') { return call(CbCancelDeposit, { id: m.id, body: { reason: m.reason } }, () => 'Внасянето е отменено.'); } "
              "if (m.action === 'cb_entry') { return call(CbEntry, { body: { date: m.date, type: m.type, amount: m.amount, note: m.note } }, "
              "(b) => 'Записано: ' + ((b.entry && b.entry.label) || '') + ' ' + money(b.entry && b.entry.amount)); } "
-             "if (m.action === 'cb_cancel_entry') { return call(CbCancelEntry, { id: m.id, body: { reason: m.reason } }, () => 'Движението е отменено.'); } } "
+             "if (m.action === 'cb_cancel_entry') { return call(CbCancelEntry, { id: m.id, body: { reason: m.reason } }, () => 'Движението е отменено.'); } "
+             # Фактура на получател (2026-11-05): moves the order's fees between the report's two recipient
+             # groups, so the period report is re-run as well.
+             "if (m.action === 'cb_invoice') { const b = await call(CbRecipientInvoice, { body: { order: m.order, invoice_no: m.invoice_no || '' } }, "
+             "(b) => { const i = b.invoice || {}; return 'Записана фактура: ' + (i.merchant || '') + ' · поръчка ' + (i.order || '') + ' · ' + money(i.amount) + (i.how === 'card' ? ' с карта' : ' в брой'); }); "
+             "if (b && b.invoice) { await OfficeReport.run(); } return; } "
+             "if (m.action === 'cb_invoice_undo') { const b = await call(CbUndoRecipientInvoice, { id: m.id }, () => 'Фактурата е отменена.'); "
+             "if (b && b.undone) { await OfficeReport.run(); } return; } } "
              "if (m.action === 'receipt') { await storeValue('receipt_payout_id', m.id || ''); "
              "return OfficeReport.payoutPdf(); } })()}}")
 
@@ -774,6 +808,9 @@ office_rest('CbFeesPaid', 'POST', '/int/v1/office/cashbook/fees-paid', body=True
 office_rest('CbUndoFeesPaid', 'POST', "/int/v1/office/cashbook/fees-paid/{{this.params.id}}/undo")
 office_rest('CbEntry', 'POST', '/int/v1/office/cashbook/entries', body=True)
 office_rest('CbCancelEntry', 'POST', "/int/v1/office/cashbook/entries/{{this.params.id}}/cancel", body=True)
+# Фактура на получател (Maria, 2026-11-05).
+office_rest('CbRecipientInvoice', 'POST', '/int/v1/office/cashbook/recipient-invoices', body=True)
+office_rest('CbUndoRecipientInvoice', 'POST', "/int/v1/office/cashbook/recipient-invoices/{{this.params.id}}/undo")
 # v2 (2026-10-23): История's range, and the payout made from "Дължими към партньори".
 office_rest('GetHistory', 'GET', '/int/v1/office/cashbook/history', on_load=True,
             params={'from': "{{appsmith.store.hist_from || ''}}", 'to': "{{appsmith.store.hist_to || ''}}"})
