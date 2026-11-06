@@ -335,9 +335,9 @@ const CB_RESET = { open: null, scope: 'all', how: '', kind: '', ids: '', pay: nu
   from: '', to: '', off: [], payFrom: '', payTo: '', payOff: [],
   dep: false, depDate: '', depAmt: '', depNote: '', ent: false, entDate: '', entType: '', entAmt: '', entNote: '',
   inv: false, invOrder: '', invNo: '', cancel: null, cancelKind: '', reason: '',
-  // Фактури (TODO 97): which invoice's "Маркирай платена" form is open ('owed:43' / 'list:43'), how, when;
-  // which issued invoice shows its "Поправи…" choices.
-  ivPay: null, ivHow: 'bank_unicredit', ivOn: '', ivFix: null };
+  // Фактури (TODO 97): which invoice's "Маркирай платена" form is open ('owed:43' / 'list:43'), how, when, how
+  // much came in ('' = what is to pay); which issued invoice shows its "Поправи…" choices.
+  ivPay: null, ivHow: 'bank_unicredit', ivOn: '', ivAmt: '', ivFix: null };
 const CB = Object.assign({ done: null, hKind: '', hMore: false, ivMore: false }, CB_RESET);
 const HOW = { bank: 'по банка', cash: 'при вземане · в брой', card: 'при вземане · с карта' };
 const dmy = (d) => String(d || '').slice(0, 10).split('-').reverse().join('.');
@@ -377,6 +377,8 @@ function normInv(x) {
     replaces: x.replaces || null, replacedBy: x.replaced_by || null, reason: x.annul_reason || '', shop: x.shop || '',
     editable: x.editable !== undefined ? !!x.editable : (!ext && (x.status || 'issued') === 'issued' && !sent && !x.paid),
     overdue: x.overdue !== undefined ? !!x.overdue : null, pdf: x.pdf !== undefined ? !!x.pdf : !ext,
+    // what is to pay after the credit / debit notes against it (InvoiceDocument::toPay) - the "Постъпила сума" offered
+    toPay: x.to_pay !== undefined ? num(x.to_pay) : num(x.sum), notices: Array.isArray(x.notices) ? x.notices : [],
   };
 }
 const ivLate = (i) => i.overdue !== null ? i.overdue : (i.doc === 'invoice' && !i.paid && i.status !== 'annulled' && !!i.due && i.due < todayIso());
@@ -385,14 +387,34 @@ const ivLate = (i) => i.overdue !== null ? i.overdue : (i.doc === 'invoice' && !
 const freeOrders = (x) => ((x && x.orders) || []).filter((o) => !o.invoice_no);
 // The invoices drawn on this render, by the key of their "Маркирай платена" form - its button reads the sum.
 let IVS = {};
-const ivGoText = (i) => `Маркирай платена ${eur(i.sum)} · ${IV_HOW[CB.ivHow] || ''}`;
+// "Постъпила сума" (Maria, 2026-11-06): what actually came in - offered as the invoice less its credit notes plus its
+// debit notes, and what is typed is what Каса / Банка take. '' = the offered sum; NaN = not a sum.
+const ivAmtText = (n) => num(n).toFixed(2).replace('.', ',');
+const ivAmt = (i) => {
+  const t = String(CB.ivAmt || '').replace(/[\s\u00a0€]/g, '');
+  if (t === '') return i.toPay;
+  return /^[0-9]+([.,][0-9]{1,2})?$/.test(t) ? Number(t.replace(',', '.')) : NaN;
+};
+const ivAmtOk = (i) => i.ugc || (Number.isFinite(ivAmt(i)) && (ivAmt(i) > 0 || i.toPay <= 0));
+const ivGoText = (i) => i.ugc ? `Маркирай платена ${eur(i.sum)} · ${IV_HOW[CB.ivHow] || ''}`
+  : ivAmtOk(i) ? `Маркирай платена ${eur(ivAmt(i))} · ${IV_HOW[CB.ivHow] || ''}` : 'Въведете постъпилата сума';
+// One with no orders on it (a one-off service): its money reaches Каса / Банка only as "Друг приход" (the server writes it).
+const ivFree = (i) => i.doc === 'invoice' && !i.ugc && !i.external && i.kind !== 'recipient' && !i.orders;
+const ivDiff = (i) => !i.ugc && ivAmtOk(i) && Math.round(ivAmt(i) * 100) !== Math.round(i.toPay * 100)
+  ? `Различно от сумата за плащане (${eur(i.toPay)}): в ${CB.ivHow === 'cash' ? 'Каса' : 'Банка'} влиза въведеното.` : '';
 const ivPayForm = (i) =>
   `<div class="ivpay">` +
     `<label class="fld" for="iv-how"><span>Как е платено</span><select id="iv-how">` +
       Object.keys(IV_HOW_OPT).map((k) => `<option value="${k}"${CB.ivHow === k ? ' selected' : ''}>${IV_HOW_OPT[k]}</option>`).join('') + `</select></label>` +
     `<label class="fld" for="iv-on"><span>Дата на плащане</span><input type="date" id="iv-on" max="${todayIso()}" value="${esc(CB.ivOn || todayIso())}"></label>` +
-    `<button type="button" class="btn sm go" id="iv-go">${esc(ivGoText(i))}</button><button type="button" class="link" id="iv-close">затвори</button>` +
+    (i.ugc ? '' : `<label class="fld" for="iv-amt"><span>Постъпила сума, €</span><input type="text" inputmode="decimal" id="iv-amt" autocomplete="off" value="${esc(CB.ivAmt !== '' ? CB.ivAmt : ivAmtText(i.toPay))}"></label>`) +
+    `<button type="button" class="btn sm go" id="iv-go"${ivAmtOk(i) ? '' : ' disabled'}>${esc(ivGoText(i))}</button><button type="button" class="link" id="iv-close">затвори</button>` +
+    (i.notices.length ? `<div class="note" style="flex-basis:100%">Фактура ${eur(i.sum)}` +
+      i.notices.map((n) => ` · ${n.doc === 'credit' ? 'кредитно' : 'дебитно'} известие № ${esc(pad10(n.no))} ${n.doc === 'credit' ? '−' : '+'}${eur(n.sum)}`).join('') +
+      ` · за плащане <b>${eur(i.toPay)}</b></div>` : '') +
+    (ivFree(i) ? `<div class="note" style="flex-basis:100%">Фактура без поръчки: сумата влиза в ${CB.ivHow === 'cash' ? 'Каса' : 'Банка'} като „Друг приход“.</div>` : '') +
     (i.ugc ? `<div class="note" style="flex-basis:100%">UGC фактура: плащането сменя само нейния статус, наличностите и отчетите не се променят.</div>` : '') +
+    `<div class="note" id="iv-diff" style="flex-basis:100%"${ivDiff(i) ? '' : ' hidden'}>${esc(ivDiff(i))}</div>` +
   `</div>`;
 
 // An open invoice under its client in "Дължат ни клиенти" (Maria's layout, previewed 06.11).
@@ -500,7 +522,9 @@ function invoicesBlock(m) {
     if (i.replacedBy) info.push('заменена от № ' + pad10(i.replacedBy));
     if (i.reason && !/^заменена от/.test(i.reason)) info.push('причина: ' + i.reason);
     if (i.sentAt) info.push('изпратена ' + dmy(i.sentAt));
-    if (i.paid) info.push((i.paid.auto ? 'платена при доставка ' : 'платена ') + dmy(i.paid.on || '') + (IV_HOW[i.paid.how] ? ' · ' + IV_HOW[i.paid.how] : ''));
+    if (i.paid) info.push((i.paid.auto ? 'платена при доставка ' : 'платена ') + dmy(i.paid.on || '') + (IV_HOW[i.paid.how] ? ' · ' + IV_HOW[i.paid.how] : '') +
+      (i.paid.cents !== undefined && i.paid.cents !== null && Math.round(num(i.paid.cents)) !== Math.round(i.sum * 100) ? ' · постъпили ' + eur(num(i.paid.cents) / 100) : '') +
+      (i.paid.entry ? ' · като „Друг приход“' : ''));
     return `<tr><td class="num">${esc(pad10(i.no))}</td>` +
       `<td class="wr">${esc(IV_DOC[i.doc] || 'Фактура')}${i.ref && i.ref.no ? `<div class="small">към № ${esc(pad10(i.ref.no))}</div>` : ''}` +
         (i.ugc ? '<div><span class="tag">UGC · извън отчетите</span></div>' : '') + (i.external ? '<div><span class="tag">Microinvest</span></div>' : '') + `</td>` +
@@ -741,7 +765,8 @@ function historyBlock(m) {
     if (x.kind === 'payout') return `<button type="button" class="link" data-receipt="${esc(x.id)}">Разписка</button>`;
     // The "Маркирано платено" a paid invoice wrote (`invoice_no`): it comes off with the invoice, never here -
     // the server refuses it (Cashbook::undoMark).
-    if (x.kind === 'mark' && x.invoice_no) return `<span class="note">платена фактура № ${esc(pad10(x.invoice_no))}</span>`;
+    // The same for the "Друг приход" a paid фактура without orders wrote (Cashbook::cancelEntry refuses it).
+    if ((x.kind === 'mark' || x.kind === 'entry') && x.invoice_no) return `<span class="note">платена фактура № ${esc(pad10(x.invoice_no))}</span>`;
     if (x.kind === 'mark') return `<button type="button" class="link" data-cb-undo="${esc(x.id)}">отмени</button>`;
     // A recipient stamp a фактура of the system wrote ("inv_0000000047") comes off only when that фактура is
     // annulled - the server refuses it here (Cashbook::undoRecipientInvoice). A Microinvest number typed on a
@@ -1044,17 +1069,27 @@ function wireOffice(m) {
   document.querySelectorAll('[data-inv-ext-undo]').forEach((b) => b.addEventListener('click', () => send({ action: 'inv_external_undo', no: b.dataset.invExtUndo })));
   document.querySelectorAll('[data-inv-pay]').forEach((b) => b.addEventListener('click', () => {
     const key = b.dataset.invPay;
-    Object.assign(CB, CB.ivPay === key ? { ivPay: null } : { ivPay: key, ivHow: 'bank_unicredit', ivOn: todayIso() });
+    Object.assign(CB, CB.ivPay === key ? { ivPay: null } : { ivPay: key, ivHow: 'bank_unicredit', ivOn: todayIso(), ivAmt: '' });
     render();
   }));
-  on('iv-how', 'change', () => { CB.ivHow = val('iv-how'); const i = IVS[CB.ivPay]; const go = document.getElementById('iv-go'); if (i && go) go.textContent = ivGoText(i); });
+  // In-form: the button, the "different sum" note and the "Друг приход" account follow without a re-render.
+  const ivRefresh = () => {
+    const i = IVS[CB.ivPay]; if (!i) return;
+    const go = document.getElementById('iv-go'); if (go) { go.textContent = ivGoText(i); go.disabled = !ivAmtOk(i); }
+    const d = document.getElementById('iv-diff'); if (d) { d.textContent = ivDiff(i); d.hidden = !ivDiff(i); }
+  };
+  on('iv-how', 'change', () => { CB.ivHow = val('iv-how'); const i = IVS[CB.ivPay]; if (i && ivFree(i)) { render(); return; } ivRefresh(); });
   on('iv-on', 'input', () => { CB.ivOn = val('iv-on'); });
+  on('iv-amt', 'input', () => { CB.ivAmt = val('iv-amt'); ivRefresh(); });
   click('iv-close', () => { CB.ivPay = null; render(); });
   click('iv-go', () => {
     const i = IVS[CB.ivPay]; if (!i) return;
     CB.ivOn = val('iv-on');
     if (!/^20[0-9]{2}-[01][0-9]-[0-3][0-9]$/.test(CB.ivOn)) return;
-    send({ action: 'inv_paid', no: i.no, how: CB.ivHow, paid_on: CB.ivOn, sum: i.sum });
+    if (document.getElementById('iv-amt')) CB.ivAmt = val('iv-amt');
+    if (!ivAmtOk(i)) { ivRefresh(); return; }
+    const amount = i.ugc ? null : Math.round(ivAmt(i) * 100) / 100;
+    send({ action: 'inv_paid', no: i.no, how: CB.ivHow, paid_on: CB.ivOn, sum: i.ugc ? i.sum : amount, amount });
   });
   document.querySelectorAll('[data-inv-fix]').forEach((b) => b.addEventListener('click', () => { CB.ivFix = b.dataset.invFix || null; render(); }));
   document.querySelectorAll('[data-inv-edit]').forEach((b) => b.addEventListener('click', () =>
@@ -1221,10 +1256,24 @@ const IE = (() => {
     S.dueByHand = !!(issue && due && due !== plus7(issue));
   }
   // The server's rules for the dates (InvoiceDocument::normalise): the document from the switch day (07.11.2026)
-  // to today; Падеж not before it. The tax event may be earlier - the deliveries of the month.
+  // to today; Падеж not before it. The tax event may be earlier - the deliveries of the month. And the numbers run
+  // in date order (InvoiceService::refuseOutOfOrder, Maria 2026-11-06): a new number not before the last one's date
+  // (`min_date`), an edited one between its neighbours.
+  function issueRange() {
+    const t = todayIso(); const inv = MODEL.invoices || {}; const since = inv.since || '2026-11-07';
+    let min = since; let max = t;
+    if (S && S.mode === 'edit') {
+      const n = Number(S.no);
+      (inv.invoices || []).filter((d) => !d.external && d.issued_on).forEach((d) => {
+        if (Number(d.no) < n && d.issued_on > min) min = d.issued_on;
+        if (Number(d.no) > n && d.issued_on < max) max = d.issued_on;
+      });
+    } else if (inv.min_date && inv.min_date > min) min = inv.min_date;
+    return { min, max };
+  }
   function dateLimits() {
-    const t = todayIso(); const since = (MODEL.invoices && MODEL.invoices.since) || '2026-11-07';
-    $('ie-issue').min = since; $('ie-issue').max = t; $('ie-event').max = t; $('ie-due').min = $('ie-issue').value || since;
+    const t = todayIso(); const since = (MODEL.invoices && MODEL.invoices.since) || '2026-11-07'; const r = issueRange();
+    $('ie-issue').min = r.min; $('ie-issue').max = r.max; $('ie-event').max = t; $('ie-due').min = $('ie-issue').value || since;
   }
 
   function lineHtml(l, i) {
@@ -1555,6 +1604,9 @@ const IE = (() => {
     }
     if (ugcState().mixed) return 'UGC услугите се фактурират отделно.';
     if (!$('ie-issue').value || !$('ie-event').value || (S.doc === 'invoice' && !$('ie-due').value)) return 'Попълнете датите.';
+    const range = issueRange();
+    if ($('ie-issue').value < range.min) return `Датата не може да е преди ${dd(range.min)}: номерата вървят по дати.`;
+    if ($('ie-issue').value > range.max) return `Датата не може да е след ${dd(range.max)}: номерата вървят по дати.`;
     return '';
   }
   function submit(e) {
@@ -1667,7 +1719,7 @@ OFFICE_ON = ("{{(async () => { const m = BoOffice.model || {}; "
              # Paid: a client invoice marks exactly its orders paid (Cashbook::markPaid on the server), so the
              # balances and the period report move; a UGC invoice only changes its own status.
              "if (m.action === 'inv_paid') { const how = { bank_unicredit: 'по банка (УниКредит)', bank_mypos: 'по банка (myPOS)', cash: 'в брой', card: 'с карта' }; "
-             "return call(InvPaid, { no: pad(m.no), body: { how: m.how, paid_on: m.paid_on } }, (b) => b.already ? 'Фактура № ' + pad(m.no) + ' вече е маркирана платена.' : 'Фактура № ' + pad(m.no) + ' е платена ' + (how[m.how] || '') + ' · ' + money(m.sum) + '.', true); } "
+             "return call(InvPaid, { no: pad(m.no), body: { how: m.how, paid_on: m.paid_on, amount: m.amount === undefined ? null : m.amount } }, (b) => b.already ? 'Фактура № ' + pad(m.no) + ' вече е маркирана платена.' : 'Фактура № ' + pad(m.no) + ' е платена ' + (how[m.how] || '') + ' · ' + money(m.sum) + '.', true); } "
              "if (m.action === 'inv_pdf') { try { await GetInvoice.run({ no: pad(m.no), format: 'pdf-base64' }); const f = GetInvoice.data || {}; "
              "if (!f.base64) { return showAlert('PDF файлът не дойде от сървъра.', 'error'); } "
              "return download('data:application/pdf;base64,' + f.base64, f.filename || ('faktura-' + pad(m.no) + '.pdf'), 'application/pdf'); } "
