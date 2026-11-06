@@ -192,6 +192,17 @@ thead th{vertical-align:bottom}
 .mrow.tot{border-bottom:0;font-weight:700}.mrow.tot .nm{font-weight:700}
 .row h2{font-size:22px}
 tr.off td{color:var(--faint);text-decoration:line-through}
+/* Pay out / mark paid by period (TODO 95, Maria 2026-11-05): quick picks, two dates, a tick list */
+.per{display:grid;gap:10px}
+.per .act label{color:var(--muted);font-size:12.5px}
+.per .chip{padding:6px 12px;font-size:12.5px}
+.tick{max-height:280px;overflow-y:auto;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+.tick table{font-size:12.5px}
+.tick th,.tick td{padding:6px 10px}
+.tick thead th{position:sticky;top:0;background:var(--card)}
+.tick input[type=checkbox]{width:15px;height:15px;accent-color:var(--accent-ink);cursor:pointer;vertical-align:middle}
+.tick tr.un td{color:var(--faint)}
+.per[hidden],.fld[hidden]{display:none}
 tr.off td.keep{text-decoration:none}
 """
 
@@ -213,6 +224,7 @@ function send(payload) {
 // widget only draws it. Form state lives in CB, outside render(), because render() rebuilds the page on every
 // model change; `cbDone` moves only after a successful save, which is when the open form clears.
 const CB_RESET = { open: null, scope: 'all', how: '', kind: '', ids: '', pay: null, payScope: 'all', payIds: '',
+  from: '', to: '', off: [], payFrom: '', payTo: '', payOff: [],
   dep: false, depDate: '', depAmt: '', depNote: '', ent: false, entDate: '', entType: '', entAmt: '', entNote: '',
   inv: false, invOrder: '', invNo: '', cancel: null, cancelKind: '', reason: '' };
 const CB = Object.assign({ done: null, hKind: '', hMore: false }, CB_RESET);
@@ -222,8 +234,22 @@ const val = (id) => (document.getElementById(id) || {}).value || '';
 
 // Which of a merchant's orders a typed list means - the same matching the server does, so the sum shown is
 // the sum that is sent. Shop numbers ("FO053602") or ours ("order_xxx"), any case, commas or spaces.
-function pick(orders, scope, typed) {
+// 'period' (TODO 95, Maria 2026-11-05): the orders DELIVERED between the two dates (Sofia days, as the reports
+// count them), minus any she unticked. The month is often closed on its last day, so "to" may be today.
+const isoDay = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+function monthRange(which) {
+  const now = new Date();
+  if (which === 'last') return [isoDay(new Date(now.getFullYear(), now.getMonth() - 1, 1)), isoDay(new Date(now.getFullYear(), now.getMonth(), 0))];
+  return [isoDay(new Date(now.getFullYear(), now.getMonth(), 1)), isoDay(now)];
+}
+const inPeriod = (orders, from, to) => orders.filter((o) => { const d = String(o.delivered_at || '').slice(0, 10); return (!from || d >= from) && (!to || d <= to); });
+
+function pick(orders, scope, typed, per) {
   if (scope === 'all') return { hit: orders, miss: [] };
+  if (scope === 'period') {
+    const list = inPeriod(orders, per.from, per.to);
+    return { hit: list.filter((o) => !per.off.includes(o.order_id)), miss: [], list };
+  }
   const hit = []; const miss = [];
   String(typed || '').toUpperCase().split(/[\s,;]+/).filter(Boolean).forEach((id) => {
     const o = orders.find((x) => String(x.source_id).toUpperCase() === id || String(x.order_id).toUpperCase() === id);
@@ -234,8 +260,15 @@ function pick(orders, scope, typed) {
 
 function sumBox(c, scope, emptyAll) {
   const sum = c.hit.reduce((a, o) => a + num(o.amount), 0);
+  if (scope === 'period' && !c.list.length) return { html: 'Няма поръчки, доставени в този период.', cls: 'sum empty', sum };
+  if (scope === 'period' && !c.hit.length) return { html: 'Не е отметната нито една поръчка.', cls: 'sum empty', sum };
   if (!c.hit.length && !c.miss.length) {
     return { html: scope === 'some' ? 'Въведете номерата на поръчките.' : emptyAll, cls: 'sum empty', sum };
+  }
+  if (scope === 'period') {
+    return { cls: 'sum', sum,
+      html: `<div class="ln"><span>${c.hit.length} от ${plural(c.list.length, 'поръчка', 'поръчки')} в периода</span><span></span></div>` +
+        `<div class="ln tot"><span>Общо</span><span>${eur(sum)}</span></div>` };
   }
   return {
     cls: 'sum', sum,
@@ -247,6 +280,41 @@ function sumBox(c, scope, emptyAll) {
   };
 }
 
+// The period part of a form: quick picks, two dates and the tick list, every delivery in the period ticked
+// to begin with (Maria: untick the ones the client did not pay). `p` is 'cb' (mark paid) or 'pay' (pay out).
+const periodBox = (p, show, from, to) =>
+  `<div class="per" id="${p}-per"${show ? '' : ' hidden'}>` +
+    `<div class="act">` +
+      `<button type="button" class="chip" data-${p}-month="this">Този месец</button>` +
+      `<button type="button" class="chip" data-${p}-month="last">Миналия месец</button>` +
+      `<label for="${p}-from">от</label><input type="date" id="${p}-from" value="${esc(from)}">` +
+      `<label for="${p}-to">до</label><input type="date" id="${p}-to" value="${esc(to)}">` +
+    `</div>` +
+    `<div class="tick" id="${p}-list"></div>` +
+  `</div>`;
+
+function periodUpdate(p, show, orders, from, to, off) {
+  const box = document.getElementById(`${p}-per`);
+  if (!box) return;
+  box.hidden = !show;
+  if (!show) return;
+  const [tf, tt] = monthRange('this'); const [lf, lt] = monthRange('last');
+  box.querySelectorAll(`[data-${p}-month]`).forEach((b) => {
+    const on = b.dataset[p === 'cb' ? 'cbMonth' : 'payMonth'] === 'this' ? (from === tf && to === tt) : (from === lf && to === lt);
+    b.classList.toggle('on', on);
+  });
+  const list = inPeriod(orders, from, to);
+  const all = list.length && list.every((o) => !off.includes(o.order_id));
+  document.getElementById(`${p}-list`).innerHTML = list.length
+    ? `<table><thead><tr><th style="width:30px"><input type="checkbox" data-${p}-all${all ? ' checked' : ''} aria-label="Всички"></th>` +
+      `<th>Доставена</th><th>Поръчка</th><th class="r">Сума</th></tr></thead><tbody class="num">` +
+      list.map((o) => { const ticked = !off.includes(o.order_id);
+        return `<tr${ticked ? '' : ' class="un"'}><td><input type="checkbox" data-${p}-tick="${esc(o.order_id)}"${ticked ? ' checked' : ''} aria-label="${esc(o.source_id)}"></td>` +
+          `<td>${esc(dmy(o.delivered_at))} ${esc(String(o.delivered_at || '').slice(11, 16))}</td><td><strong>${esc(o.source_id)}</strong></td><td class="r">${eur(o.amount)}</td></tr>`; }).join('') +
+      `</tbody></table>`
+    : `<div class="empty" style="padding:14px 0">Няма поръчки, доставени в този период.</div>`;
+}
+
 // In-form changes update these few nodes only: re-rendering the page would drop the cursor out of the box.
 function formUpdate(m) {
   const cb = m.cashbook || {};
@@ -256,10 +324,11 @@ function formUpdate(m) {
   const markSum = document.getElementById('cb-sum');
   if (markSum) {
     document.getElementById('cb-ids-wrap').hidden = CB.scope !== 'some';
+    periodUpdate('cb', CB.scope === 'period', owedOf(CB.open), CB.from, CB.to, CB.off);
     const kindSel = document.getElementById('cb-kind');
     kindSel.disabled = CB.how !== 'pickup';
     if (CB.how !== 'pickup') { kindSel.value = ''; CB.kind = ''; }
-    const c = pick(owedOf(CB.open), CB.scope, CB.ids);
+    const c = pick(owedOf(CB.open), CB.scope, CB.ids, { from: CB.from, to: CB.to, off: CB.off });
     const b = sumBox(c, CB.scope, 'Този клиент не ни дължи нищо.');
     markSum.className = b.cls; markSum.innerHTML = b.html;
     const k = CB.how === 'pickup' ? CB.kind : CB.how;
@@ -272,7 +341,8 @@ function formUpdate(m) {
   const paySum = document.getElementById('pay-sum');
   if (paySum) {
     document.getElementById('pay-ids-wrap').hidden = CB.payScope !== 'some';
-    const c = pick(payOf(CB.pay), CB.payScope, CB.payIds);
+    periodUpdate('pay', CB.payScope === 'period', payOf(CB.pay), CB.payFrom, CB.payTo, CB.payOff);
+    const c = pick(payOf(CB.pay), CB.payScope, CB.payIds, { from: CB.payFrom, to: CB.payTo, off: CB.payOff });
     const b = sumBox(c, CB.payScope, 'Нищо за изплащане.');
     paySum.className = b.cls; paySum.innerHTML = b.html;
     const go = document.getElementById('pay-go');
@@ -329,7 +399,8 @@ function holdingsBlock(m) {
   const payForm = (x) =>
     `<div class="mform">` +
       `<div class="steps"><label class="fld" for="pay-scope"><span>Кои поръчки</span>` +
-        `<select id="pay-scope"><option value="all"${CB.payScope === 'all' ? ' selected' : ''}>Всички поръчки</option><option value="some"${CB.payScope === 'some' ? ' selected' : ''}>Избрани поръчки</option></select></label></div>` +
+        `<select id="pay-scope"><option value="all"${CB.payScope === 'all' ? ' selected' : ''}>Всички поръчки</option><option value="period"${CB.payScope === 'period' ? ' selected' : ''}>За период</option><option value="some"${CB.payScope === 'some' ? ' selected' : ''}>Избрани поръчки</option></select></label></div>` +
+      periodBox('pay', CB.payScope === 'period', CB.payFrom, CB.payTo) +
       idsBox('pay-ids', 'pay-ids-wrap', CB.payScope === 'some', CB.payIds, x.orders) +
       `<div class="sum" id="pay-sum"></div>` +
       `<div class="act"><button type="button" class="btn go" id="pay-go" disabled>Изплати</button><button type="button" class="link" id="pay-close">затвори</button></div>` +
@@ -340,12 +411,13 @@ function holdingsBlock(m) {
     `<div class="mform">` +
       `<div class="steps">` +
         `<label class="fld" for="cb-scope"><span><span class="num-step">1</span>Кои поръчки</span>` +
-          `<select id="cb-scope"><option value="all"${CB.scope === 'all' ? ' selected' : ''}>Всички поръчки</option><option value="some"${CB.scope === 'some' ? ' selected' : ''}>Избрани поръчки</option></select></label>` +
+          `<select id="cb-scope"><option value="all"${CB.scope === 'all' ? ' selected' : ''}>Всички поръчки</option><option value="period"${CB.scope === 'period' ? ' selected' : ''}>За период</option><option value="some"${CB.scope === 'some' ? ' selected' : ''}>Избрани поръчки</option></select></label>` +
         `<label class="fld" for="cb-how"><span><span class="num-step">2</span>Как е платено</span>` +
           `<select id="cb-how"><option value="">Изберете…</option><option value="bank"${CB.how === 'bank' ? ' selected' : ''}>По банка</option><option value="pickup"${CB.how === 'pickup' ? ' selected' : ''}>При вземане</option></select></label>` +
         `<label class="fld" for="cb-kind"><span><span class="num-step">3</span>При вземане</span>` +
           `<select id="cb-kind"${CB.how === 'pickup' ? '' : ' disabled'}><option value="">Изберете…</option><option value="cash"${CB.kind === 'cash' ? ' selected' : ''}>В брой</option><option value="card"${CB.kind === 'card' ? ' selected' : ''}>С карта</option></select></label>` +
       `</div>` +
+      periodBox('cb', CB.scope === 'period', CB.from, CB.to) +
       idsBox('cb-ids', 'cb-ids-wrap', CB.scope === 'some', CB.ids, x.orders) +
       `<div class="sum" id="cb-sum"></div>` +
       `<div class="act"><button type="button" class="btn go" id="cb-go" disabled>Маркирай платено</button><button type="button" class="link" id="cb-close">затвори</button></div>` +
@@ -592,34 +664,70 @@ function wireOffice(m) {
   // section 1 - payouts
   document.querySelectorAll('[data-pay]').forEach((b) => b.addEventListener('click', () => {
     const uuid = b.dataset.pay;
-    Object.assign(CB, CB.pay === uuid ? { pay: null } : { pay: uuid, payScope: 'all', payIds: '', open: null });
+    Object.assign(CB, CB.pay === uuid ? { pay: null } : { pay: uuid, payScope: 'all', payIds: '', payFrom: '', payTo: '', payOff: [], open: null });
     render();
   }));
-  on('pay-scope', 'change', () => { CB.payScope = val('pay-scope'); formUpdate(m); });
+  // The period opens on "Този месец", up to today - the month is often closed on its last day (Maria).
+  const periodWire = (p, get, set) => {
+    on(`${p}-scope`, 'change', () => { set({ scope: val(`${p}-scope`) }); const g = get();
+      if (g.scope === 'period' && !g.from && !g.to) { const [f, t] = monthRange('this'); set({ from: f, to: t, off: [] }); }
+      if (g.scope === 'period') { const s = get(); const fi = document.getElementById(`${p}-from`); if (fi) { fi.value = s.from; document.getElementById(`${p}-to`).value = s.to; } }
+      formUpdate(m); });
+    document.querySelectorAll(`[data-${p}-month]`).forEach((b) => b.addEventListener('click', () => {
+      const [f, t] = monthRange(b.dataset[p === 'cb' ? 'cbMonth' : 'payMonth']);
+      set({ from: f, to: t, off: [] });
+      document.getElementById(`${p}-from`).value = f; document.getElementById(`${p}-to`).value = t;
+      formUpdate(m);
+    }));
+    on(`${p}-from`, 'change', () => { set({ from: val(`${p}-from`), off: [] }); formUpdate(m); });
+    on(`${p}-to`, 'change', () => { set({ to: val(`${p}-to`), off: [] }); formUpdate(m); });
+    on(`${p}-list`, 'change', (e) => {
+      const el = e.target; const g = get();
+      if (el.hasAttribute(`data-${p}-all`)) {
+        const ids = Array.from(document.querySelectorAll(`[data-${p}-tick]`)).map((x) => x.getAttribute(`data-${p}-tick`));
+        set({ off: el.checked ? g.off.filter((id) => !ids.includes(id)) : Array.from(new Set(g.off.concat(ids))) });
+      } else if (el.hasAttribute(`data-${p}-tick`)) {
+        const id = el.getAttribute(`data-${p}-tick`);
+        set({ off: el.checked ? g.off.filter((x) => x !== id) : g.off.concat([id]) });
+      }
+      formUpdate(m);
+    });
+  };
+  periodWire('pay', () => ({ scope: CB.payScope, from: CB.payFrom, to: CB.payTo, off: CB.payOff }),
+    (v) => { if ('scope' in v) CB.payScope = v.scope; if ('from' in v) CB.payFrom = v.from; if ('to' in v) CB.payTo = v.to; if ('off' in v) CB.payOff = v.off; });
+  periodWire('cb', () => ({ scope: CB.scope, from: CB.from, to: CB.to, off: CB.off }),
+    (v) => { if ('scope' in v) CB.scope = v.scope; if ('from' in v) CB.from = v.from; if ('to' in v) CB.to = v.to; if ('off' in v) CB.off = v.off; });
   on('pay-ids', 'input', () => { CB.payIds = val('pay-ids'); formUpdate(m); });
   click('pay-close', () => { CB.pay = null; render(); });
   click('pay-go', () => {
     const merchant = (((m.cashbook || {}).payouts || {}).merchants || []).find((x) => x.uuid === CB.pay);
     if (!merchant) return;
-    const c = pick(merchant.orders || [], CB.payScope, CB.payIds);
+    const c = pick(merchant.orders || [], CB.payScope, CB.payIds, { from: CB.payFrom, to: CB.payTo, off: CB.payOff });
     if (!c.hit.length || c.miss.length) return;
-    send({ action: 'cb_payout', merchant: CB.pay, orders: CB.payScope === 'some' ? c.hit.map((o) => o.order_id) : null });
+    send({ action: 'cb_payout', merchant: CB.pay, orders: CB.payScope === 'all' ? null : c.hit.map((o) => o.order_id) });
   });
 
   // section 1 - fees merchants paid us
   document.querySelectorAll('[data-cb-open]').forEach((b) => b.addEventListener('click', () => {
     const uuid = b.dataset.cbOpen;
-    Object.assign(CB, CB.open === uuid ? { open: null } : { open: uuid, scope: 'all', how: '', kind: '', ids: '', pay: null });
+    Object.assign(CB, CB.open === uuid ? { open: null } : { open: uuid, scope: 'all', how: '', kind: '', ids: '', from: '', to: '', off: [], pay: null });
     render();
   }));
-  on('cb-scope', 'change', () => { CB.scope = val('cb-scope'); formUpdate(m); });
   on('cb-how', 'change', () => { CB.how = val('cb-how'); formUpdate(m); });
   on('cb-kind', 'change', () => { CB.kind = val('cb-kind'); formUpdate(m); });
   on('cb-ids', 'input', () => { CB.ids = val('cb-ids'); formUpdate(m); });
   click('cb-close', () => { CB.open = null; render(); });
   click('cb-go', () => {
     const k = CB.how === 'pickup' ? CB.kind : CB.how;
-    if (CB.open && k) send({ action: 'cb_mark', merchant: CB.open, orders: CB.scope === 'some' ? CB.ids : null, how: k });
+    if (!CB.open || !k) return;
+    // A period sends the ticked orders' own ids, the same list the server matches a typed one against.
+    if (CB.scope === 'period') {
+      const owedOrders = ((((m.cashbook || {}).owed || {}).merchants || []).find((x) => x.uuid === CB.open) || {}).orders || [];
+      const c = pick(owedOrders, 'period', '', { from: CB.from, to: CB.to, off: CB.off });
+      if (!c.hit.length) return;
+      return send({ action: 'cb_mark', merchant: CB.open, orders: c.hit.map((o) => o.order_id).join(' '), how: k });
+    }
+    send({ action: 'cb_mark', merchant: CB.open, orders: CB.scope === 'some' ? CB.ids : null, how: k });
   });
 
   // section 3 - history, deposits, other movements
