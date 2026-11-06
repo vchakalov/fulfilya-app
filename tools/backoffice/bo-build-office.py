@@ -374,7 +374,7 @@ function normInv(x) {
     sent, sentAt: x.sent_at || '', paid: x.paid || null, ugc: !!x.ugc, external: ext, kind: x.kind || null,
     client: c.name || '', merchant: x.merchant || null, issued: x.issued_on || '', due: x.due_on || '',
     sum: num(x.sum), orders: x.count !== undefined ? num(x.count) : (x.orders || []).length,
-    replaces: x.replaces || null, replacedBy: x.replaced_by || null, reason: x.annul_reason || '',
+    replaces: x.replaces || null, replacedBy: x.replaced_by || null, reason: x.annul_reason || '', shop: x.shop || '',
     editable: x.editable !== undefined ? !!x.editable : (!ext && (x.status || 'issued') === 'issued' && !sent && !x.paid),
     overdue: x.overdue !== undefined ? !!x.overdue : null, pdf: x.pdf !== undefined ? !!x.pdf : !ext,
   };
@@ -409,24 +409,44 @@ function ivLine(i) {
     `</span></div>` + (CB.ivPay === key ? ivPayForm(i) : '');
 }
 
-// "Дължат ни клиенти · по клиент": per client "Издай фактура" for the orders not on an invoice yet, then the
-// client's open invoices. The per-order "Маркирай платено" stays for fees paid at pickup and goes once every
-// owed order is on an invoice.
-function owedRows(list, markForm) {
-  if (!list.length) return `<div class="empty">Никой клиент не ни дължи.</div>`;
-  return list.map((x) => {
-    const invs = (x.invoices || []).map(normInv);
-    const rest = x.not_invoiced ? Array(num(x.not_invoiced.count)).fill(0) : freeOrders(x);
-    const open = CB.open === x.uuid;
-    return `<div class="mrow"><span class="nm">${esc(x.name)}</span><span class="cnt">${plural(num(x.count), 'поръчка', 'поръчки')}</span>` +
-      `<span class="amt num">${eur(x.amount)}</span>` +
-      (rest.length
-        ? `<span class="bt"><button type="button" class="btn sm go" data-inv-issue="${esc(x.uuid)}">Издай фактура${invs.length ? ` (${rest.length} ${rest.length === 1 ? 'нова' : 'нови'})` : ''}</button>` +
-          `<button type="button" class="btn sm" data-cb-open="${esc(x.uuid)}" aria-expanded="${open}">Маркирай платено ${open ? '▴' : '▾'}</button></span>`
-        : '') + `</div>` +
-      (open && rest.length ? markForm(x) : '') + invs.map(ivLine).join('');
-  }).join('') +
-    `<div class="mrow tot"><span class="nm">Общо</span><span class="amt num">${eur(list.reduce((a, x) => a + num(x.amount), 0))}</span></div>`;
+// "Дължат ни клиенти · по клиент": per client "Издай фактура" for what is not on an invoice yet - owed orders
+// and a fees-on-фактура client's returned parcels (Cashbook::withInvoices `not_invoiced` + `returns`) - then the
+// client's open invoices. The per-order "Маркирай платено" stays for fees paid at pickup, for the owed orders
+// only, and goes once every one of them is on an invoice.
+// `without` (Cashbook `owed.without_orders`): clients who owe no delivered order but have returned parcels to
+// invoice or an invoice still waiting. They are drawn after the total, which stays the server's owed.total (the
+// delivered orders, as the office PDF prints it): what they owe is in their invoice lines, not in that sum.
+function owedRow(x, markForm, withoutOrders) {
+  const invs = (x.invoices || []).map(normInv);
+  const ni = x.not_invoiced || null;
+  const back = ni && ni.returns ? num(ni.returns.count) : 0;
+  const free = ni ? num(ni.count) : freeOrders(x).length;
+  const fresh = free + back;
+  const markable = withoutOrders ? 0 : free;
+  const open = CB.open === x.uuid && markable > 0;
+  const cnt = withoutOrders
+    ? (back ? `${plural(back, 'върната пратка', 'върнати пратки')} за фактуриране · ${eur(ni.returns.amount)}` : 'фактура чака плащане')
+    : plural(num(x.count), 'поръчка', 'поръчки') + (back ? ` · ${plural(back, 'върната пратка', 'върнати пратки')}` : '');
+  return `<div class="mrow"><span class="nm">${esc(x.name)}</span><span class="cnt">${esc(cnt)}</span>` +
+    (withoutOrders ? '' : `<span class="amt num">${eur(x.amount)}</span>`) +
+    (fresh || markable
+      ? `<span class="bt">` +
+        (fresh ? `<button type="button" class="btn sm go" data-inv-issue="${esc(x.uuid)}">Издай фактура${invs.length ? ` (${fresh} ${fresh === 1 ? 'нова' : 'нови'})` : ''}</button>` : '') +
+        (markable ? `<button type="button" class="btn sm" data-cb-open="${esc(x.uuid)}" aria-expanded="${open}">Маркирай платено ${open ? '▴' : '▾'}</button>` : '') +
+        `</span>`
+      : '') + `</div>` +
+    (open ? markForm(x) : '') + invs.map(ivLine).join('');
+}
+function owedRows(list, without, markForm) {
+  if (!list.length && !without.length) return `<div class="empty">Никой клиент не ни дължи.</div>`;
+  return (list.length
+    ? list.map((x) => owedRow(x, markForm, false)).join('') +
+      `<div class="mrow tot"><span class="nm">Общо</span><span class="amt num">${eur(list.reduce((a, x) => a + num(x.amount), 0))}</span></div>`
+    : `<div class="empty" style="padding:12px 0">Никой клиент не ни дължи по доставени поръчки.</div>`) +
+    (without.length
+      ? `<div class="hint" style="margin-top:12px">Без дължими поръчки: върнати пратки за фактуриране или фактура, която чака плащане</div>` +
+        without.map((x) => owedRow(x, markForm, true)).join('')
+      : '');
 }
 
 const ivPill = (i) => i.status === 'annulled' ? '<span class="pill bad">Анулирана</span>'
@@ -448,6 +468,7 @@ function invoicesBlock(m) {
   // InvoiceService::refuseCorrection: a paid document is never annulled (a credit note corrects it) - except a
   // recipient's, paid at the door by itself - and neither is one a notice still points at.
   const noticed = new Set(list.filter((n) => n.ref && n.status === 'issued').map((n) => Number(n.ref.no)));
+  const shopOf = (i) => i.shop || ((Array.isArray(m.merchants) ? m.merchants : []).find((x) => x.uuid === i.merchant) || {}).name || '';
   const shown = CB.ivMore ? list : list.slice(0, 20);
   const body = shown.length ? shown.map((i) => {
     const key = 'list:' + i.no; IVS[key] = i;
@@ -471,6 +492,8 @@ function invoicesBlock(m) {
     }
     if (i.pdf) acts += `<button type="button" class="btn sm" data-inv-pdf="${esc(i.no)}">PDF</button>`;
     const info = [];
+    const shop = shopOf(i);
+    if (shop && shop !== i.client) info.push('магазин ' + shop);
     if (i.external) info.push('издадена в Microinvest');
     if (i.kind === 'recipient') info.push('на получател');
     if (i.replaces) info.push('вместо № ' + pad10(i.replaces));
@@ -695,7 +718,7 @@ function holdingsBlock(m) {
       `<div class="card"><div class="hd" style="margin-bottom:0"><h3>Дължими към партньори · по клиент</h3><span class="hint">наложен платеж за превод</span></div>` +
         paidLine + rows(pays, CB.pay, 'Изплати', 'data-pay', payForm, 'Нищо за изплащане.') + `</div>` +
       `<div class="card"><div class="hd" style="margin-bottom:0"><h3>Дължат ни клиенти · по клиент</h3><span class="hint">таксите ни по поръчки без плащане от получателя</span></div>` +
-        owedRows(owed, markForm) + `</div>` +
+        owedRows(owed, (cb.owed && cb.owed.without_orders) || [], markForm) + `</div>` +
     `</div>`;
 
   return `<div class="cb">` +
@@ -710,16 +733,15 @@ function historyBlock(m) {
   const types = cb.entry_types || {};
   const all = Array.isArray(h.rows) ? h.rows : [];
   const kinds = { payout: 'Изплащания', deposit: 'Внесени в банка', entry: 'Други движения', mark: 'Маркирано платено', invoice: 'Маркирани като фактурирани' };
-  const paidBy = {};
-  ((m.invoices && m.invoices.invoices) || []).forEach((d) => { if (d.paid && d.paid.mark) paidBy[d.paid.mark] = d.no; });
   const shown = all.filter((x) => !CB.hKind || x.kind === CB.hKind);
   const list = CB.hMore ? shown : shown.slice(0, 20);
   const pill = { payout: 'pill', deposit: 'kind', entry: 'pill', mark: 'pill ok', invoice: 'kind' };
   const amt = (v) => (v === null || v === undefined) ? '' : `<span class="${num(v) < 0 ? 'minus' : 'plus'}">${num(v) > 0 ? '+' : '−'}${fmt(Math.abs(num(v)))}</span>`;
   const action = (x) => {
     if (x.kind === 'payout') return `<button type="button" class="link" data-receipt="${esc(x.id)}">Разписка</button>`;
-    // The "Маркирано платено" a paid invoice wrote: taking it back here would leave the invoice "платена".
-    if (x.kind === 'mark' && paidBy[x.id]) return `<span class="note">платена фактура № ${esc(pad10(paidBy[x.id]))}</span>`;
+    // The "Маркирано платено" a paid invoice wrote (`invoice_no`): it comes off with the invoice, never here -
+    // the server refuses it (Cashbook::undoMark).
+    if (x.kind === 'mark' && x.invoice_no) return `<span class="note">платена фактура № ${esc(pad10(x.invoice_no))}</span>`;
     if (x.kind === 'mark') return `<button type="button" class="link" data-cb-undo="${esc(x.id)}">отмени</button>`;
     // A recipient stamp a фактура of the system wrote ("inv_0000000047") comes off only when that фактура is
     // annulled - the server refuses it here (Cashbook::undoRecipientInvoice). A Microinvest number typed on a
@@ -1086,7 +1108,8 @@ function wireOffice(m) {
 // what they owe that is not on an invoice yet (GET invoices/prefill?merchant=) - returned parcels of a fees-on-
 // фактура client included - and says which orders those are, and whether the lines add up to what is owed.
 function issueFor(m, uuid, trigger) {
-  const x = (((m.cashbook || {}).owed || {}).merchants || []).find((y) => y.uuid === uuid);
+  const o = (m.cashbook || {}).owed || {};
+  const x = (o.merchants || []).concat(o.without_orders || []).find((y) => y.uuid === uuid);
   if (!x) return;
   IE.open({ m, mode: 'new', merchant: x.uuid, name: x.name, back: `[data-inv-issue="${uuid}"]` }, trigger);
 }
@@ -1442,7 +1465,7 @@ const IE = (() => {
         note(`${IV_DOC[S.doc]} № ${pad10(d.no)} ще бъде анулирана (остава в списъка) и ще се издаде нова${S.next ? ' с № ' + pad10(S.next) : ''} за същите поръчки. Поправете грешното.`);
       } else {
         setDates(d.issued_on, d.event_on, d.due_on);
-        note(`Редактирате ${label} № ${pad10(d.no)} (още не е изпратена). Номерът остава същият.`);
+        note(`Редактирате ${label} № ${pad10(d.no)}${d.shop ? ' (' + d.shop + ')' : ''}, още не е изпратена. Номерът остава същият.`);
       }
     }
   }
@@ -1505,7 +1528,7 @@ const IE = (() => {
       if (df.issued_on) { setDates(df.issued_on, df.event_on || df.issued_on, df.due_on || plus7(df.issued_on)); dateLimits(); }
       const os = d.orders || []; const back = os.filter((o) => o.returned).length;
       note((d.kind === 'recipient' ? 'Фактура на получател за ' : 'Фактура за ') +
-        plural(os.length - back, 'поръчка', 'поръчки') + (back ? ' и ' + plural(back, 'върната пратка', 'върнати пратки') : '') +
+        [os.length - back ? plural(os.length - back, 'поръчка', 'поръчки') : '', back ? plural(back, 'върната пратка', 'върнати пратки') : ''].filter(Boolean).join(' и ') +
         (d.shop ? ' на ' + d.shop : '') + (d.from ? ` (${dmy(d.from)}${d.to && d.to !== d.from ? ' - ' + dmy(d.to) : ''})` : '') +
         `, ${eur(d.owed_sum)}. Поръчки: ${os.map((o) => o.source_id).join(', ')}.`);
       err(d.warning || '');
