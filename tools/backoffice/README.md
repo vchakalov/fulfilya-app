@@ -26,8 +26,15 @@ over `pages/`, commit, and Ico pulls in the Appsmith editor (Discard & pull) and
   клиенти" with a per-merchant "Маркирай платено", deposits. Data from `GET int/v1/office/cashbook`
   (GetCashbook); writes through CbDeposit / CbCancelDeposit / CbFeesPaid / CbUndoFeesPaid (run() params,
   Appsmith confirmation first). The form state lives in `CB` outside render(); `cb_done` in the store
-  clears it after a successful save. **Copy only BoOffice.json and the five queries** when this is the
+  clears it after a successful save. **Copy only BoOffice.json and the Office queries** when this is the
   only change: the generated BoHeader also picks up later header work meant for the merchant pages.
+  Since 2026-11-06 also the **фактури** (TODO 97): "Издай фактура" / open invoices under each client in
+  "Дължат ни клиенти", the "Фактури" list at the end, "+ Маркирай като фактурирана" in История, the payout's
+  "Разписка" right after "Изплати" and "Разписка <година>" (TODO 94). The invoice editor is a dialog inside
+  the same widget (`IE`, in `#ie-root` outside `#bo-office` so render() leaves it alone); its reads
+  (Inv* / GetInvoice queries) answer through `appsmith.store.inv_reply` (session only), tagged with the
+  editor's request number. Clear `$TMPDIR/fulfilya-bo-build/office` before a run: the generator never
+  deletes a query it stopped writing (CbRecipientInvoice went on 2026-11-06).
 
 `bo_i18n.py` is shared: every widget embeds the whole dictionary, so adding one phrase rewrites
 **every** widget JSON. That is expected — rerun all the generators together, never one alone.
