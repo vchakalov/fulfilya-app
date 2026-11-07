@@ -116,6 +116,7 @@ padding:7px 14px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;line
 padding:9px 15px;font:inherit;font-size:13.5px;font-weight:600;cursor:pointer;line-height:1;white-space:nowrap}
 .btn:hover{border-color:var(--ink)}
 .btn.go{background:var(--accent);border-color:var(--accent-hover);font-weight:700}
+#ie .btn.go.armed{background:var(--ink, #1D1D1F);border-color:var(--ink, #1D1D1F);color:#fff}
 .btn:focus-visible,.chip:focus-visible{outline:2px solid var(--accent-ink);outline-offset:2px}
 .tablewrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:13px}
@@ -1329,7 +1330,9 @@ const IE = (() => {
     $('ie-no').textContent = no ? '№ ' + pad10(no) : 'номерът се дава при издаване';
     const verb = { new: 'Издай фактура', edit: 'Запази промените по', reissue: 'Анулирай и издай', notice: 'Издай ' + docT.toLowerCase() }[S.mode];
     const go = $('ie-go');
-    go.textContent = S.saving ? 'Записва се…' : verb + (nTxt ? ' № ' + nTxt : '');
+    go.textContent = S.saving ? 'Записва се…' : (S.armed ? 'Потвърди: ' + verb.charAt(0).toLowerCase() + verb.slice(1) : verb) + (nTxt ? ' № ' + nTxt : '');
+    go.classList.toggle('armed', !!S.armed && !S.saving);
+    const ah = $('ie-armed'); if (ah) ah.hidden = !(S.armed && !S.saving);
     go.disabled = !!(S.saving || S.waiting || u.mixed);
     fit(); grow();
   }
@@ -1344,6 +1347,7 @@ const IE = (() => {
 
   // ---- talking to the page: a read or a save goes out as an onAction, its answer comes back in the model ----
   function ask(kind, payload) {
+    if (kind !== 'save') S.armed = false;
     SEQ += 1; S.wait[SEQ] = kind;
     send(Object.assign({ action: kind === 'prefill_order' ? 'inv_prefill' : 'inv_' + kind, seq: SEQ,
       merchant: null, order: null, eik: null, no: null, mode: null, body: null, company: null, label: null }, payload));
@@ -1384,6 +1388,7 @@ const IE = (() => {
               `<label><span>Падеж <span style="font-weight:500">(+7 дни)</span></span><input id="ie-due" type="date"></label></div>` +
             `<div class="ie-g2"><label>Съставил<input id="ie-author"></label></div></fieldset>` +
           `<div class="ie-found bad" id="ie-err" role="alert" hidden></div>` +
+          `<div class="ie-found warn" id="ie-armed" role="status" hidden>Проверете документа вдясно. Натиснете бутона още веднъж, за да го издадете: номерът се използва само веднъж.</div>` +
           `<div class="ie-acts"><button class="btn go" type="submit" id="ie-go"></button><button class="btn" type="button" id="ie-cancel">Отказ</button>` +
             `<span class="hint">После: бутон „PDF“ и я изпращате вие. Докато не е маркирана „Изпратена“, фактурата се редактира свободно; след това: анулиране и нова фактура, или кредитно/дебитно известие. Нищо не се трие.</span></div>` +
         `</form>` +
@@ -1403,8 +1408,8 @@ const IE = (() => {
       row.querySelector('.net').innerHTML = 'без ДДС: ' + money(r2(l.gross / 1.2)) + ' € / бр' + (l.svc === 'ugc' ? ' · <b>UGC: извън куриерските отчети</b>' : '');
       paper();
     });
-    $('ie-lines').addEventListener('click', (e) => { const d = e.target.dataset.del; if (d !== undefined) { S.lines.splice(+d, 1); drawLines(); } });
-    $('ie-add').addEventListener('click', () => { S.lines.push(blank()); drawLines(); });
+    $('ie-lines').addEventListener('click', (e) => { const d = e.target.dataset.del; if (d !== undefined) { S.armed = false; S.lines.splice(+d, 1); drawLines(); } });
+    $('ie-add').addEventListener('click', () => { S.armed = false; S.lines.push(blank()); drawLines(); });
     $('ie-byorder').addEventListener('click', () => { const r = $('ie-orderrow'); r.hidden = !r.hidden; if (!r.hidden) $('ie-order').focus(); });
     const loadOrder = () => {
       const o = $('ie-order').value.trim(); if (!o) return;
@@ -1437,7 +1442,8 @@ const IE = (() => {
     document.querySelectorAll('#ie [data-notice]').forEach((b) => b.addEventListener('click', () => { setNotice(b.dataset.notice); paper(); }));
     $('ie-issue').addEventListener('input', () => { if (!S.dueByHand && $('ie-issue').value) $('ie-due').value = plus7($('ie-issue').value); dateLimits(); });
     $('ie-due').addEventListener('input', () => { S.dueByHand = true; });
-    $('ie-f').addEventListener('input', (e) => { if (!e.target.closest('.ie-line')) paper(); });
+    // any change after the first press of the issue button disarms it: the second press confirms what was seen
+    $('ie-f').addEventListener('input', () => { S.armed = false; paper(); });
     $('ie-f').addEventListener('submit', submit);
     $('ie-x').addEventListener('click', close);
     $('ie-cancel').addEventListener('click', close);
@@ -1452,7 +1458,7 @@ const IE = (() => {
     const inv = m.invoices || {};
     S = { open: true, mode: o.mode, no: o.no || null, next: inv.next_no || null, doc: 'invoice', ref: null, kind: 'eik', merchant: '',
       lines: [blank()], pay: 'card', orders: [], ordersMerchant: null, docKind: null, replaces: null, loaded: null, dueByHand: false,
-      waiting: null, saving: false, wait: {}, back: o.back || '', top: 0 };
+      waiting: null, saving: false, armed: false, wait: {}, back: o.back || '', top: 0 };
     build(m);
     const root = $('bo-root');
     S.top = trigger ? Math.max(0, Math.round(trigger.getBoundingClientRect().top - root.getBoundingClientRect().top - 40)) : 0;
@@ -1612,8 +1618,11 @@ const IE = (() => {
   function submit(e) {
     e.preventDefault();
     if (!S || S.saving || S.waiting) return;
-    const problem = check(); if (problem) { err(problem); return; }
+    const problem = check(); if (problem) { S.armed = false; err(problem); return paper(); }
     err('');
+    // two presses (2026-11-07): the first only arms the button; the number is used for good on the second
+    if (!S.armed) { S.armed = true; return paper(); }
+    S.armed = false;
     const r = rec(); const person = S.kind === 'person'; const u = ugcState();
     const client = { uuid: S.kind === 'merchant' ? (S.merchant || null) : null, name: r.name.trim(), eik: person ? '' : r.eik.trim(),
       vat: person ? '' : r.vat.trim(), city: r.city.trim(), address: r.addr.trim(), mol: person ? '' : r.mol.trim() };
@@ -1641,7 +1650,11 @@ appsmith.onModelChange(render);
 
 # The page's handler: every control above ends up in one of OfficeReport's existing
 # functions. Nothing about the money is re-implemented here - the widget is a surface.
-OFFICE_ON = ("{{(async () => { const m = BoOffice.model || {}; "
+# 2026-11-07 (Ico): this used to run inline as the widget's onAction, where Appsmith hands the code a snapshot -
+# after `await Q.run()` Q.data was still the PREVIOUS answer (empty on a first press: the invoice form stayed blank,
+# the issue toast read № 0000000000, a PDF could be the previous document). In a JS object (login, Excel import)
+# .data is fresh, so the body now lives in OfficeBook.act() and the handler only calls it.
+OFFICE_BOOK_BODY = ("const m = BoOffice.model || {}; "
              "if (m.action === 'merchant') { await storeValue('office_merchant', m.merchant || 'all'); "
              "return OfficeReport.run(); } "
              "if (m.action === 'period' && m.period === 'all') { return OfficeReport.useRange((GetCashbook.data && GetCashbook.data.since) || '2026-09-14', OfficeReport.today()); } "
@@ -1682,18 +1695,19 @@ OFFICE_ON = ("{{(async () => { const m = BoOffice.model || {}; "
              "const money = (n) => Number(n || 0).toFixed(2).replace('.', ',') + ' €'; "
              "const pad = (n) => String(n == null ? '' : n).padStart(10, '0'); "
              "const cancelled = (e) => /cancel/i.test(String(e && (e.name || e.message) || '')); "
-             "const call = async (q, params, ok, report) => { try { await q.run(params); } catch (e) { const b = q.data || {}; "
+             "const got = (res, q) => (res && typeof res === 'object' ? res : null) || q.data || {}; "
+             "const call = async (q, params, ok, report) => { let res; try { res = await q.run(params); } catch (e) { const b = q.data || {}; "
              "if (cancelled(e)) { return; } "
              "return showAlert((en ? 'Not saved: ' : 'Не е записано: ') + (b.error || e.message || ''), 'error'); } "
-             "const b = q.data || {}; if (b.error) { return showAlert((en ? 'Not saved: ' : 'Не е записано: ') + b.error, 'error'); } "
+             "const b = got(res, q); if (b.error) { return showAlert((en ? 'Not saved: ' : 'Не е записано: ') + b.error, 'error'); } "
              "await storeValue('cb_done', Number(appsmith.store.cb_done || 0) + 1); showAlert(ok(b), 'success'); "
              "await Promise.all([GetCashbook.run(), GetHistory.run(), GetInvoices.run().catch(() => null)]); "
              "if (report) { await OfficeReport.run(); } return b; }; "
              # The invoice editor's reads: the answer goes back through the store (this session only), tagged
              # with the editor's request number, and the editor takes the one it asked for.
              "const reply = (r) => storeValue('inv_reply', Object.assign({ seq: m.seq, kind: m.action }, r), false); "
-             "const ask = async (q, params) => { try { await q.run(params); } catch (e) { const b = q.data || {}; return reply({ ok: false, error: b.error || e.message || '' }); } "
-             "const b = q.data || {}; return reply(b.error ? { ok: false, error: b.error } : { ok: true, data: b }); }; "
+             "const ask = async (q, params) => { let res; try { res = await q.run(params); } catch (e) { const b = q.data || {}; return reply({ ok: false, error: b.error || e.message || '' }); } "
+             "const b = got(res, q); return reply(b.error ? { ok: false, error: b.error } : { ok: true, data: b }); }; "
              "if (m.action === 'inv_prefill') { return m.order ? ask(InvPrefillOrder, { order: m.order }) : ask(InvPrefill, { merchant: m.merchant }); } "
              "if (m.action === 'inv_lookup') { return ask(InvLookup, { eik: m.eik }); } "
              "if (m.action === 'inv_company') { return ask(InvCompany, { merchant: m.merchant }); } "
@@ -1702,10 +1716,10 @@ OFFICE_ON = ("{{(async () => { const m = BoOffice.model || {}; "
              # from the system keeps the company details typed here for next time (no second confirmation:
              # it rides on the document just confirmed); if that save fails the document still stands.
              "if (m.action === 'inv_save') { const q = m.mode === 'edit' ? InvUpdate : InvCreate; "
-             "try { await q.run(m.mode === 'edit' ? { no: pad(m.no), body: m.body } : { body: m.body }); } catch (e) { const b = q.data || {}; "
+             "let res; try { res = await q.run(m.mode === 'edit' ? { no: pad(m.no), body: m.body } : { body: m.body }); } catch (e) { const b = q.data || {}; "
              "if (cancelled(e)) { return reply({ ok: false, error: '' }); } await reply({ ok: false, error: b.error || e.message || '' }); "
              "return showAlert('Не е записано: ' + (b.error || e.message || ''), 'error'); } "
-             "const b = q.data || {}; if (b.error) { await reply({ ok: false, error: b.error }); return showAlert('Не е записано: ' + b.error, 'error'); } "
+             "const b = got(res, q); if (b.error) { await reply({ ok: false, error: b.error }); return showAlert('Не е записано: ' + b.error, 'error'); } "
              "const d = b.invoice || b; const no = pad(d.no || m.no); "
              "if (m.company && m.company.merchant) { try { await InvCompanySave.run({ merchant: m.company.merchant, body: m.company.data }); } catch (e) { const c = InvCompanySave.data || {}; "
              "showAlert('Документът е издаден, но данните на фирмата не са запазени за следващия път: ' + (c.error || e.message || ''), 'warning'); } } "
@@ -1720,7 +1734,7 @@ OFFICE_ON = ("{{(async () => { const m = BoOffice.model || {}; "
              # balances and the period report move; a UGC invoice only changes its own status.
              "if (m.action === 'inv_paid') { const how = { bank_unicredit: 'по банка (УниКредит)', bank_mypos: 'по банка (myPOS)', cash: 'в брой', card: 'с карта' }; "
              "return call(InvPaid, { no: pad(m.no), body: { how: m.how, paid_on: m.paid_on, amount: m.amount === undefined ? null : m.amount } }, (b) => b.already ? 'Фактура № ' + pad(m.no) + ' вече е маркирана платена.' : 'Фактура № ' + pad(m.no) + ' е платена ' + (how[m.how] || '') + ' · ' + money(m.sum) + '.', true); } "
-             "if (m.action === 'inv_pdf') { try { await GetInvoice.run({ no: pad(m.no), format: 'pdf-base64' }); const f = GetInvoice.data || {}; "
+             "if (m.action === 'inv_pdf') { try { const res = await GetInvoice.run({ no: pad(m.no), format: 'pdf-base64' }); const f = (res && typeof res === 'object' ? res : null) || GetInvoice.data || {}; "
              "if (!f.base64) { return showAlert('PDF файлът не дойде от сървъра.', 'error'); } "
              "return download('data:application/pdf;base64,' + f.base64, f.filename || ('faktura-' + pad(m.no) + '.pdf'), 'application/pdf'); } "
              "catch (e) { const b = GetInvoice.data || {}; return showAlert('PDF файлът не можа да се създаде: ' + (b.error || e.message || ''), 'error'); } } "
@@ -1758,10 +1772,12 @@ OFFICE_ON = ("{{(async () => { const m = BoOffice.model || {}; "
              "return OfficeReport.payoutPdf(); } "
              "if (m.action === 'payout_dismiss') { return storeValue('last_payout', null, false); } "
              # "Разписка <година>" (Maria, 2026-11-06): every НП paid out to that client in the year, one PDF.
-             "if (m.action === 'annual') { try { await GetPayoutAnnual.run({ merchant: m.merchant, year: m.year }); const f = GetPayoutAnnual.data || {}; "
+             "if (m.action === 'annual') { try { const res = await GetPayoutAnnual.run({ merchant: m.merchant, year: m.year }); const f = (res && typeof res === 'object' ? res : null) || GetPayoutAnnual.data || {}; "
              "if (!f.base64) { return showAlert('Годишната разписка не дойде от сървъра.', 'error'); } "
              "return download('data:application/pdf;base64,' + f.base64, f.filename || ('razpiska-' + m.year + '.pdf'), 'application/pdf'); } "
-             "catch (e) { const b = GetPayoutAnnual.data || {}; return b.error ? showAlert(b.error, 'warning') : showAlert('Годишната разписка не можа да се създаде: ' + (e.message || ''), 'error'); } } })()}}")
+             "catch (e) { const b = GetPayoutAnnual.data || {}; return b.error ? showAlert(b.error, 'warning') : showAlert('Годишната разписка не можа да се създаде: ' + (e.message || ''), 'error'); } }")
+OFFICE_ON = "{{OfficeBook.act()}}"
+OFFICE_BOOK_JS = "export default {\n  async act () {\n    " + OFFICE_BOOK_BODY + "\n  }\n}\n"
 
 OFFICE_MODEL = ("{{ { " + bo_i18n.MODEL_LANG + ", report: GetCodReport.data, merchants: ListMerchants.data, "
                 "hist: GetHistory.data, returns: GetPeriodReturns.data, "
@@ -1864,8 +1880,10 @@ office_rest('GetInvoice', 'GET', "/int/v1/office/invoices/{{this.params.no}}", p
 # Two queries rather than one with an empty parameter: the server must see either ?merchant= or ?order=.
 office_rest('InvPrefill', 'GET', '/int/v1/office/invoices/prefill', params={'merchant': "{{this.params.merchant}}"})
 office_rest('InvPrefillOrder', 'GET', '/int/v1/office/invoices/prefill', params={'order': "{{this.params.order}}"})
-office_rest('InvCreate', 'POST', '/int/v1/office/invoices', body=True)
-office_rest('InvUpdate', 'PUT', "/int/v1/office/invoices/{{this.params.no}}", body=True)
+# Issue / edit: no Appsmith confirmation (its box is English and names the query, "Are you sure you want to run
+# InvCreate?"); the editor's own button asks in Bulgarian - the first press arms it, the second issues (2026-11-07).
+office_rest('InvCreate', 'POST', '/int/v1/office/invoices', body=True, confirm=False)
+office_rest('InvUpdate', 'PUT', "/int/v1/office/invoices/{{this.params.no}}", body=True, confirm=False)
 office_rest('InvSent', 'POST', "/int/v1/office/invoices/{{this.params.no}}/sent")
 office_rest('InvPaid', 'POST', "/int/v1/office/invoices/{{this.params.no}}/paid", body=True)
 office_rest('InvExternal', 'POST', '/int/v1/office/invoices/external', body=True)
@@ -1875,6 +1893,33 @@ office_rest('InvExternalUndo', 'POST', "/int/v1/office/invoices/external/{{this.
 office_rest('InvLookup', 'GET', '/int/v1/office/companies/lookup', params={'eik': "{{this.params.eik}}"})
 office_rest('InvCompany', 'GET', "/int/v1/office/merchants/{{this.params.merchant}}/company")
 office_rest('InvCompanySave', 'PUT', "/int/v1/office/merchants/{{this.params.merchant}}/company", body=True, confirm=False)
+
+# OfficeBook (2026-11-07): the page handler as a JS object, so `await Q.run()` is followed by fresh Q.data. Its one
+# function needs its own queries/OfficeBook-act entry or Appsmith never resolves OfficeBook.act() after a Pull
+# (git-import trap 4). Long timeout: a write waits for Appsmith's confirmation box and then re-reads four queries.
+def _jsgid(name):
+    for d in ('jsobjects', 'queries'):
+        p = os.path.join(REPO, 'pages', 'Office', d, name, 'metadata.json')
+        if os.path.exists(p):
+            try: return json.load(open(p, encoding='utf-8'))['gitSyncId']
+            except Exception: pass
+    return f'{APP}_{_uuid.uuid5(_uuid.NAMESPACE_URL, "fulfilya-backoffice/Office/" + name)}'
+
+
+w('pages/Office/jsobjects/OfficeBook/OfficeBook.js', OFFICE_BOOK_JS)
+w('pages/Office/jsobjects/OfficeBook/metadata.json', {
+    "gitSyncId": _jsgid('OfficeBook'), "id": "Office_OfficeBook",
+    "unpublishedCollection": {"name": "OfficeBook", "pageId": "Office", "pluginId": "js-plugin", "pluginType": "JS", "variables": []}})
+w('pages/Office/queries/OfficeBook-act/metadata.json', {
+    "gitSyncId": _jsgid('OfficeBook-act'), "id": "Office_OfficeBook.act", "pluginId": "js-plugin", "pluginType": "JS",
+    "unpublishedAction": {
+        "actionConfiguration": {"encodeParamsToggle": True, "isAsync": True, "jsArguments": [], "paginationType": "NONE",
+                                "timeoutInMillisecond": 600000},
+        "collectionId": "Office_OfficeBook", "confirmBeforeExecute": False,
+        "datasource": {"isAutoGenerated": False, "name": "UNUSED_DATASOURCE", "pluginId": "js-plugin"},
+        "dynamicBindingPathList": [{"key": "body"}],
+        "fullyQualifiedName": "OfficeBook.act", "name": "act", "pageId": "Office",
+        "runBehaviour": "MANUAL", "userSetOnLoad": False}})
 
 # The widgets вариант А replaces. Removing the file is how a widget leaves on the next
 # Pull; they are listed rather than globbed so a new one is never swept up by accident.
