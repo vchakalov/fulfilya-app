@@ -22,7 +22,7 @@
       "queryParameters": [
         {
           "key": "order_id",
-          "value": "{{OrdersTable.selectedRow.order_id}}"
+          "value": "{{OrdersTable.selectedRow.order_id || 'order_none'}}"
         }
       ],
       "paginationType": "NONE",
