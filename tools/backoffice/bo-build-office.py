@@ -1663,6 +1663,10 @@ OFFICE_BOOK_BODY = ("const m = BoOffice.model || {}; "
              # English and an empty report (tester finding, 2026-10-02) - so a date is checked
              # here as a real YYYY-MM-DD from 2026 before anything is asked.
              "const en = appsmith.store.bo_lang === 'en'; "
+             # A request's answer: run()'s own result; after a refusal, q.data once Appsmith has written the new
+             # answer into it (it lands a moment after the rejection - 07.11, the reason only showed on a second press).
+             "const got = (res, q) => (res && typeof res === 'object' ? res : null) || q.data || {}; "
+             "const settle = async (q, before) => { for (let i = 0; i < 20 && q.data === before; i += 1) { await new Promise((r) => setTimeout(r, 100)); } return q.data || {}; }; "
              "const okDate = (d) => /^20[2-9][0-9]-[01][0-9]-[0-3][0-9]$/.test(d || '') && d >= '2026-01-01'; "
              "if (m.action === 'range') { if (!m.from || !m.to) { return showAlert(en ? 'Pick a start and an end date.' : 'Избери начална и крайна дата.', 'warning'); } "
              "if (!okDate(m.from) || !okDate(m.to)) { return showAlert(en ? 'Check the dates - the year has to be four digits, from 2026 on.' : 'Провери датите - годината трябва да е с четири цифри, от 2026 нататък.', 'warning'); } "
@@ -1695,8 +1699,7 @@ OFFICE_BOOK_BODY = ("const m = BoOffice.model || {}; "
              "const money = (n) => Number(n || 0).toFixed(2).replace('.', ',') + ' €'; "
              "const pad = (n) => String(n == null ? '' : n).padStart(10, '0'); "
              "const cancelled = (e) => /cancel/i.test(String(e && (e.name || e.message) || '')); "
-             "const got = (res, q) => (res && typeof res === 'object' ? res : null) || q.data || {}; "
-             "const call = async (q, params, ok, report) => { let res; try { res = await q.run(params); } catch (e) { const b = q.data || {}; "
+                          "const call = async (q, params, ok, report) => { let res; const before = q.data; try { res = await q.run(params); } catch (e) { const b = await settle(q, before); "
              "if (cancelled(e)) { return; } "
              "return showAlert((en ? 'Not saved: ' : 'Не е записано: ') + (b.error || e.message || ''), 'error'); } "
              "const b = got(res, q); if (b.error) { return showAlert((en ? 'Not saved: ' : 'Не е записано: ') + b.error, 'error'); } "
@@ -1706,7 +1709,7 @@ OFFICE_BOOK_BODY = ("const m = BoOffice.model || {}; "
              # The invoice editor's reads: the answer goes back through the store (this session only), tagged
              # with the editor's request number, and the editor takes the one it asked for.
              "const reply = (r) => storeValue('inv_reply', Object.assign({ seq: m.seq, kind: m.action }, r), false); "
-             "const ask = async (q, params) => { let res; try { res = await q.run(params); } catch (e) { const b = q.data || {}; return reply({ ok: false, error: b.error || e.message || '' }); } "
+             "const ask = async (q, params) => { let res; const before = q.data; try { res = await q.run(params); } catch (e) { const b = await settle(q, before); return reply({ ok: false, error: b.error || e.message || '' }); } "
              "const b = got(res, q); return reply(b.error ? { ok: false, error: b.error } : { ok: true, data: b }); }; "
              "if (m.action === 'inv_prefill') { return m.order ? ask(InvPrefillOrder, { order: m.order }) : ask(InvPrefill, { merchant: m.merchant }); } "
              "if (m.action === 'inv_lookup') { return ask(InvLookup, { eik: m.eik }); } "
@@ -1716,7 +1719,7 @@ OFFICE_BOOK_BODY = ("const m = BoOffice.model || {}; "
              # from the system keeps the company details typed here for next time (no second confirmation:
              # it rides on the document just confirmed); if that save fails the document still stands.
              "if (m.action === 'inv_save') { const q = m.mode === 'edit' ? InvUpdate : InvCreate; "
-             "let res; try { res = await q.run(m.mode === 'edit' ? { no: pad(m.no), body: m.body } : { body: m.body }); } catch (e) { const b = q.data || {}; "
+             "let res; const before = q.data; try { res = await q.run(m.mode === 'edit' ? { no: pad(m.no), body: m.body } : { body: m.body }); } catch (e) { const b = await settle(q, before); "
              "if (cancelled(e)) { return reply({ ok: false, error: '' }); } await reply({ ok: false, error: b.error || e.message || '' }); "
              "return showAlert('Не е записано: ' + (b.error || e.message || ''), 'error'); } "
              "const b = got(res, q); if (b.error) { await reply({ ok: false, error: b.error }); return showAlert('Не е записано: ' + b.error, 'error'); } "
@@ -1734,10 +1737,10 @@ OFFICE_BOOK_BODY = ("const m = BoOffice.model || {}; "
              # balances and the period report move; a UGC invoice only changes its own status.
              "if (m.action === 'inv_paid') { const how = { bank_unicredit: 'по банка (УниКредит)', bank_mypos: 'по банка (myPOS)', cash: 'в брой', card: 'с карта' }; "
              "return call(InvPaid, { no: pad(m.no), body: { how: m.how, paid_on: m.paid_on, amount: m.amount === undefined ? null : m.amount } }, (b) => b.already ? 'Фактура № ' + pad(m.no) + ' вече е маркирана платена.' : 'Фактура № ' + pad(m.no) + ' е платена ' + (how[m.how] || '') + ' · ' + money(m.sum) + '.', true); } "
-             "if (m.action === 'inv_pdf') { try { const res = await GetInvoice.run({ no: pad(m.no), format: 'pdf-base64' }); const f = (res && typeof res === 'object' ? res : null) || GetInvoice.data || {}; "
+             "if (m.action === 'inv_pdf') { const before = GetInvoice.data; try { const res = await GetInvoice.run({ no: pad(m.no), format: 'pdf-base64' }); const f = (res && typeof res === 'object' ? res : null) || GetInvoice.data || {}; "
              "if (!f.base64) { return showAlert('PDF файлът не дойде от сървъра.', 'error'); } "
              "return download('data:application/pdf;base64,' + f.base64, f.filename || ('faktura-' + pad(m.no) + '.pdf'), 'application/pdf'); } "
-             "catch (e) { const b = GetInvoice.data || {}; return showAlert('PDF файлът не можа да се създаде: ' + (b.error || e.message || ''), 'error'); } } "
+             "catch (e) { const b = await settle(GetInvoice, before); return showAlert('PDF файлът не можа да се създаде: ' + (b.error || e.message || ''), 'error'); } } "
              # "+ Маркирай като фактурирана" (Maria, 2026-11-06): orders invoiced in Microinvest (№ 1-42). The
              # server sorts them - door-paid fees move to "с фактура", owed orders wait under that invoice - and
              # refuses the whole list, naming them, when any number is unknown.
@@ -1772,10 +1775,10 @@ OFFICE_BOOK_BODY = ("const m = BoOffice.model || {}; "
              "return OfficeReport.payoutPdf(); } "
              "if (m.action === 'payout_dismiss') { return storeValue('last_payout', null, false); } "
              # "Разписка <година>" (Maria, 2026-11-06): every НП paid out to that client in the year, one PDF.
-             "if (m.action === 'annual') { try { const res = await GetPayoutAnnual.run({ merchant: m.merchant, year: m.year }); const f = (res && typeof res === 'object' ? res : null) || GetPayoutAnnual.data || {}; "
+             "if (m.action === 'annual') { const before = GetPayoutAnnual.data; try { const res = await GetPayoutAnnual.run({ merchant: m.merchant, year: m.year }); const f = (res && typeof res === 'object' ? res : null) || GetPayoutAnnual.data || {}; "
              "if (!f.base64) { return showAlert('Годишната разписка не дойде от сървъра.', 'error'); } "
              "return download('data:application/pdf;base64,' + f.base64, f.filename || ('razpiska-' + m.year + '.pdf'), 'application/pdf'); } "
-             "catch (e) { const b = GetPayoutAnnual.data || {}; return b.error ? showAlert(b.error, 'warning') : showAlert('Годишната разписка не можа да се създаде: ' + (e.message || ''), 'error'); } }")
+             "catch (e) { const b = await settle(GetPayoutAnnual, before); return b.error ? showAlert(b.error, 'warning') : showAlert('Годишната разписка не можа да се създаде: ' + (e.message || ''), 'error'); } }")
 OFFICE_ON = "{{OfficeBook.act()}}"
 OFFICE_BOOK_JS = "export default {\n  async act () {\n    " + OFFICE_BOOK_BODY + "\n  }\n}\n"
 
