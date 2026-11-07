@@ -25,11 +25,7 @@
       "key": "onOptionChange"
     }
   ],
-  "dynamicTriggerPathList": [
-    {
-      "key": "onOptionChange"
-    }
-  ],
+  "dynamicTriggerPathList": [],
   "isDisabled": false,
   "isFilterable": false,
   "isLoading": false,
@@ -50,7 +46,7 @@
   "mobileRightColumn": 64,
   "mobileTopRow": 7,
   "needsErrorInfo": false,
-  "onOptionChange": "{{\n    // Update the order with new service rate\n    UpdateOrderServiceRate.run({\n      serviceRateUuid: ServiceRateSelect.selectedOptionValue\n    }).then(() => {\n\t\t\tsetTimeout(() => GetOrderDetails.run(), 1000);\n      const selectedRate = GetAvailableServiceRates.data?.find(r => r.service_rate_uuid === ServiceRateSelect.selectedOptionValue);\n      showAlert(`Service updated to ${selectedRate?.display_name || 'new rate'}!`, \"success\");\n      GetOrderDetails.run(); // Refresh data\n    }).catch(err => {\n      showAlert(\"Error updating service rate\", \"error\");\n    });\n  }}\n}\n",
+  "onOptionChange": "",
   "optionLabel": "label",
   "optionValue": "value",
   "parentColumnSpace": 9.63828125,

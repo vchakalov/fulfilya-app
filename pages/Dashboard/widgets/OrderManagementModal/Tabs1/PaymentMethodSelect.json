@@ -25,11 +25,7 @@
       "key": "isDisabled"
     }
   ],
-  "dynamicTriggerPathList": [
-    {
-      "key": "onOptionChange"
-    }
-  ],
+  "dynamicTriggerPathList": [],
   "isDisabled": false,
   "isFilterable": false,
   "isLoading": false,
@@ -50,7 +46,7 @@
   "mobileRightColumn": 23,
   "mobileTopRow": 2,
   "needsErrorInfo": false,
-  "onOptionChange": "{{\n    UpdatePaymentMethod.run().then(() => {\n    \n      GetOrderDetails.run(); // Refresh data\n    }).catch(err => {\n      showAlert(\"Error updating payment method\", \"error\");\n    });\n  }}",
+  "onOptionChange": "",
   "optionLabel": "label",
   "optionValue": "value",
   "originalBottomRow": 14,

@@ -19,11 +19,7 @@
       "key": "onClick"
     }
   ],
-  "dynamicTriggerPathList": [
-    {
-      "key": "onClick"
-    }
-  ],
+  "dynamicTriggerPathList": [],
   "iconAlign": "left",
   "isDefaultClickDisabled": true,
   "isDisabled": false,
@@ -37,7 +33,7 @@
   "mobileRightColumn": 16,
   "mobileTopRow": 39,
   "needsErrorInfo": false,
-  "onClick": "{{\n      CancelOrder.run().then(() => {\n        showAlert(\"Order cancelled successfully!\", \"success\");\n        GetOrderDetails.run();\n        closeModal('OrderManagementModal');\n      }).catch(err => {\n        showAlert(\"Error cancelling order: \" + err.message, \"error\");\n      });\n    }}",
+  "onClick": "",
   "originalBottomRow": 43,
   "originalTopRow": 39,
   "parentColumnSpace": 9.71328125,

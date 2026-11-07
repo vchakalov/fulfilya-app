@@ -1,8 +1,0 @@
--- CancelOrder
--- Triggers: Cancel Order button click
-UPDATE orders 
-SET 
-  status = 'canceled',
-  updated_at = NOW()
-WHERE public_id = '{{OrdersTable.selectedRow.order_id}}'
-  AND status NOT IN ('delivered', 'canceled');

@@ -174,14 +174,7 @@ export default {
         PickupLatHidden.setValue(loc.lat);
         PickupLngHidden.setValue(loc.lng);
 
-        // Save to database
-        UpdatePickupLocationWithCoords.run().then(() => {
-          showAlert(`Pickup location updated: ${resolvedAddress.shortName}`, "success");
-          // DON'T refresh GetOrderDetails here - it resets the input!
-          // GetOrderDetails.run(); // REMOVE THIS LINE
-        }).catch(err => {
-          showAlert("Error updating pickup location", "error");
-        });
+        // (The old database save was removed 2026-11-07, TODO 80.1 c - this hidden edit field saves nothing.)
       } else {
         showAlert("Address not found - keeping current location", "warning");
       }
@@ -207,12 +200,7 @@ export default {
       DropoffLatHidden.setValue(loc.lat);
       DropoffLngHidden.setValue(loc.lng);
 
-      // Save to database
-      UpdateDropoffLocationWithCoord.run().then(() => {
-        showAlert(`Delivery location updated: ${resolvedAddress.shortName}`, "success");
-      }).catch(err => {
-        showAlert("Error updating delivery location", "error");
-      });
+      // (The old database save was removed 2026-11-07, TODO 80.1 c - this hidden edit field saves nothing.)
     } else {
       showAlert("Address not found - keeping current location", "warning");
     }
