@@ -1,4 +1,0 @@
-SELECT JSON_UNQUOTE(JSON_EXTRACT(s.value, '$.options')) AS options
-FROM appsmith_portal_settings s
-WHERE s.`key` = CONCAT('fulfilya.payer_options.', '{{appsmith.store.customer_uuid}}')
-LIMIT 1
