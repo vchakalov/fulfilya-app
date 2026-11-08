@@ -63,9 +63,10 @@
     "recipient_notes",
     "shop_order_id",
     "cod_goods",
-    "payer"
+    "payer",
+    "delivery_date"
   ],
-  "columnUpdatedAt": 1792874246641,
+  "columnUpdatedAt": 1794128639225,
   "columnWidthMap": {
     "customColumn3": 198,
     "external_order_id": 203
@@ -138,6 +139,9 @@
       "key": "primaryColumns.delivery_amount.computedValue"
     },
     {
+      "key": "primaryColumns.delivery_date.computedValue"
+    },
+    {
       "key": "primaryColumns.delivery_full_address.computedValue"
     },
     {
@@ -172,6 +176,9 @@
     },
     {
       "key": "primaryColumns.our_fees.label"
+    },
+    {
+      "key": "primaryColumns.payer.computedValue"
     },
     {
       "key": "primaryColumns.payment_method.computedValue"
@@ -223,9 +230,6 @@
     },
     {
       "key": "tableData"
-    },
-    {
-      "key": "primaryColumns.payer.computedValue"
     }
   ],
   "dynamicPropertyPathList": [
@@ -384,7 +388,7 @@
       "allowSameOptionsInNewRow": true,
       "cellBackground": "",
       "columnType": "date",
-      "computedValue": "{{(() => { const tableData = OrdersTable.processedTableData || []; return tableData.length > 0 ? tableData.map((currentRow, currentIndex) => (currentRow[\"created_date\"])) : created_date })()}}",
+      "computedValue": "{{(() => { const tableData = OrdersTable.processedTableData || []; return tableData.length > 0 ? tableData.map((currentRow, currentIndex) => ((() => { const v = currentRow.delivery_date || currentRow.created_date; return v ? moment(v).format('YYYY-MM-DD') : ''; })())) : created_date })()}}",
       "currencyCode": "USD",
       "decimals": 0,
       "enableFilter": true,
@@ -400,7 +404,7 @@
       "isEditable": false,
       "isSaveVisible": true,
       "isVisible": true,
-      "label": "{{appsmith.store.bo_lang === 'en' ? \"Created\" : \"Създадена\"}}",
+      "label": "{{appsmith.store.bo_lang === 'en' ? \"Delivery date\" : \"Дата на доставка\"}}",
       "notation": "standard",
       "originalId": "created_date",
       "sticky": "",
@@ -409,7 +413,9 @@
       "thousandSeparator": true,
       "validation": {},
       "verticalAlignment": "CENTER",
-      "width": 150
+      "width": 150,
+      "inputFormat": "YYYY-MM-DD",
+      "outputFormat": "DD.MM.YYYY"
     },
     "customColumn1": {
       "alias": "",
@@ -941,7 +947,7 @@
       "fontStyle": "",
       "horizontalAlignment": "CENTER",
       "id": "payer",
-      "index": 25,
+      "index": 30,
       "isCellEditable": false,
       "isCellVisible": true,
       "isDerived": false,
@@ -1337,6 +1343,39 @@
       "validation": {},
       "verticalAlignment": "CENTER",
       "width": 230
+    },
+    "delivery_date": {
+      "alias": "delivery_date",
+      "allowCellWrapping": false,
+      "allowSameOptionsInNewRow": true,
+      "cellBackground": "",
+      "columnType": "text",
+      "computedValue": "{{(() => { const tableData = OrdersTable.processedTableData || []; return tableData.length > 0 ? tableData.map((currentRow, currentIndex) => (currentRow[\"delivery_date\"])) : delivery_date })()}}",
+      "currencyCode": "USD",
+      "decimals": 0,
+      "enableFilter": true,
+      "enableSort": true,
+      "horizontalAlignment": "CENTER",
+      "id": "delivery_date",
+      "index": 31,
+      "isCellEditable": false,
+      "isCellVisible": true,
+      "isDerived": false,
+      "isDisabled": false,
+      "isDiscardVisible": true,
+      "isEditable": false,
+      "isSaveVisible": true,
+      "isVisible": false,
+      "label": "delivery_date",
+      "notation": "standard",
+      "originalId": "delivery_date",
+      "sticky": "",
+      "textColor": "",
+      "textSize": "1rem",
+      "thousandSeparator": true,
+      "validation": {},
+      "verticalAlignment": "CENTER",
+      "width": 150
     }
   },
   "renderMode": "CANVAS",

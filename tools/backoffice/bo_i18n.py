@@ -169,6 +169,7 @@ EN = {
     'Дата': 'Date',
     'Събрано': 'Collected',
     'Доставка': 'Delivery',
+    'Дата на доставка': 'Delivery date',
     'Такса НП': 'COD fee',
     'Такси': 'Fees',
     # the phone login (bo-build-login2.py, 2026-10-24)

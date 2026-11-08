@@ -10,7 +10,8 @@ import os as _os, tempfile as _tempfile
 
 import bo_i18n
 
-REPO = '/Users/fulfilyaood/Documents/fulfilya/fulfilya-app/pages'
+# BO_PAGES points it at another checkout's pages (a worktree on a branch); the default is the main checkout.
+REPO = _os.environ.get('BO_PAGES', '/Users/fulfilyaood/Documents/fulfilya/fulfilya-app/pages')
 OUT = _os.path.join(_tempfile.gettempdir(), 'fulfilya-bo-build', 'dashboard', 'pages')
 APP = '68600ba97c31ed49d151bad2'
 MARK = open(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)), 'mark.b64')).read().strip()
@@ -851,7 +852,7 @@ tb = load('Dashboard/widgets/OrdersTable.json')
 tb.update(topRow=66, bottomRow=116, originalTopRow=66, originalBottomRow=116, mobileTopRow=66, mobileBottomRow=116,
           accentColor='#FFC400', boxShadow='0 1px 2px rgba(0,0,0,.04), 0 12px 32px -12px rgba(29,29,31,.14)', borderRadius='18px')
 cols = tb['primaryColumns']
-labels = dict(order_id='Поръчка', status='Статус', created_date='Създадена', delivery_address='Адрес', customer_name='Получател',
+labels = dict(order_id='Поръчка', status='Статус', created_date='Дата на доставка', delivery_address='Адрес', customer_name='Получател',
               total_amount='Наложен платеж', customColumn4='Плащане', external_order_id='№ в магазина', customColumn2='Възраст')
 binds = {e['key'] for e in tb.get('dynamicBindingPathList', [])}
 for k, l in labels.items():
@@ -859,6 +860,16 @@ for k, l in labels.items():
         cols[k]['label'] = bi(l)
         binds.add('primaryColumns.%s.label' % k)
 cols['customColumn2']['isVisible'] = False
+# TODO 98 (Ico for Toys&Party, 2026-11-08): the created_date column shows the DELIVERY day for every merchant - the
+# day picked in the form (orders.scheduled_at, sent as delivery_date), else the day the order was created (Express
+# for today and shop orders carry no picked day). Both arrive in UTC; moment() turns them into the viewer's Sofia day,
+# summer or winter time, which a fixed offset in the SQL would get wrong by a day at midnight. Kept in the
+# created_date slot so the column order and every viewer's saved layout stay as they were.
+cols['created_date']['computedValue'] = (
+    "{{(() => { const tableData = OrdersTable.processedTableData || []; return tableData.length > 0 ? "
+    "tableData.map((currentRow, currentIndex) => ((() => { const v = currentRow.delivery_date || currentRow.created_date; "
+    "return v ? moment(v).format('YYYY-MM-DD') : ''; })())) : created_date })()}}")
+cols['created_date'].update(columnType='date', inputFormat='YYYY-MM-DD', outputFormat='DD.MM.YYYY')
 # The merchant's list: shop order number first, the recipient and where the parcel goes,
 # nothing about the merchant themselves (it is their own portal), no pickup, no tracking.
 cols['internal_reference'].update(label=bi('Поръчка'), isVisible=True)
@@ -876,7 +887,7 @@ for new_id, label in (('recipient_phone', bi('Телефон')), ('delivery_full
     tb['dynamicBindingPathList'].append({"key": f"primaryColumns.{new_id}.computedValue"})
     tb['dynamicBindingPathList'].append({"key": f"primaryColumns.{new_id}.label"})
 # Every key the query returns that the merchant should not see as a raw column.
-for hidden_id in ('cod_amount', 'goods_amount', 'delivery_amount', 'cod_fee', 'recipient_notes', 'shop_order_id', 'cod_goods'):
+for hidden_id in ('cod_amount', 'goods_amount', 'delivery_amount', 'cod_fee', 'recipient_notes', 'shop_order_id', 'cod_goods', 'delivery_date'):
     if hidden_id not in cols:
         c = copy.deepcopy(cols['delivery_address']); c.update(id=hidden_id, alias=hidden_id, originalId=hidden_id, label=hidden_id)
         c['computedValue'] = c['computedValue'].replace('delivery_address', hidden_id)
@@ -894,7 +905,7 @@ for e in list(tb.get('dynamicBindingPathList', [])):
     if e['key'].startswith('primaryColumns.customColumn1.') and not e['key'].endswith(('.buttonLabel', '.onClick')):
         tb['dynamicBindingPathList'].append({'key': e['key'].replace('customColumn1', 'waybill')})
 tb['dynamicTriggerPathList'] = [x for x in tb.get('dynamicTriggerPathList', []) if x.get('key') != 'primaryColumns.waybill.onClick'] + [{'key': 'primaryColumns.waybill.onClick'}]
-tb['columnOrder'] = ['customColumn1', 'waybill', 'internal_reference', 'status', 'created_date', 'delivery_address', 'recipient_phone', 'delivery_full_address', 'total_amount', 'our_fees', 'customColumn4', 'order_id', 'customer_name', 'external_order_id', 'customColumn2', 'customer_email', 'customer_phone', 'pickup_location', 'driver_name', 'tracking_number', 'payment_method', 'store_type', 'status_display', 'cod_amount', 'goods_amount', 'delivery_amount', 'cod_fee', 'recipient_notes', 'shop_order_id', 'cod_goods']
+tb['columnOrder'] = ['customColumn1', 'waybill', 'internal_reference', 'status', 'created_date', 'delivery_address', 'recipient_phone', 'delivery_full_address', 'total_amount', 'our_fees', 'customColumn4', 'order_id', 'customer_name', 'external_order_id', 'customColumn2', 'customer_email', 'customer_phone', 'pickup_location', 'driver_name', 'tracking_number', 'payment_method', 'store_type', 'status_display', 'cod_amount', 'goods_amount', 'delivery_amount', 'cod_fee', 'recipient_notes', 'shop_order_id', 'cod_goods', 'payer', 'delivery_date']
 for i, k in enumerate(tb['columnOrder']):
     if k in cols: cols[k]['index'] = i
 # A viewer's browser remembers a table's column order (localStorage tableWidgetColumnOrder)
