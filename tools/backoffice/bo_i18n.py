@@ -188,6 +188,7 @@ EN = {
     'доставка, наложен платеж, обявена стойност': 'delivery, cash on delivery, declared value',
     'Общо от получателите': 'Total from recipients',
     'наложен платеж + такси': 'cash on delivery + fees',
+    'наложен платеж': 'cash on delivery',
     '€ наложен платеж': '€ cash on delivery',
     'във фактурата': 'on the invoice',
     'За вас': 'Yours',

@@ -353,7 +353,7 @@ function render() {
     // the whole sum the driver took is shown only under its own name, as the two added up.
     `<div class="card kpi hero"><h3>Наложен платеж</h3><div class="big num">${fmt(st.payout)} <small>€</small></div><div class="foot"><span class="delta">стойност на стоките</span> ${int(st.cod_orders)} поръчки с НП</div></div>` +
     `<div class="card kpi"><h3>Такси</h3><div class="big num">${fmt(st.fees)} <small>€</small></div><div class="foot">доставка, наложен платеж, обявена стойност</div></div>` +
-    `<div class="card kpi"><h3>Общо от получателите</h3><div class="big num">${fmt(st.cod_collected)} <small>€</small></div><div class="foot">наложен платеж + такси</div></div>` +
+    `<div class="card kpi"><h3>Общо от получателите</h3><div class="big num">${fmt(st.cod_collected)} <small>€</small></div><div class="foot">${st.fees_at_door == null || Number(st.fees_at_door) > 0 ? 'наложен платеж + такси' : 'наложен платеж'}</div></div>` +
     `<div class="card kpi"><h3>Доставени</h3><div class="big num">${int(st.delivered)}</div><div class="foot"><span class="delta">${int(st.returned)} върнати · ${int(st.cancelled)} отказани</span></div></div>` +
     `</div>` +
     `<div class="grid g3">` +
