@@ -200,6 +200,8 @@ td input[type=checkbox]{width:16px;height:16px;margin-top:8px;accent-color:#8A65
 td input:not([type=checkbox]),td select{width:100%;border:1px solid var(--line);border-radius:8px;padding:6px 8px;font:inherit;font-size:13px;background:var(--card);color:var(--ink)}
 td input.amt{text-align:right;width:84px}
 td select[data-f=payment]{min-width:158px}
+.payer{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:4px 0 12px}
+.payer select{margin-left:8px;min-width:250px}
 td select[data-f=tier]{min-width:124px}
 td .no{font-weight:700;white-space:nowrap}
 td .items{color:var(--faint);font-size:12px;margin-top:3px}
@@ -217,7 +219,7 @@ IMPORT_JS = PARSER + r"""
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const plural = (n, one, many) => `${n} ${Number(n) === 1 ? one : many}`;
 
-let state = { file: '', orders: [], notices: [], error: '', batch: '', done: {} };
+let state = { file: '', orders: [], notices: [], error: '', batch: '', done: {}, payer: 'all' };
 
 const NOTICE = {
   'no-header': ['bad', 'Не открихме колони с поръчки в този файл. Проверете дали първият ред съдържа заглавия (Получател, Телефон, Адрес, Сума…) или използвайте примерния файл.'],
@@ -243,7 +245,7 @@ function serverReason(s) {
 
 function readFile(f) {
   if (!f) return;
-  state = { file: f.name, orders: [], notices: [], error: '', batch: '', done: {} };
+  state = { file: f.name, orders: [], notices: [], error: '', batch: '', done: {}, payer: state.payer || 'all' };
   const ext = String(f.name.split('.').pop() || '').toLowerCase();
   const reader = new FileReader();
   reader.onload = () => {
@@ -366,13 +368,19 @@ function render() {
           .filter(Boolean).map((t) => `<span>${t}</span>`).join(' · ') + `</div>`;
     }
 
-    body += `<div class="card"><div class="hd"><h3>Поръчки</h3>${chips}</div>` +
+    // Who pays our fees, once for the whole file (Maria, 2026-11-13) - the same three options as "+ Нова поръчка".
+    const payerSel = `<div class="payer"><label>Кой плаща <select data-act-payer${running ? ' disabled' : ''}>` +
+      [['all', 'Получателят плаща всичко'], ['fees', 'Получателят плаща само таксите'], ['nothing', 'Получателят не плаща нищо']]
+        .map(([v, t]) => `<option value="${v}"${state.payer === v ? ' selected' : ''}>${t}</option>`).join('') +
+      `</select></label><span class="hint">за всички поръчки с наложен платеж във файла</span></div>`;
+
+    body += `<div class="card"><div class="hd"><h3>Поръчки</h3>${chips}</div>${payerSel}` +
       `<div class="tablewrap"><table><thead><tr><th></th><th>№</th><th>Получател</th><th>Телефон</th><th>Адрес</th>` +
-      `<th>Сума €</th><th>Плащане</th><th>Доставка</th><th>Статус</th></tr></thead><tbody>` +
+      `<th>Наложен платеж €</th><th>Плащане</th><th>Доставка</th><th>Статус</th></tr></thead><tbody>` +
       state.orders.map(orderRow).join('') + `</tbody></table></div>` +
       progress +
-      `<div class="foot"><span class="note">Сумата е това, което куриерът събира от получателя при наложен платеж. ` +
-      `При „Платена“ не се събират пари.</span>` +
+      `<div class="foot"><span class="note">Наложеният платеж е стойността на стоката - получавате го изцяло. ` +
+      `Нашите такси се събират според „Кой плаща“. При „Платена“ не се събират пари.</span>` +
       `<span style="display:flex;gap:8px;flex-wrap:wrap">` +
       (created || dups ? `<button type="button" class="btn" data-act="orders">Към поръчките</button>` : '') +
       `<button type="button" class="btn primary" data-act="create"${running || !toSend.length ? ' disabled' : ''}>` +
@@ -403,6 +411,9 @@ function wire(running) {
     render();
   }));
 
+  const payerSel = document.querySelector('[data-act-payer]');
+  if (payerSel) payerSel.addEventListener('change', () => { state.payer = payerSel.value; render(); });
+
   document.querySelectorAll('[data-act]').forEach((el) => el.addEventListener('click', (ev) => {
     ev.preventDefault();
     const act = el.dataset.act;
@@ -412,7 +423,7 @@ function wire(running) {
       if (!list.length) return;
       list.forEach((o) => { if (state.done[o.key]) delete state.done[o.key]; });
       state.batch = 'b' + Date.now();
-      appsmith.updateModel({ action: 'create', batch: state.batch, orders: list.map((o) => ({ key: o.key, body: bodyFor(o) })) });
+      appsmith.updateModel({ action: 'create', batch: state.batch, orders: list.map((o) => ({ key: o.key, body: bodyFor(o, state.payer) })) });
       appsmith.triggerEvent('onAction');
       render();
     } else if (act === 'template') {

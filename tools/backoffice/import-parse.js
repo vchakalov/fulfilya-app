@@ -256,8 +256,14 @@ function problems(o) {
 }
 
 // The body for POST int/v1/portal/orders - the same shape the "Нова поръчка" form sends.
-function bodyFor(o) {
+// Maria, 2026-11-13: the amount in the file IS the наложен платеж - the client's money, paid out whole, never with
+// our fees inside. Who pays our fees is chosen once for the whole file ("Кой плаща", the portal form's three options);
+// a row marked "Платена" collects nothing. The server works out what the driver collects from these.
+const PAYERS = ['all', 'fees', 'nothing'];
+
+function bodyFor(o, payer) {
   const email = String(o.email || '').trim();
+  const who = o.payment === 'COD' ? (PAYERS.includes(payer) ? payer : 'all') : 'nothing';
   const b = {
     dropoff: {
       address: String(o.address || '').trim(),
@@ -265,8 +271,7 @@ function bodyFor(o) {
       phone: String(o.phone || '').trim(),
     },
     delivery_type: o.tier === 'Express' ? 'Express' : 'Standard',
-    payment_method: o.payment === 'COD' ? 'COD' : 'CARD',
-    amount: money(o.amount) || 0,
+    payer: who,
     order_source_id: String(o.no || '').trim(),
     notes: String(o.notes || '').trim(),
     items: (o.items || []).map((it) => ({
@@ -277,6 +282,8 @@ function bodyFor(o) {
   // Only a real-looking address is sent: the server validates it as one and would refuse
   // the whole order over a typo in a field the office only uses to write to the customer.
   if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) b.dropoff.email = email;
+  // The наложен платеж only when the recipient pays it; "само таксите" and "нищо" have none.
+  if (who === 'all') b.cod_amount = money(o.amount) || 0;
   return b;
 }
 

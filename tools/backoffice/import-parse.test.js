@@ -48,8 +48,10 @@ t('our own template reads back as one COD order in Sofia', () => {
   assert.strictEqual(o.include, true);
   assert.deepStrictEqual(P.problems(o), []);
   const b = P.bodyFor(o);
-  assert.strictEqual(b.amount, 59.9);
-  assert.strictEqual(b.payment_method, 'COD');
+  // Maria, 2026-11-13: the file's amount is the наложен платеж, sent as such with who pays (default "всичко").
+  assert.strictEqual(b.payer, 'all');
+  assert.strictEqual(b.cod_amount, 59.9);
+  assert.strictEqual(b.amount, undefined);
   assert.strictEqual(b.order_source_id, '1001');
   assert.strictEqual(b.dropoff.email, undefined);
   assert.deepStrictEqual(b.items, [{ name: 'Подаръчна кошница', sku: '', quantity: 1 }]);
@@ -126,6 +128,14 @@ t('CSV: Bulgarian Excel semicolons, quotes and a BOM', () => {
 t('CSV: commas when that is what the file uses', () => {
   const rows = P.parseCsv('Name,Phone,Address\nA,1,"x, y"\n');
   assert.deepStrictEqual(rows, [['Name', 'Phone', 'Address'], ['A', '1', 'x, y']]);
+});
+
+t('who pays: chosen once for the file; a paid row collects nothing (2026-11-13)', () => {
+  const o = P.parseRows(P.TEMPLATE).orders[0];
+  assert.deepStrictEqual([P.bodyFor(o, 'fees').payer, P.bodyFor(o, 'fees').cod_amount], ['fees', undefined]);
+  assert.deepStrictEqual([P.bodyFor(o, 'nothing').payer, P.bodyFor(o, 'nothing').cod_amount], ['nothing', undefined]);
+  const paid = Object.assign({}, o, { payment: 'CARD' });
+  assert.deepStrictEqual([P.bodyFor(paid, 'all').payer, P.bodyFor(paid, 'all').cod_amount], ['nothing', undefined]);
 });
 
 console.log(`\n${n} passed`);
