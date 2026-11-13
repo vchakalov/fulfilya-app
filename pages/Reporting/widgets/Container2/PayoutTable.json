@@ -65,6 +65,7 @@
       "key": "primaryColumns.affectedRows.computedValue"
     }
   ],
+  "dynamicHeight": "FIXED",
   "dynamicPropertyPathList": [
     {
       "key": "tableData"

@@ -128,6 +128,7 @@
       "key": "primaryColumns.cancellation_rate_percent.computedValue"
     }
   ],
+  "dynamicHeight": "FIXED",
   "dynamicPropertyPathList": [
     {
       "key": "isVisible"
