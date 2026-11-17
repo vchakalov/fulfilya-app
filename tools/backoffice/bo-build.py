@@ -1127,6 +1127,11 @@ for _cid, _c in cols.items():
         _paths.add('primaryColumns.%s.label' % _cid)
     if isinstance(_c.get('buttonLabel'), str) and '{{' in _c['buttonLabel']:
         _paths.add('primaryColumns.%s.buttonLabel' % _cid)
+# ... and a path whose value is no longer a binding must not stay listed (the wayback column's
+# `isVisible` was one for a single commit on 2026-11-17): the sets above are collected from the
+# file as it stands, so a dropped binding would otherwise be carried forward for ever.
+_paths = {k for k in _paths if not (k.startswith('primaryColumns.') and k.count('.') == 2
+          and not (isinstance(cols.get(k.split('.')[1], {}).get(k.split('.')[2]), str) and '{{' in cols[k.split('.')[1]][k.split('.')[2]]))}
 tb['dynamicBindingPathList'] = [{'key': k} for k in sorted(_paths)]
 w('Dashboard/widgets/OrdersTable.json', tb)
 
