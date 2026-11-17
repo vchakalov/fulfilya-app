@@ -82,6 +82,12 @@
 		throw new Error("Въведете обявена стойност до 5 112,92 €");
 	}
 
+	// "Двупосочна" (XBORN, 2026-11-17): the form is filled in as for any order - the customer as
+	// the recipient, the customer's address as the delivery address - and the server turns the two
+	// ends round: the courier collects from the customer and delivers to the service. The tick
+	// exists only for a client the office switched it on for (BoExtras), and the server checks too.
+	const twoWay = !!(BoExtras.data && BoExtras.data.two_way === true && TwoWayCheckbox.isChecked === true);
+
 	return {
 		// Where we collect from. The field opens as the merchant's warehouse and may be
 		// overwritten; the server keeps the warehouse unless this clearly names somewhere
@@ -104,6 +110,7 @@
 		},
 		"service_rate_uuid": OrderShippingSelect.selectedOptionValue,
 		"payer": payer,
+		...(twoWay ? { "two_way": true } : {}),
 		// "Клиентът не плаща нищо" has no наложен платеж, and an empty box means none (2026-10-04).
 		...(payer !== "nothing" && Number(NewCodAmount) > 0 ? { "cod_amount": NewCodAmount } : {}),
 		...(withDeclared ? { "declared_value": NewDeclared } : {}),

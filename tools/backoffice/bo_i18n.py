@@ -38,6 +38,13 @@ EN = {
     'Свали CSV': 'Download CSV',
     # account window, "Смяна на парола" (2026-10-21)
     'Смяна на парола': 'Change password',
+    # The way back of a two-way order (XBORN, 2026-11-17).
+    'Върни на клиента': 'Return to customer',
+    'Създай поръчката': 'Create the order',
+    'Създаваме…': 'Creating…',
+    'Отказ': 'Cancel',
+    'Изберете дата.': 'Choose a date.',
+    'Създава се поръчка за връщане до същия клиент и адрес.': 'A return order is created for the same customer and address.',
     'Текуща парола': 'Current password',
     'Нова парола': 'New password',
     'Повторете новата парола': 'Repeat the new password',

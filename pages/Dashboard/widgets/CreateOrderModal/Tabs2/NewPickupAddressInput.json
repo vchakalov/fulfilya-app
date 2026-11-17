@@ -41,7 +41,7 @@
   "isRequired": false,
   "isVisible": true,
   "key": "gnxtfpd5ih",
-  "label": "{{appsmith.store.bo_lang === 'en' ? \"Pickup address\" : \"Адрес за взимане\"}}",
+  "label": "{{appsmith.store.bo_lang === 'en' ? ((BoExtras.data && BoExtras.data.two_way === true && TwoWayCheckbox.isChecked === true) ? \"Service address\" : \"Pickup address\") : ((BoExtras.data && BoExtras.data.two_way === true && TwoWayCheckbox.isChecked === true) ? \"Адрес на сервиза\" : \"Адрес за взимане\")}}",
   "labelAlignment": "left",
   "labelPosition": "Top",
   "labelStyle": "",

@@ -37,7 +37,7 @@
   "responsiveBehavior": "fill",
   "rightColumn": 11,
   "shouldTruncate": false,
-  "text": "{{appsmith.store.bo_lang === 'en' ? \"Pickup address\" : \"Адрес за взимане\"}}",
+  "text": "{{appsmith.store.bo_lang === 'en' ? ((BoExtras.data && BoExtras.data.two_way === true && TwoWayCheckbox.isChecked === true) ? \"Service address\" : \"Pickup address\") : ((BoExtras.data && BoExtras.data.two_way === true && TwoWayCheckbox.isChecked === true) ? \"Адрес на сервиза\" : \"Адрес за взимане\")}}",
   "textAlign": "LEFT",
   "textColor": "#231F20",
   "topRow": 0,

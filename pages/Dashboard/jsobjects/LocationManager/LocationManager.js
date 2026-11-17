@@ -333,6 +333,12 @@ updateNewDropoffFromGeocode: () => {
     // Which "Кой плаща" options this merchant gets (The Gourmet House: only the fees,
     // 2026-10-07). Run here, on the click, like BoWarehouse: a Pull adds no on-load query.
     await BoPayerOptions.run().catch(() => null);
+    // What this client's form has beyond everybody's (XBORN, 2026-11-17): a weight limit of
+    // their own and the tick "Двупосочна". Asked on the click, like the query above; for every
+    // other client it answers 20 kg and no tick, and the form opens as it always has.
+    await BoExtras.run().catch(() => null);
+    // The tick is never carried over from the order before, or from another login in this browser.
+    TwoWayCheckbox.setValue(false);
     if (appsmith.store.newOrderDraftFor !== me) {
       await Promise.all([
         NewPickupAddressInput.setValue(''), NewPickupLatHidden.setValue(''), NewPickupLngHidden.setValue(''),
@@ -406,5 +412,7 @@ updateNewDropoffFromGeocode: () => {
     DeclaredValueSelect.setSelectedOption('no');
     DeclaredValueInput.setValue('');
     OrderShippingSelect.setSelectedOption('');
+    // ... and without the last one's "Двупосочна" (2026-11-17).
+    TwoWayCheckbox.setValue(false);
   }
   }

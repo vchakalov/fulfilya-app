@@ -44,7 +44,7 @@
   "isRequired": false,
   "isVisible": true,
   "key": "rr3cz5jv4u",
-  "label": "{{appsmith.store.bo_lang === 'en' ? \"Delivery date\" : \"Дата на доставка\"}}",
+  "label": "{{appsmith.store.bo_lang === 'en' ? ((BoExtras.data && BoExtras.data.two_way === true && TwoWayCheckbox.isChecked === true) ? \"Pickup date\" : \"Delivery date\") : ((BoExtras.data && BoExtras.data.two_way === true && TwoWayCheckbox.isChecked === true) ? \"Дата за взимане\" : \"Дата на доставка\")}}",
   "labelAlignment": "left",
   "labelPosition": "Top",
   "labelTextSize": "0.875rem",

@@ -37,7 +37,7 @@
   "responsiveBehavior": "fill",
   "rightColumn": 47,
   "shouldTruncate": false,
-  "text": "{{appsmith.store.bo_lang === 'en' ? \"Delivery address\" : \"Адрес за доставка\"}}",
+  "text": "{{appsmith.store.bo_lang === 'en' ? ((BoExtras.data && BoExtras.data.two_way === true && TwoWayCheckbox.isChecked === true) ? \"Customer address\" : \"Delivery address\") : ((BoExtras.data && BoExtras.data.two_way === true && TwoWayCheckbox.isChecked === true) ? \"Адрес на клиента\" : \"Адрес за доставка\")}}",
   "textAlign": "LEFT",
   "textColor": "#231F20",
   "topRow": 0,

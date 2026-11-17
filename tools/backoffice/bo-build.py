@@ -805,6 +805,127 @@ custom('BoAccount', 0, 68, ACCOUNT_HTML, ACCOUNT_CSS, ACCOUNT_JS,
        "{{ { merchant: appsmith.store.customer_name || '', email: appsmith.store.customer_email || '', result: appsmith.store.pw_result || null } }}",
        "FIXED", "acc0unt1ab", on=ACCOUNT_ON, parent=ACC_CANVAS, folder='BoAccountModal/')
 
+# ---------------------------------------------------------------- "Върни на клиента" (XBORN, 2026-11-17, TODO 112)
+# The way back of a two-way order. The list's third button (OrdersTable column `wayback`, below)
+# opens this window; it asks one thing, the day, and POSTs int/v1/portal/orders/{id}/way-back.
+# Everything else - customer, address, products, service, who pays - is the first order's, on
+# the server. Only a client the office switched two-way on for ever sees the button.
+RETURN_HTML = FONT_LINK + '<div id="bo-return"></div>'
+RETURN_CSS = TOKENS + """html,body{background:var(--card)}
+.ret{display:grid;gap:14px;padding:6px 8px 10px;font-family:var(--body)}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.top h2{font-family:var(--display);font-size:19px;font-weight:800;margin:0}
+.x{border:0;background:transparent;font-size:22px;line-height:1;color:var(--muted);cursor:pointer;padding:2px 6px;border-radius:8px}
+.x:hover{color:var(--ink);background:var(--ground)}
+.who{background:var(--ground);border-radius:10px;padding:10px 12px;min-width:0}
+.who .n{font-family:var(--display);font-weight:800;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.who .e{color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+label{display:grid;gap:5px;font-size:13px;font-weight:600;color:var(--ink)}
+label input{width:100%;box-sizing:border-box;font:15px var(--body);padding:10px 12px;border:1px solid var(--line-strong);border-radius:10px;background:#fff;color:var(--ink)}
+label input:focus{outline:2px solid var(--accent);outline-offset:0;border-color:transparent}
+.hint{font-size:13px;color:var(--muted)}
+.msg{font-size:13px;border-radius:10px;padding:10px 12px;display:none}
+.msg.err{display:block;background:#FBE9E7;color:#B42318}
+.actions{display:flex;justify-content:flex-end;gap:8px}
+.btn{font:600 14px var(--body);border-radius:999px;padding:9px 18px;cursor:pointer;border:1px solid var(--line-strong);background:#fff;color:var(--ink)}
+.btn.go{background:var(--accent);border-color:var(--accent);color:#1D1D1F}
+.btn[disabled]{opacity:.45;cursor:default}"""
+RETURN_JS = r"""const $ = (id) => document.getElementById(id);
+const pad = (n) => String(n).padStart(2, '0');
+const ymd = (d) => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+let built = false, shown = null, busy = false, lastAt = null;
+
+function say(text) { const m = $('msg'); m.className = text ? 'msg err' : 'msg'; m.textContent = text || ''; }
+function paint() { $('go').disabled = busy; $('go').textContent = busy ? 'Създаваме…' : 'Създай поръчката'; }
+
+function build() {
+  document.documentElement.dataset.theme = 'light';
+  $('bo-return').innerHTML =
+    '<div class="ret">' +
+      '<div class="top"><h2>Върни на клиента</h2><button class="x" data-act="close" title="Затвори">×</button></div>' +
+      '<div class="who"><div class="n" id="nm"></div><div class="e" id="rf"></div></div>' +
+      '<label>Дата на доставка<input id="day" type="date"></label>' +
+      '<div class="hint">Създава се поръчка за връщане до същия клиент и адрес.</div>' +
+      '<div class="msg" id="msg"></div>' +
+      '<div class="actions"><button class="btn" data-act="close">Отказ</button><button class="btn go" id="go">Създай поръчката</button></div>' +
+    '</div>';
+  built = true;
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('[data-act="close"]')) { appsmith.updateModel({ action: 'close' }); appsmith.triggerEvent('onAction'); return; }
+    if (e.target.closest('#go') && !busy) {
+      const day = $('day').value;
+      if (!day) { say('Изберете дата.'); return; }
+      busy = true; say(''); paint();
+      appsmith.updateModel({ action: 'create', day: day });
+      appsmith.triggerEvent('onAction');
+    }
+  });
+}
+
+function render() {
+  const m = appsmith.model || {};
+  if (!built) build();
+  const o = m.order || {};
+  const key = String(o.id || '') + '|' + String(o.at || '');
+  if (key !== shown) {
+    // Another press of the list's button: tomorrow again, and nothing left over from the last time.
+    shown = key; busy = false;
+    const t = new Date(); t.setDate(t.getDate() + 1);
+    $('day').min = ymd(new Date());
+    $('day').value = ymd(t);
+    say('');
+  }
+  $('nm').textContent = o.name || '';
+  $('rf').textContent = [o.ref, o.address].filter(Boolean).join(' · ');
+  // The server said no (a day too early, already created...): its own sentence, and the button works again.
+  const r = m.result || null;
+  if (r && r.key === key && r.at !== lastAt) { lastAt = r.at; busy = false; say(r.error || ''); }
+  paint();
+}
+appsmith.onReady(render);
+appsmith.onModelChange(render);"""
+
+# The day as the order form sends it (CreateOrderAPI): today = "from now", sent as no date; a later
+# day = its midnight here. A refusal comes back as the server's own sentence, shown in the window.
+RETURN_ON = ("{{(async () => { const m = BoReturn.model || {}; "
+             "if (m.action === 'close') { return closeModal('BoReturnModal'); } "
+             "if (m.action !== 'create') { return; } "
+             "const o = appsmith.store.way_back || {}; const en = appsmith.store.bo_lang === 'en'; "
+             "const day = m.day ? moment(m.day, 'YYYY-MM-DD').startOf('day') : null; "
+             "const scheduledAt = day && day.isAfter(moment()) ? day.toISOString() : null; "
+             "try { await ReturnToCustomer.run({ order: o.id, scheduled_at: scheduledAt }); const b = ReturnToCustomer.data || {}; "
+             "if (!b.created) { throw new Error(b.error || 'not created'); } "
+             "closeModal('BoReturnModal'); "
+             "showAlert((en ? 'A return order was created for ' : 'Създадена е поръчка за връщане към ') + (b.customer || o.name || ''), 'success'); "
+             "return GetOrdersList.run(); } "
+             "catch (e) { const b = ReturnToCustomer.data || {}; "
+             "await storeValue('way_back_result', { at: Date.now(), key: String(o.id || '') + '|' + String(o.at || ''), "
+             "error: b.error || (en ? 'The return order could not be created.' : 'Поръчката за връщане не можа да се създаде.') }, false); "
+             "if (b.duplicate) { return GetOrdersList.run(); } } })()}}")
+
+RET_MODAL, RET_CANVAS = 'boretnmod1', 'boretncnv1'
+w('Dashboard/widgets/BoReturnModal/BoReturnModal.json', {
+    "animateLoading": True, "borderRadius": "18px", "bottomRow": 60, "boxShadow": "none",
+    "canEscapeKeyClose": True, "canOutsideClickClose": True,
+    "children": [{
+        "borderRadius": "18px", "bottomRow": 340, "boxShadow": "none", "canExtend": True, "detachFromLayout": True,
+        "dynamicBindingPathList": [], "dynamicHeight": "AUTO_HEIGHT", "flexLayers": [], "isDisabled": False, "isLoading": False,
+        "isVisible": True, "key": "retncanvas", "leftColumn": 0, "maxDynamicHeight": 9000, "minDynamicHeight": 4,
+        "minHeight": 340, "minWidth": 450, "mobileBottomRow": 340, "mobileLeftColumn": 0, "mobileRightColumn": 460,
+        "mobileTopRow": 0, "needsErrorInfo": False, "parentColumnSpace": 1, "parentId": RET_MODAL, "parentRowSpace": 1,
+        "renderMode": "CANVAS", "responsiveBehavior": "fill", "rightColumn": 460, "shouldScrollContents": False,
+        "topRow": 0, "type": "CANVAS_WIDGET", "version": 1, "widgetId": RET_CANVAS, "widgetName": "BoReturnCanvas"}],
+    # No "isVisible" here: on a MODAL_WIDGET it means "open when the page loads" (see BoAccountModal).
+    "detachFromLayout": True, "dynamicBindingPathList": [], "dynamicHeight": "FIXED", "height": 340, "isCanvas": True,
+    "isLoading": False, "key": "retnmodal1", "leftColumn": 0, "maxDynamicHeight": 9000,
+    "minDynamicHeight": 24, "minHeight": 340, "mobileBottomRow": 60, "mobileLeftColumn": 0, "mobileRightColumn": 24,
+    "mobileTopRow": 0, "needsErrorInfo": False, "parentColumnSpace": 10.171875, "parentId": "0", "parentRowSpace": 10,
+    "renderMode": "CANVAS", "rightColumn": 24, "shouldScrollContents": False, "topRow": 0, "type": "MODAL_WIDGET",
+    "version": 2, "widgetId": RET_MODAL, "widgetName": "BoReturnModal", "width": 460})
+custom('BoReturn', 0, 32, RETURN_HTML, RETURN_CSS, RETURN_JS,
+       "{{ { order: appsmith.store.way_back || null, result: appsmith.store.way_back_result || null } }}",
+       "FIXED", "retn0rdr1a", on=RETURN_ON, parent=RET_CANVAS, folder='BoReturnModal/')
+
 # The merchant's OWN token: the endpoint changes the password of whoever it belongs to.
 CHANGE_PW_BODY = """{{ {
 \t"current_password": this.params.current || "",
@@ -887,7 +1008,7 @@ for new_id, label in (('recipient_phone', bi('Телефон')), ('delivery_full
     tb['dynamicBindingPathList'].append({"key": f"primaryColumns.{new_id}.computedValue"})
     tb['dynamicBindingPathList'].append({"key": f"primaryColumns.{new_id}.label"})
 # Every key the query returns that the merchant should not see as a raw column.
-for hidden_id in ('cod_amount', 'goods_amount', 'delivery_amount', 'cod_fee', 'recipient_notes', 'shop_order_id', 'cod_goods', 'delivery_date'):
+for hidden_id in ('cod_amount', 'goods_amount', 'delivery_amount', 'cod_fee', 'recipient_notes', 'shop_order_id', 'cod_goods', 'delivery_date', 'two_way', 'can_return'):
     if hidden_id not in cols:
         c = copy.deepcopy(cols['delivery_address']); c.update(id=hidden_id, alias=hidden_id, originalId=hidden_id, label=hidden_id)
         c['computedValue'] = c['computedValue'].replace('delivery_address', hidden_id)
@@ -905,7 +1026,28 @@ for e in list(tb.get('dynamicBindingPathList', [])):
     if e['key'].startswith('primaryColumns.customColumn1.') and not e['key'].endswith(('.buttonLabel', '.onClick')):
         tb['dynamicBindingPathList'].append({'key': e['key'].replace('customColumn1', 'waybill')})
 tb['dynamicTriggerPathList'] = [x for x in tb.get('dynamicTriggerPathList', []) if x.get('key') != 'primaryColumns.waybill.onClick'] + [{'key': 'primaryColumns.waybill.onClick'}]
-tb['columnOrder'] = ['customColumn1', 'waybill', 'internal_reference', 'status', 'created_date', 'delivery_address', 'recipient_phone', 'delivery_full_address', 'total_amount', 'our_fees', 'customColumn4', 'order_id', 'customer_name', 'external_order_id', 'customColumn2', 'customer_email', 'customer_phone', 'pickup_location', 'driver_name', 'tracking_number', 'payment_method', 'store_type', 'status_display', 'cod_amount', 'goods_amount', 'delivery_amount', 'cod_fee', 'recipient_notes', 'shop_order_id', 'cod_goods', 'payer', 'delivery_date']
+# "Върни на клиента" (XBORN, 2026-11-17, TODO 112): the third button, on the first leg of a two-way
+# order once it has reached the service (GetOrdersList.can_return, worked out on the server). The
+# COLUMN shows only when the list holds a two-way order at all, so every other client's list is the
+# one it always was - no empty column. Outlined, as in the picture Ico approved. Rebuilt on every run.
+rtc = copy.deepcopy(cols['customColumn1'])
+rtc.update(id='wayback', originalId='wayback', alias='', label='', width=190, buttonColor='#1D1D1F', labelColor='#1D1D1F', buttonVariant='SECONDARY',
+           buttonLabel=bi('Върни на клиента'),
+           isVisible="{{(GetOrdersList.data || []).some((r) => r.two_way === 'in')}}",
+           isCellVisible="{{OrdersTable.processedTableData.map((currentRow, currentIndex) => ( currentRow.can_return == 1))}}",
+           onClick=("{{(async () => { await storeValue('way_back', { id: currentRow.order_id, ref: currentRow.internal_reference, "
+                    "name: currentRow.delivery_address, address: currentRow.delivery_full_address, at: Date.now() }, false); "
+                    "await storeValue('way_back_result', null, false); return showModal('BoReturnModal'); })()}}"))
+cols['wayback'] = rtc
+for e in list(tb.get('dynamicBindingPathList', [])):
+    if e['key'].startswith('primaryColumns.customColumn1.') and not e['key'].endswith(('.buttonLabel', '.onClick')):
+        tb['dynamicBindingPathList'].append({'key': e['key'].replace('customColumn1', 'wayback')})
+tb['dynamicBindingPathList'] += [{'key': 'primaryColumns.wayback.isVisible'}, {'key': 'primaryColumns.wayback.isCellVisible'}]
+tb.setdefault('dynamicPropertyPathList', [])
+for k in ('primaryColumns.wayback.onClick', 'primaryColumns.wayback.isCellVisible', 'primaryColumns.wayback.isVisible'):
+    if not any(x.get('key') == k for x in tb['dynamicPropertyPathList']): tb['dynamicPropertyPathList'].append({'key': k})
+tb['dynamicTriggerPathList'] = [x for x in tb['dynamicTriggerPathList'] if x.get('key') != 'primaryColumns.wayback.onClick'] + [{'key': 'primaryColumns.wayback.onClick'}]
+tb['columnOrder'] = ['customColumn1', 'waybill', 'wayback', 'internal_reference', 'status', 'created_date', 'delivery_address', 'recipient_phone', 'delivery_full_address', 'total_amount', 'our_fees', 'customColumn4', 'order_id', 'customer_name', 'external_order_id', 'customColumn2', 'customer_email', 'customer_phone', 'pickup_location', 'driver_name', 'tracking_number', 'payment_method', 'store_type', 'status_display', 'cod_amount', 'goods_amount', 'delivery_amount', 'cod_fee', 'recipient_notes', 'shop_order_id', 'cod_goods', 'payer', 'delivery_date', 'two_way', 'can_return']
 for i, k in enumerate(tb['columnOrder']):
     if k in cols: cols[k]['index'] = i
 # A viewer's browser remembers a table's column order (localStorage tableWidgetColumnOrder)
