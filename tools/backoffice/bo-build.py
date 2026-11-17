@@ -1027,13 +1027,16 @@ for e in list(tb.get('dynamicBindingPathList', [])):
         tb['dynamicBindingPathList'].append({'key': e['key'].replace('customColumn1', 'waybill')})
 tb['dynamicTriggerPathList'] = [x for x in tb.get('dynamicTriggerPathList', []) if x.get('key') != 'primaryColumns.waybill.onClick'] + [{'key': 'primaryColumns.waybill.onClick'}]
 # "Върни на клиента" (XBORN, 2026-11-17, TODO 112): the third button, on the first leg of a two-way
-# order once it has reached the service (GetOrdersList.can_return, worked out on the server). The
-# COLUMN shows only when the list holds a two-way order at all, so every other client's list is the
-# one it always was - no empty column. Outlined, as in the picture Ico approved. Rebuilt on every run.
+# order once it has reached the service (GetOrdersList.can_return, worked out on the server). Table V2
+# hides a column whose cells are ALL invisible (seen on the branch, 2026-11-18: one two-way row not yet
+# delivered, no column), so every other client's list - where no row is ever returnable - is the one it
+# always was, with no empty column, and the column needs no visibility rule of its own (a bound column
+# `isVisible` is not something Appsmith's panel offers; it was tried first and dropped).
+# Outlined, as in the picture Ico approved. Rebuilt on every run.
 rtc = copy.deepcopy(cols['customColumn1'])
 rtc.update(id='wayback', originalId='wayback', alias='', label='', width=190, buttonColor='#1D1D1F', labelColor='#1D1D1F', buttonVariant='SECONDARY',
            buttonLabel=bi('Върни на клиента'),
-           isVisible="{{(GetOrdersList.data || []).some((r) => r.two_way === 'in')}}",
+           isVisible=True,
            isCellVisible="{{OrdersTable.processedTableData.map((currentRow, currentIndex) => ( currentRow.can_return == 1))}}",
            onClick=("{{(async () => { await storeValue('way_back', { id: currentRow.order_id, ref: currentRow.internal_reference, "
                     "name: currentRow.delivery_address, address: currentRow.delivery_full_address, at: Date.now() }, false); "
@@ -1042,9 +1045,10 @@ cols['wayback'] = rtc
 for e in list(tb.get('dynamicBindingPathList', [])):
     if e['key'].startswith('primaryColumns.customColumn1.') and not e['key'].endswith(('.buttonLabel', '.onClick')):
         tb['dynamicBindingPathList'].append({'key': e['key'].replace('customColumn1', 'wayback')})
-tb['dynamicBindingPathList'] += [{'key': 'primaryColumns.wayback.isVisible'}, {'key': 'primaryColumns.wayback.isCellVisible'}]
+tb['dynamicBindingPathList'] = [x for x in tb['dynamicBindingPathList'] if x.get('key') != 'primaryColumns.wayback.isVisible'] + [{'key': 'primaryColumns.wayback.isCellVisible'}]
 tb.setdefault('dynamicPropertyPathList', [])
-for k in ('primaryColumns.wayback.onClick', 'primaryColumns.wayback.isCellVisible', 'primaryColumns.wayback.isVisible'):
+tb['dynamicPropertyPathList'] = [x for x in tb['dynamicPropertyPathList'] if x.get('key') != 'primaryColumns.wayback.isVisible']
+for k in ('primaryColumns.wayback.onClick', 'primaryColumns.wayback.isCellVisible'):
     if not any(x.get('key') == k for x in tb['dynamicPropertyPathList']): tb['dynamicPropertyPathList'].append({'key': k})
 tb['dynamicTriggerPathList'] = [x for x in tb['dynamicTriggerPathList'] if x.get('key') != 'primaryColumns.wayback.onClick'] + [{'key': 'primaryColumns.wayback.onClick'}]
 tb['columnOrder'] = ['customColumn1', 'waybill', 'wayback', 'internal_reference', 'status', 'created_date', 'delivery_address', 'recipient_phone', 'delivery_full_address', 'total_amount', 'our_fees', 'customColumn4', 'order_id', 'customer_name', 'external_order_id', 'customColumn2', 'customer_email', 'customer_phone', 'pickup_location', 'driver_name', 'tracking_number', 'payment_method', 'store_type', 'status_display', 'cod_amount', 'goods_amount', 'delivery_amount', 'cod_fee', 'recipient_notes', 'shop_order_id', 'cod_goods', 'payer', 'delivery_date', 'two_way', 'can_return']

@@ -69,7 +69,7 @@
     "two_way",
     "can_return"
   ],
-  "columnUpdatedAt": 1794951286910,
+  "columnUpdatedAt": 1794952669278,
   "columnWidthMap": {
     "customColumn3": 198,
     "external_order_id": 203
@@ -275,9 +275,6 @@
     },
     {
       "key": "primaryColumns.wayback.isCellVisible"
-    },
-    {
-      "key": "primaryColumns.wayback.isVisible"
     }
   ],
   "dynamicTriggerPathList": [
@@ -1507,7 +1504,7 @@
       "isDiscardVisible": true,
       "isEditable": false,
       "isSaveVisible": true,
-      "isVisible": "{{(GetOrdersList.data || []).some((r) => r.two_way === 'in')}}",
+      "isVisible": true,
       "label": "",
       "labelColor": "#1D1D1F",
       "notation": "standard",
