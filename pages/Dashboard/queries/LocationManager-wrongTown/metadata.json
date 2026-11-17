@@ -6,7 +6,14 @@
   "unpublishedAction": {
     "actionConfiguration": {
       "encodeParamsToggle": true,
-      "jsArguments": [],
+      "jsArguments": [
+        {
+          "name": "geoResult"
+        },
+        {
+          "name": "typed"
+        }
+      ],
       "paginationType": "NONE",
       "timeoutInMillisecond": 10000
     },
