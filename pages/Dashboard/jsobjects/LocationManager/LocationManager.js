@@ -366,6 +366,25 @@ updateNewDropoffFromGeocode: () => {
         NewPickupLngHidden.setValue(String(w.lng));
       }
     }
+    // A phone gets the form drawn for a phone (BoOrderPhone, 2026-11-18): this window has one layout, about
+    // 1100 px wide, and on a narrow screen every field shrinks with it. The page's width comes from BoScreen; with
+    // no answer from it the usual window opens, as it always has. The phone form writes into the fields above
+    // and runs their own actions, so everything set here - the warehouse, a draft, the options - is what it shows.
+    const narrow = (() => { try { const w = Number((BoScreen.model || {}).w) || 0; return w > 0 && w < 700; } catch (e) { return false; } })();
+    if (narrow) {
+      // (After a short wait: the options set a few lines up are not awaited there.)
+      await storeValue('phone_order_asked', Date.now(), false);
+      await storeValue('phone_order', { at: Date.now(), values: {
+        name: RecipientNameInput.text || '', phone: RecipientPhoneInput.text || '', email: CustomerEmailInput.text || '',
+        notes: DeliveryNotesInput.text || '', amount: NewAmountInput.text || '', declaredValue: DeclaredValueInput.text || '',
+        declared: DeclaredValueSelect.selectedOptionValue || 'no', pickup: NewPickupAddressInput.text || '',
+        dropoff: NewDropoffAddressInput.text || '', zip: NewDropoffPostcodeInput.text || '',
+        service: OrderShippingSelect.selectedOptionValue || '', payer: NewPaymentMethodSelect.selectedOptionValue || '',
+        date: ScheduledDeliveryPicker.selectedDate ? moment(ScheduledDeliveryPicker.selectedDate).format('YYYY-MM-DD') : ''
+      } }, false);
+      showModal('BoOrderPhoneModal');
+      return;
+    }
     showModal('CreateOrderModal');
   },
 

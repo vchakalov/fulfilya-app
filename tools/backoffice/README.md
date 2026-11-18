@@ -36,6 +36,15 @@ over `pages/`, commit, and Ico pulls in the Appsmith editor (Discard & pull) and
   editor's request number. Clear `$TMPDIR/fulfilya-bo-build/office` before a run: the generator never
   deletes a query it stopped writing (CbRecipientInvoice went on 2026-11-06).
 
+- `bo-build-phone.py` - the **"Нова поръчка" form for a phone** (TODO 114, 2026-11-18): BoScreen (reports the page's
+  width), BoOrderPhoneModal + BoOrderPhone (the form drawn for a narrow screen, one block), and the last lines of
+  `LocationManager.openNewOrder`, which opens it under 700 px. The computer form is not touched. The phone form has
+  no order logic of its own: its handler is built FROM the computer form's own nine handlers (read out of the widget
+  files when the script runs) and writes the phone's values into that form's fields first. **Changed a rule in the
+  computer form? Run this script again** (`--check` fails when pages/ is stale) - never edit BoOrderPhone.json by hand.
+  It writes straight into `pages/` (four files) and imports nothing from the other generators. Test:
+  `python3 tools/backoffice/phone-form-test.py` (the block in headless Chrome inside a 375 px frame + the handler in Node).
+
 `bo_i18n.py` is shared: every widget embeds the whole dictionary, so adding one phrase rewrites
 **every** widget JSON. That is expected — rerun all the generators together, never one alone.
 

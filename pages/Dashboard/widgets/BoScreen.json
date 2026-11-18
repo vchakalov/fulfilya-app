@@ -1,0 +1,57 @@
+{
+  "animateLoading": true,
+  "backgroundColor": "transparent",
+  "borderColor": "transparent",
+  "borderRadius": "0px",
+  "borderWidth": "0",
+  "bottomRow": 9,
+  "boxShadow": "none",
+  "defaultModel": "{{ { lang: appsmith.store.bo_lang || 'bg' } }}",
+  "dynamicBindingPathList": [
+    {
+      "key": "theme"
+    },
+    {
+      "key": "defaultModel"
+    }
+  ],
+  "dynamicHeight": "FIXED",
+  "dynamicTriggerPathList": [],
+  "events": [],
+  "isLoading": false,
+  "isVisible": true,
+  "key": "scrnw1dth1",
+  "leftColumn": 0,
+  "maxDynamicHeight": 9000,
+  "minDynamicHeight": 4,
+  "minWidth": 200,
+  "mobileBottomRow": 9,
+  "mobileLeftColumn": 0,
+  "mobileRightColumn": 64,
+  "mobileTopRow": 8,
+  "needsErrorInfo": false,
+  "originalBottomRow": 9,
+  "originalTopRow": 8,
+  "parentColumnSpace": 10.484375,
+  "parentId": "0",
+  "parentRowSpace": 10,
+  "renderMode": "CANVAS",
+  "responsiveBehavior": "fill",
+  "rightColumn": 64,
+  "srcDoc": {
+    "html": "<div></div>",
+    "css": "html,body{margin:0;background:transparent;overflow:hidden}",
+    "js": "\n// Nothing to see here: this block only tells the page how wide it is, so \"Нова поръчка\" can open the form\n// drawn for a phone on a narrow screen (LocationManager.openNewOrder reads `w`).\nlet told = 0;\nfunction tell() {\n  const w = Math.round(window.innerWidth || document.documentElement.clientWidth || 0);\n  if (w > 0 && (appsmith.model || {}).w !== w) { told = w; appsmith.updateModel({ w: w }); }\n}\nappsmith.onReady(tell);\nappsmith.onModelChange(tell);\nwindow.addEventListener('resize', tell);\n"
+  },
+  "theme": "{{appsmith.theme}}",
+  "topRow": 8,
+  "type": "CUSTOM_WIDGET",
+  "uncompiledSrcDoc": {
+    "html": "<div></div>",
+    "css": "html,body{margin:0;background:transparent;overflow:hidden}",
+    "js": "\n// Nothing to see here: this block only tells the page how wide it is, so \"Нова поръчка\" can open the form\n// drawn for a phone on a narrow screen (LocationManager.openNewOrder reads `w`).\nlet told = 0;\nfunction tell() {\n  const w = Math.round(window.innerWidth || document.documentElement.clientWidth || 0);\n  if (w > 0 && (appsmith.model || {}).w !== w) { told = w; appsmith.updateModel({ w: w }); }\n}\nappsmith.onReady(tell);\nappsmith.onModelChange(tell);\nwindow.addEventListener('resize', tell);\n"
+  },
+  "version": 1,
+  "widgetId": "boscrnw1dt",
+  "widgetName": "BoScreen"
+}
