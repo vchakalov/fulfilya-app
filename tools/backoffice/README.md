@@ -52,6 +52,12 @@ over `pages/`, commit, and Ico pulls in the Appsmith editor (Discard & pull) and
   `mark-small.b64` = `mark.b64` at 288 px). Nine new files, and ONE property of the computer page: its card
   (`con_login.isVisible`) is not shown behind an OPEN phone window on a narrow screen - otherwise the squeezed page
   shows through around the window. The rule fails open (no window, no width, 700 px or more: shown as always).
+  **And the rest of the portal on a phone** (the same script, section "THE REST OF THE PORTAL ON A PHONE"): the header's
+  two-line layout under 560 px (appended to BoHeader on all five pages), `BoTabloPhone` / `BoReportsPhone` - twins of the
+  two FIXED-height blocks that grow with their content (AUTO_HEIGHT) - and `BoOrdersPhone`, the orders as cards with
+  the table's own column and button code inside. Which is shown is decided by `appsmith.store.bo_w` (kept by BoScreen;
+  no width = the computer page). Test: `python3 tools/backoffice/phone-pages-test.py`. A block's MODEL is put back to
+  its default whenever the default is worked out again - never keep in it something the page must not forget.
 
 `bo_i18n.py` is shared: every widget embeds the whole dictionary, so adding one phrase rewrites
 **every** widget JSON. That is expected — rerun all the generators together, never one alone.

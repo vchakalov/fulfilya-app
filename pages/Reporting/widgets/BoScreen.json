@@ -1,0 +1,64 @@
+{
+  "animateLoading": true,
+  "backgroundColor": "transparent",
+  "borderColor": "transparent",
+  "borderRadius": "0px",
+  "borderWidth": "0",
+  "bottomRow": 9,
+  "boxShadow": "none",
+  "defaultModel": "{{ { screen: true } }}",
+  "dynamicBindingPathList": [
+    {
+      "key": "theme"
+    },
+    {
+      "key": "defaultModel"
+    }
+  ],
+  "dynamicHeight": "FIXED",
+  "dynamicTriggerPathList": [
+    {
+      "key": "onAction"
+    }
+  ],
+  "events": [
+    "onAction"
+  ],
+  "isLoading": false,
+  "isVisible": true,
+  "key": "rpscrnw1d3",
+  "leftColumn": 0,
+  "maxDynamicHeight": 9000,
+  "minDynamicHeight": 4,
+  "minWidth": 200,
+  "mobileBottomRow": 9,
+  "mobileLeftColumn": 0,
+  "mobileRightColumn": 64,
+  "mobileTopRow": 8,
+  "needsErrorInfo": false,
+  "onAction": "{{(async () => { const w = Number((BoScreen.model || {}).w) || 0; if (w <= 0) { return; } if (Number(appsmith.store.bo_w) !== w) { await storeValue('bo_w', w, false); } })()}}",
+  "originalBottomRow": 9,
+  "originalTopRow": 8,
+  "parentColumnSpace": 10.484375,
+  "parentId": "0",
+  "parentRowSpace": 10,
+  "renderMode": "CANVAS",
+  "responsiveBehavior": "fill",
+  "rightColumn": 64,
+  "srcDoc": {
+    "html": "<div></div>",
+    "css": "html,body{margin:0;background:transparent;overflow:hidden}",
+    "js": "\n// Nothing to see here: this block tells the page how wide it is. The page keeps the number in its own\n// store (`bo_w`, see SCREEN_ON) - NOT in this block's model, which Appsmith puts back to its default\n// whenever that default is worked out again: found 2026-11-18 on the login (a press on BG|EN and the width\n// was gone, the squeezed page was back behind the phone window) and, on Ico's phone, as \"Нова поръчка\"\n// opening the computer form. So the width is told when the block is ready, once more a moment later, on\n// every resize, and again whenever the model has lost it.\nlet sent = 0;\nfunction tell(again) {\n  const w = Math.round(window.innerWidth || document.documentElement.clientWidth || 0);\n  if (w <= 0) return;\n  if (again || sent !== w || (appsmith.model || {}).w !== w) {\n    sent = w;\n    appsmith.updateModel({ w: w });\n    appsmith.triggerEvent('onAction');\n  }\n}\nappsmith.onReady(() => { tell(true); setTimeout(() => tell(true), 1200); });\nappsmith.onModelChange(() => tell(false));\nwindow.addEventListener('resize', () => tell(false));\n"
+  },
+  "theme": "{{appsmith.theme}}",
+  "topRow": 8,
+  "type": "CUSTOM_WIDGET",
+  "uncompiledSrcDoc": {
+    "html": "<div></div>",
+    "css": "html,body{margin:0;background:transparent;overflow:hidden}",
+    "js": "\n// Nothing to see here: this block tells the page how wide it is. The page keeps the number in its own\n// store (`bo_w`, see SCREEN_ON) - NOT in this block's model, which Appsmith puts back to its default\n// whenever that default is worked out again: found 2026-11-18 on the login (a press on BG|EN and the width\n// was gone, the squeezed page was back behind the phone window) and, on Ico's phone, as \"Нова поръчка\"\n// opening the computer form. So the width is told when the block is ready, once more a moment later, on\n// every resize, and again whenever the model has lost it.\nlet sent = 0;\nfunction tell(again) {\n  const w = Math.round(window.innerWidth || document.documentElement.clientWidth || 0);\n  if (w <= 0) return;\n  if (again || sent !== w || (appsmith.model || {}).w !== w) {\n    sent = w;\n    appsmith.updateModel({ w: w });\n    appsmith.triggerEvent('onAction');\n  }\n}\nappsmith.onReady(() => { tell(true); setTimeout(() => tell(true), 1200); });\nappsmith.onModelChange(() => tell(false));\nwindow.addEventListener('resize', () => tell(false));\n"
+  },
+  "version": 1,
+  "widgetId": "borpscrnw1",
+  "widgetName": "BoScreen"
+}

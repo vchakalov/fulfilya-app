@@ -13,6 +13,9 @@
     },
     {
       "key": "defaultModel"
+    },
+    {
+      "key": "isVisible"
     }
   ],
   "dynamicHeight": "FIXED",
@@ -26,7 +29,7 @@
   ],
   "onAction": "{{(async () => { const m = BoTitle.model || {}; if (m.action === 'wbsize') { return storeValue('wb_size', m.size === 'a4' ? 'a4' : 'label'); } if (m.action === 'wball') { return (async () => { const en = appsmith.store.bo_lang === 'en'; const size = appsmith.store.wb_size === 'a4' ? 'a4' : 'label'; try { await WaybillPDF.run(Object.assign({ size: size }, { waiting: 1 })); const f = WaybillPDF.data || {}; if (!f.base64) { return showAlert(en ? 'The waybill did not arrive from the server.' : 'Товарителницата не дойде от сървъра.', 'error'); } return download('data:application/pdf;base64,' + f.base64, f.filename || 'tovaritelnica.pdf', 'application/pdf'); } catch (e) { const b = WaybillPDF.data || {}; return showAlert(b.error || ((en ? 'Could not create the waybill: ' : 'Товарителницата не можа да се създаде: ') + (e.message || '')), 'warning'); } })(); } })()}}",
   "isLoading": false,
-  "isVisible": true,
+  "isVisible": "{{!(Number(appsmith.store.bo_w) > 0 && Number(appsmith.store.bo_w) < 700)}}",
   "key": "ttl5r6t7y8",
   "leftColumn": 0,
   "maxDynamicHeight": 9000,
@@ -60,5 +63,10 @@
   "type": "CUSTOM_WIDGET",
   "version": 1,
   "widgetId": "bottl5r6t7",
-  "widgetName": "BoTitle"
+  "widgetName": "BoTitle",
+  "dynamicPropertyPathList": [
+    {
+      "key": "isVisible"
+    }
+  ]
 }

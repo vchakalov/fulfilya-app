@@ -12,11 +12,17 @@
     },
     {
       "key": "text"
+    },
+    {
+      "key": "isVisible"
     }
   ],
   "dynamicPropertyPathList": [
     {
       "key": "onClick"
+    },
+    {
+      "key": "isVisible"
     }
   ],
   "dynamicTriggerPathList": [
@@ -29,7 +35,7 @@
   "isDefaultClickDisabled": true,
   "isDisabled": false,
   "isLoading": false,
-  "isVisible": true,
+  "isVisible": "{{!(Number(appsmith.store.bo_w) > 0 && Number(appsmith.store.bo_w) < 700)}}",
   "key": "v8dutca5gf",
   "leftColumn": 51,
   "minWidth": 120,

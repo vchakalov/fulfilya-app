@@ -29,7 +29,7 @@
   ],
   "onAction": "{{(async () => { const m = BoTablo.model || {}; if (m.action === 'period' && m.period) { await storeValue('bo_view_period', m.period, false); await Promise.all([BoStats.run(), BoPayment.run(), BoStatus.run()]); return; } if (m.action === 'new') { return LocationManager.openNewOrder(); } if (m.action === 'nav' && m.page) { return navigateTo(m.page); } })()}}",
   "isLoading": false,
-  "isVisible": "{{!(appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders')}}",
+  "isVisible": "{{(!(appsmith.URL.queryParams && appsmith.URL.queryParams.tab === 'orders')) && !(Number(appsmith.store.bo_w) > 0 && Number(appsmith.store.bo_w) < 700)}}",
   "key": "tblz9x8c7v",
   "leftColumn": 0,
   "maxDynamicHeight": 9000,
@@ -63,5 +63,10 @@
   "type": "CUSTOM_WIDGET",
   "version": 1,
   "widgetId": "botblz9x8c",
-  "widgetName": "BoTablo"
+  "widgetName": "BoTablo",
+  "dynamicPropertyPathList": [
+    {
+      "key": "isVisible"
+    }
+  ]
 }

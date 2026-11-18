@@ -813,6 +813,349 @@ FILES[os.path.join(A, 'BoScreen.json')] = custom(
     SCREEN_MODEL, on=LOGIN_SCREEN_ON)
 
 
+# ================================================================ THE REST OF THE PORTAL ON A PHONE
+# (Ico, 2026-11-18, his phone on the Dashboard after the phone login: "login was fine, afte that is the proble" -
+#  the tabs gone from the header, the tiles cut, "Принтирай всички" cut, the yellow button reading "+ …", the
+#  orders a table that slides sideways - then: "fix everythign and only then show me results".)
+#
+# The same answer as for the form and the login - a phone gets its own, the computer keeps what it has:
+#   - the HEADER (one block, on five pages) lays itself out in two lines under 560 px: brand and account, then the
+#     tabs as a strip that slides sideways. A menu cannot drop out of the header: a block is a box of fixed height.
+#   - a block of FIXED height cuts its content on a phone (the tiles: 490 px for 1100 px of content; the reports:
+#     850 px for 1640 px). Each gets a twin that grows with its content (AUTO_HEIGHT, as BoPayouts and BoImport
+#     already are), shown on a narrow screen while the original is not.
+#   - the orders: BoOrdersPhone - the title, "+ Нова поръчка" at full width, the waybill buttons on a line of their
+#     own, a search box and one CARD per order - shown on a narrow screen instead of BoTitle, Button6 and the table.
+# Everything a card says is worked out by the table's OWN column code (cell() below reads it out of OrdersTable.json),
+# and its buttons run the table's own button code. Hidden widgets take no room in the published app, so the
+# phone's blocks, kept at the bottom of the page, move up into place - what the "Поръчки" tab has always relied on
+# when it hides the tiles. Every rule fails open: no width known = the computer page.
+import hashlib
+
+IS_NARROW = "(Number(appsmith.store.bo_w) > 0 && Number(appsmith.store.bo_w) < %d)" % NARROW
+PATCHED = {}   # path -> (text as it is on disk, widget) for the computer page's files this section changes
+
+
+def page_file(page, *parts):
+    return os.path.join(PAGES, page, 'widgets', *parts)
+
+
+def existing(path):
+    """A widget file of the computer page, to be changed in place: read once, and written back in Appsmith's own
+    form (keys in order, two spaces, the file's own ending). Refuses a file it could not write back unchanged."""
+    if path not in PATCHED:
+        text = FILES[path] if isinstance(FILES.get(path), str) else open(path, encoding='utf-8').read()
+        d = json.loads(text)
+        end = '\n' if text.endswith('\n') else ''
+        assert json.dumps(d, ensure_ascii=False, indent=2) + end == text, 'not in the form this script writes: ' + path
+        PATCHED[path] = (end, d)
+    return PATCHED[path][1]
+
+
+def keep(path):
+    # in the order the file has its keys: a change is then the lines that changed, and nothing else
+    end, d = PATCHED[path]
+    FILES[path] = json.dumps(d, ensure_ascii=False, indent=2) + end
+
+
+def shown_when(d, rule):
+    """isVisible becomes a rule, joined to the one the widget already has."""
+    was = d.get('isVisible')
+    if isinstance(was, str) and IS_NARROW in was:
+        return                      # already done by an earlier run
+    cond = inner(was) if isinstance(was, str) and was.strip().startswith('{{') else None
+    assert cond is not None or was is True, 'isVisible is neither true nor a rule: ' + str(was)
+    d['isVisible'] = '{{' + (('(' + cond + ') && ') if cond else '') + rule + '}}'
+    d['dynamicBindingPathList'] = paths(d, 'dynamicBindingPathList', 'isVisible')
+    d['dynamicPropertyPathList'] = paths(d, 'dynamicPropertyPathList', 'isVisible')
+
+
+def wid(name):
+    return 'bo' + hashlib.md5(name.encode()).hexdigest()[:8]
+
+
+def phone_twin(page, name, top, bottom):
+    """`name`, a block of fixed height, gets a twin for a narrow screen that grows with its content."""
+    path = page_file(page, name + '.json')
+    src = existing(path)
+    was = src.get('isVisible')
+    own = None
+    if isinstance(was, str):
+        own = inner(was)
+        if IS_NARROW in own:        # an earlier run: the widget's own rule is what stands before ours
+            own = own.split(') && !' + IS_NARROW)[0].lstrip('(') if ') && !' + IS_NARROW in own else None
+    twin = dict(src)
+    assert src['onAction'].count(name + '.model') >= 1
+    twin.update({
+        'widgetName': name + 'Phone', 'widgetId': wid(name + 'Phone'), 'key': wid(name + 'Phone')[2:] + 'ph',
+        'topRow': top, 'bottomRow': bottom, 'originalTopRow': top, 'originalBottomRow': bottom, 'mobileTopRow': top, 'mobileBottomRow': bottom,
+        'dynamicHeight': 'AUTO_HEIGHT', 'minDynamicHeight': 4, 'maxDynamicHeight': 9000,
+        'onAction': src['onAction'].replace(name + '.model', name + 'Phone.model'),
+        'isVisible': '{{' + (('(' + own + ') && ') if own else '') + IS_NARROW + '}}',
+    })
+    twin['dynamicBindingPathList'] = paths(twin, 'dynamicBindingPathList', 'isVisible')
+    twin['dynamicPropertyPathList'] = paths(twin, 'dynamicPropertyPathList', 'isVisible')
+    FILES[page_file(page, name + 'Phone.json')] = dict(sorted(twin.items()))
+    shown_when(src, '!' + IS_NARROW)
+    keep(path)
+
+
+# ---------------------------------------------------------------- the header, on every page that has it
+HEADER_PHONE_MARK = '/* phone (2026-11-18): two lines */'
+HEADER_PHONE_CSS = HEADER_PHONE_MARK + """
+@media (max-width:560px){
+.topbar{flex-wrap:wrap;gap:0 6px;height:72px;align-content:flex-start;padding:0 2px}
+.topbar>*{order:5}
+.brand{order:1;height:38px}.brand img{height:22px}.brand .word{font-size:17px}
+.grow{order:2}
+.merchant{order:3;padding:2px;background:transparent;border-color:transparent}.merchant .avatar{width:28px;height:28px}.merchant .caret{display:none}
+.btn{order:4;padding:6px 8px}.btn.lang{padding:5px 9px}
+/* the tabs: a line of their own, sliding sideways; the fade on the right says there is more */
+.tabs{order:9;flex:0 0 100%;max-width:100%;margin-left:0;height:34px;align-self:auto;-webkit-overflow-scrolling:touch;
+-webkit-mask-image:linear-gradient(90deg,#000 86%,transparent);mask-image:linear-gradient(90deg,#000 86%,transparent)}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:0 10px;font-size:14px;height:34px}
+.tab:last-child{margin-right:28px}
+}
+"""
+HEADER_PHONE_JS = """
+// phone (2026-11-18): the tab that is open is brought into view in the sliding strip
+(function () {
+  const root = document.getElementById('bo-header');
+  if (!root || !window.MutationObserver) return;
+  const show = () => { const strip = root.querySelector('.tabs'), on = root.querySelector('.tab.on');
+    if (strip && on && window.innerWidth <= 560) strip.scrollLeft = Math.max(0, on.offsetLeft - strip.offsetLeft - 12); };
+  new MutationObserver(show).observe(root, { childList: true });
+  show();
+})();
+"""
+for header in sorted(__import__('glob').glob(os.path.join(PAGES, '*', 'widgets', 'BoHeader.json'))):
+    h = existing(header)
+    for part in ('srcDoc', 'uncompiledSrcDoc'):
+        if HEADER_PHONE_MARK not in h[part]['css']:
+            h[part] = dict(h[part], css=h[part]['css'].rstrip('\n') + '\n' + HEADER_PHONE_CSS, js=h[part]['js'].rstrip('\n') + '\n' + HEADER_PHONE_JS)
+        else:   # an earlier run: put today's text in its place
+            css = h[part]['css']; js = h[part]['js']
+            h[part] = dict(h[part], css=css[:css.index(HEADER_PHONE_MARK)] + HEADER_PHONE_CSS,
+                           js=js[:js.index('\n// phone (2026-11-18): the tab that is open')] + '\n' + HEADER_PHONE_JS.lstrip('\n'))
+    keep(header)
+
+# ---------------------------------------------------------------- the tiles and the reports: twins that grow
+phone_twin('Dashboard', 'BoTablo', 118, 168)
+phone_twin('Reporting', 'BoReports', 322, 400)
+# The Reporting page needs to know its width too (a visit can start there): the same block as on the other two.
+FILES[page_file('Reporting', 'BoScreen.json')] = custom(
+    'BoScreen', 'rpscrnw1d3', 8, 9, '<div></div>', 'html,body{margin:0;background:transparent;overflow:hidden}', SCREEN_JS,
+    SCREEN_MODEL, on=screen_on())
+
+# ---------------------------------------------------------------- the orders, as cards
+TABLE = load(page_file('Dashboard', 'OrdersTable.json'))
+TITLE = load(page_file('Dashboard', 'BoTitle.json'))
+COLS = TABLE['primaryColumns']
+
+
+def cell(column):
+    """What a column of the table shows for one row - its own code, with `currentRow` free in it."""
+    v = COLS[column]['computedValue']
+    head = 'tableData.map((currentRow, currentIndex) => ('
+    return v[v.index(head) + len(head):v.rindex(')) : ')]
+
+
+WAYBILL = inner(COLS['waybill']['onClick'])
+WAYBACK = inner(COLS['wayback']['onClick'])
+assert 'currentRow.order_id' in WAYBILL and 'currentRow.order_id' in WAYBACK and "showModal('BoReturnModal')" in WAYBACK
+TITLE_ON = inner(TITLE['onAction'])
+assert TITLE_ON.count('BoTitle.model') == 1 and "m.action === 'wball'" in TITLE_ON
+assert TABLE['tableData'] == '{{GetOrdersList.data}}'
+
+ORDERS_MODEL = ("{{ (() => { const rows = (GetOrdersList.data || []).map((currentRow, currentIndex) => ({ "
+                "id: currentRow.order_id, ref: currentRow.internal_reference, name: currentRow.delivery_address, phone: currentRow.recipient_phone, "
+                "address: currentRow.delivery_full_address, pickup: currentRow.pickup_location, driver: currentRow.driver_name, note: currentRow.recipient_notes, "
+                "shop: currentRow.shop_order_id, payer: currentRow.payer, canReturn: currentRow.can_return == 1, "
+                "date: " + cell('created_date') + ", status: " + cell('status') + ", payment: " + cell('customColumn4') + ", "
+                "cod: " + cell('total_amount') + ", fees: " + cell('our_fees') + " })); "
+                # What the computer's "Детайли" window shows for the order that was opened last - its own texts, read
+                # from its own widgets. Shown under a card only when it is about that card's order.
+                "const detail = (() => { try { const d = (GetOrderDetails.data || [])[0]; if (!d) { return null; } "
+                "return { id: d.public_id, when: Text39.text, amount: BoAmountValue.text, amountLabel: BoAmountLabel.text, payment: BoPaymentValue.text, paymentLabel: BoPaymentLabel.text, "
+                "shipping: BoShippingValue.text, shippingLabel: BoShippingLabel.text, fees: BoFeesValue.text, feesLabel: BoFeesLabel.text, "
+                "pickup: BoPickupValue.text, dropoff: BoDropoffValue.text, "
+                "items: (GetOrderItems.data || []).map((i) => ({ name: i.name, sku: i.sku, qty: i.quantity })) }; } catch (e) { return null; } })(); "
+                "return { lang: appsmith.store.bo_lang || 'bg', title: " + inner("{{" + re.search(r"title: (\(appsmith\.URL[^,]+)", TITLE['defaultModel']).group(1) + "}}") + ", "
+                "size: appsmith.store.wb_size || 'label', rows: rows, detail: detail, loading: GetOrdersList.isLoading === true }; })() }}")
+
+ORDERS_ON = """{{(async () => {
+  const m = BoOrdersPhone.model || {};
+  if (m.action === 'new') { return LocationManager.openNewOrder(); }
+  if (m.action === 'details' || m.action === 'waybill' || m.action === 'wayback' || m.action === 'track') {
+    const currentRow = (GetOrdersList.data || []).find((r) => String(r.order_id) === String(m.id));
+    if (!currentRow) { return; }
+    if (m.action === 'waybill') { return (__WAYBILL__); }
+    if (m.action === 'wayback') { return (__WAYBACK__); }
+    // "Детайли": the order is made the table's chosen row, as the table's own button does, and the two
+    // queries the computer's window reads are run. Their answer comes back to the card through the model.
+    try {
+      await OrdersTable.setSelectedRowIndex(OrdersTable.tableData.findIndex((row) => row.order_id === currentRow.order_id));
+      await new Promise((r) => setTimeout(r, 150));
+      await Promise.all([GetOrderDetails.run(), GetOrderItems.run()]);
+    } catch (e) { return; }
+    if (m.action === 'track') { return showModal('Modal1'); }
+    return;
+  }
+  // the waybill size and "print all waiting": the computer's title row's own code
+  return (__TITLE__);
+})()}}""".replace('__WAYBILL__', WAYBILL).replace('__WAYBACK__', WAYBACK).replace('__TITLE__', TITLE_ON.replace('BoTitle.model', 'BoOrdersPhone.model'))
+
+ORDERS_HTML = ('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=Onest:wght@400;500;600&display=swap">'
+               '<div id="op"></div>')
+ORDERS_CSS = """:root{--ink:#1D1D1F;--muted:#6E6E73;--line:#E6E6EA;--accent:#FFC400;--ground:#F7F8FA;
+--display:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;--body:'Onest',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+*{box-sizing:border-box}
+html,body{margin:0;background:transparent;height:auto!important;min-height:0!important;overflow:auto}
+body{font-family:var(--body);font-size:14px;line-height:1.4;color:var(--ink);-webkit-font-smoothing:antialiased}
+#op{padding:2px 2px 12px}
+h2{margin:6px 0 10px;font:800 20px/1.2 var(--display);letter-spacing:-.01em}
+button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.new{display:block;width:100%;border:0;border-radius:12px;background:var(--accent);padding:14px;font:800 16px var(--display);margin-bottom:10px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+.seg{display:inline-flex;border:1px solid #D5D5DA;border-radius:999px;padding:3px;background:#fff}
+.seg button{border:0;background:transparent;border-radius:999px;padding:7px 12px;font-weight:600;font-size:13px;color:var(--muted)}
+.seg button.on{background:var(--ink);color:#fff}
+.all{border:1.5px solid var(--ink);background:#fff;border-radius:999px;padding:8px 14px;font-weight:600;font-size:13px}
+/* 16px: below that an iPhone zooms the page when the box is tapped */
+.find{display:block;width:100%;border:1px solid #D5D5DA;border-radius:10px;background:#fff;padding:10px 12px;font:inherit;font-size:16px;margin-bottom:10px;outline:none}
+.find:focus{border-color:var(--ink)}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:10px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ref{font:700 15px var(--display);overflow-wrap:anywhere}
+.who{font-weight:600;font-size:15px;margin-top:6px;overflow-wrap:anywhere}
+.addr{color:var(--muted);font-size:13px;margin-top:2px;overflow-wrap:anywhere}
+.addr a{color:#1D4ED8;text-decoration:none;white-space:nowrap}
+.meta{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin-top:8px;color:var(--muted);font-size:13px}
+.meta b{color:var(--ink);font:700 15px var(--display);white-space:nowrap}
+.meta small{display:block;font-size:11.5px;text-align:right;white-space:nowrap}
+.acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.acts button{flex:1 1 40%;border:1px solid #D5D5DA;background:#fff;border-radius:10px;padding:10px 6px;font-weight:600;font-size:13px}
+.acts button.on{background:var(--ground);border-color:var(--ink)}
+.more{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}
+.kv{display:flex;gap:10px;padding:4px 0;font-size:13px}
+.kv span{flex:0 0 38%;color:var(--muted)}
+.kv div{flex:1;min-width:0;overflow-wrap:anywhere;white-space:pre-line}
+.items{margin:6px 0 0;padding:0;list-style:none;font-size:13px}
+.items li{display:flex;justify-content:space-between;gap:10px;padding:3px 0}
+.note{color:var(--muted);text-align:center;padding:18px 8px;font-size:14px}
+.next{display:block;width:100%;border:1px solid #D5D5DA;background:#fff;border-radius:10px;padding:11px;font-weight:600;margin-top:2px}
+"""
+ORDERS_JS = r"""
+// The orders on a phone: one card each, instead of the table (which on a narrow screen slides sideways under
+// the thumb). What a card says is worked out by the table's own column code, on the page; this block only draws.
+const T = {
+  bg: { new: '+ Нова поръчка', label: 'Етикет 100×150', a4: 'A4', all: 'Принтирай всички чакащи', find: 'Търсене: номер, име, телефон, адрес',
+    details: 'Детайли', hide: 'Скрий', waybill: 'Товарителница', wayback: 'Върни на клиента', track: 'Проследи', cod: 'наложен платеж', fees: 'такси',
+    none: 'Още няма поръчки.', nothing: 'Няма поръчка, която отговаря на търсенето.', loading: 'Зареждаме поръчките…', more: 'Покажи още',
+    phone: 'Телефон', address: 'Адрес', pickup: 'Взимане от', driver: 'Шофьор', note: 'Бележка', shop: '№ в магазина', when: 'Статус', items: 'Артикули', from: 'Взимане', to: 'Доставка', pieces: 'бр.' },
+  en: { new: '+ New order', label: 'Label 100×150', a4: 'A4', all: 'Print all waiting', find: 'Search: number, name, phone, address',
+    details: 'Details', hide: 'Hide', waybill: 'Waybill', wayback: 'Return to customer', track: 'Track', cod: 'cash on delivery', fees: 'fees',
+    none: 'No orders yet.', nothing: 'No order matches the search.', loading: 'Loading the orders…', more: 'Show more',
+    phone: 'Phone', address: 'Address', pickup: 'Pickup from', driver: 'Driver', note: 'Note', shop: 'Shop order no.', when: 'Status', items: 'Items', from: 'Pickup', to: 'Delivery', pieces: 'pcs' },
+};
+const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const STEP = 20;
+let find = '';
+let shown = STEP;
+let open = null;        // the order whose card is unfolded
+
+function send(action, extra) { appsmith.updateModel(Object.assign({ action: action, at: Date.now() }, extra || {})); appsmith.triggerEvent('onAction'); }
+const kv = (label, value) => (value == null || String(value).trim() === '' || String(value).trim() === '-' ? '' : `<div class="kv"><span>${esc(label)}</span><div>${esc(value)}</div></div>`);
+
+function card(r, L, detail) {
+  const isOpen = open === r.id;
+  const tel = String(r.phone || '').replace(/[^0-9+]/g, '');
+  let more = '';
+  if (isOpen) {
+    const d = detail && String(detail.id) === String(r.id) ? detail : null;
+    more = '<div class="more">' +
+      (d ? kv(L.when, d.when) + kv(d.amountLabel, d.amount) + kv(d.paymentLabel, d.payment) + kv(d.shippingLabel, d.shipping) + kv(d.feesLabel, d.fees) + kv(L.from, d.pickup) + kv(L.to, d.dropoff)
+         : kv(L.pickup, r.pickup)) +
+      kv(L.driver, r.driver) + kv(L.shop, r.shop) + kv(L.note, r.note) +
+      (d && d.items && d.items.length ? `<div class="kv"><span>${L.items}</span><div><ul class="items">` +
+        d.items.map((i) => `<li><span>${esc(i.name)}</span><span>${i.qty != null && i.qty !== '' ? esc(i.qty) + ' ' + L.pieces : ''}</span></li>`).join('') + '</ul></div></div>' : '') +
+      '</div>';
+  }
+  return `<div class="card" data-id="${esc(r.id)}">` +
+    `<div class="top"><span class="ref">${esc(r.ref || r.id)}</span>${r.status || ''}</div>` +
+    `<div class="who">${esc(r.name || '')}</div>` +
+    `<div class="addr">${esc(r.address || '')}${tel ? ` · <a href="tel:${esc(tel)}">${esc(r.phone)}</a>` : ''}</div>` +
+    `<div class="meta"><span>${esc(r.date || '')}${r.payment && r.payment !== '—' ? ' · ' + esc(r.payment) : ''}</span>` +
+    `<span><small>${L.cod}</small><b>${esc(r.cod || '')}</b><small>${L.fees} ${esc(r.fees || '')}</small></span></div>` +
+    more +
+    '<div class="acts">' +
+    `<button data-act="details" class="${isOpen ? 'on' : ''}">${isOpen ? L.hide : L.details}</button>` +
+    `<button data-act="waybill">${L.waybill}</button>` +
+    (isOpen && detail && String(detail.id) === String(r.id) ? `<button data-act="track">${L.track}</button>` : '') +
+    (r.canReturn ? `<button data-act="wayback">${L.wayback}</button>` : '') +
+    '</div></div>';
+}
+
+function render() {
+  const m = appsmith.model || {};
+  const L = T[m.lang === 'en' ? 'en' : 'bg'];
+  const rows = Array.isArray(m.rows) ? m.rows : [];
+  const q = find.trim().toLowerCase();
+  const hit = q ? rows.filter((r) => [r.ref, r.name, r.phone, r.address, r.shop].some((v) => String(v || '').toLowerCase().indexOf(q) >= 0)) : rows;
+  const size = m.size === 'a4' ? 'a4' : 'label';
+  const had = document.activeElement && document.activeElement.id === 'find';
+  const caret = had ? document.activeElement.selectionStart : null;
+  let list;
+  if (!rows.length) list = `<div class="note">${m.loading ? L.loading : L.none}</div>`;
+  else if (!hit.length) list = `<div class="note">${L.nothing}</div>`;
+  else list = hit.slice(0, shown).map((r) => card(r, L, m.detail)).join('') + (hit.length > shown ? `<button class="next" data-act="more">${L.more} (${hit.length - shown})</button>` : '');
+  document.getElementById('op').innerHTML =
+    `<h2>${esc(m.title || '')}</h2>` +
+    `<button class="new" data-act="new">${L.new}</button>` +
+    `<div class="row"><span class="seg"><button data-size="label" class="${size === 'label' ? 'on' : ''}">${L.label}</button><button data-size="a4" class="${size === 'a4' ? 'on' : ''}">${L.a4}</button></span>` +
+    `<button class="all" data-act="wball">${L.all}</button></div>` +
+    (rows.length > 3 ? `<input class="find" id="find" type="search" inputmode="search" autocomplete="off" placeholder="${L.find}" value="${esc(find)}">` : '') +
+    list;
+  if (had) { const box = document.getElementById('find'); if (box) { box.focus(); try { box.setSelectionRange(caret, caret); } catch (e) {} } }
+}
+
+document.addEventListener('click', (ev) => {
+  const sz = ev.target.closest('[data-size]');
+  if (sz) { send('wbsize', { size: sz.dataset.size }); return; }
+  const b = ev.target.closest('[data-act]');
+  if (!b) return;
+  const act = b.dataset.act;
+  if (act === 'new' || act === 'wball') { send(act); return; }
+  if (act === 'more') { shown += STEP; render(); return; }
+  const host = b.closest('.card');
+  const id = host && host.dataset.id;
+  if (!id) return;
+  if (act === 'details') {
+    open = open === id ? null : id;
+    render();
+    if (open) send('details', { id: id });
+    return;
+  }
+  send(act, { id: id });
+});
+document.addEventListener('input', (ev) => { if (ev.target && ev.target.id === 'find') { find = ev.target.value; shown = STEP; render(); } });
+appsmith.onReady(render);
+appsmith.onModelChange(render);
+"""
+
+orders = custom('BoOrdersPhone', 'ordersph01', 170, 240, ORDERS_HTML, ORDERS_CSS, ORDERS_JS, ORDERS_MODEL, on=ORDERS_ON)
+orders.update({'dynamicHeight': 'AUTO_HEIGHT', 'minDynamicHeight': 4, 'maxDynamicHeight': 9000, 'isVisible': '{{' + IS_NARROW + '}}'})
+orders['dynamicBindingPathList'] = paths(orders, 'dynamicBindingPathList', 'isVisible')
+orders['dynamicPropertyPathList'] = paths(orders, 'dynamicPropertyPathList', 'isVisible')
+FILES[page_file('Dashboard', 'BoOrdersPhone.json')] = dict(sorted(orders.items()))
+# ... and on a narrow screen the computer's title row, its yellow button and its table are not shown.
+for name in ('BoTitle', 'Button6', 'OrdersTable'):
+    path = page_file('Dashboard', name + '.json')
+    shown_when(existing(path), '!' + IS_NARROW)
+    keep(path)
+
+
 def text_of(content):
     return content if isinstance(content, str) else json.dumps(content, ensure_ascii=False, indent=2) + '\n'
 
