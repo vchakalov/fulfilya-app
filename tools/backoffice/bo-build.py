@@ -807,12 +807,25 @@ custom('BoAccount', 0, 68, ACCOUNT_HTML, ACCOUNT_CSS, ACCOUNT_JS,
 
 # ---------------------------------------------------------------- "Върни на клиента" (XBORN, 2026-11-17, TODO 112)
 # The way back of a two-way order. The list's third button (OrdersTable column `wayback`, below)
-# opens this window; it asks one thing, the day, and POSTs int/v1/portal/orders/{id}/way-back.
-# Everything else - customer, address, products, service, who pays - is the first order's, on
-# the server. Only a client the office switched two-way on for ever sees the button.
+# opens this window and it POSTs int/v1/portal/orders/{id}/way-back. The customer, address,
+# products and service are the first order's, on the server. Only a client the office switched
+# two-way on for ever sees the button.
+#
+# It asks the day and, since 2026-11-18 (Ico), three things more:
+#   "Наложен платеж"   - the repair bill. XBORN learns it only once the device is repaired, so it
+#                        cannot be typed on the first order; with one, the customer pays it and
+#                        our fees at the door (the server makes it "Получателят плаща всичко").
+#   "Обявена стойност" - as on every order; opens with the first order's.
+#   "Бележки за куриера" - opens with the first order's; our own "ДВУПОСОЧНА: ..." line stays
+#                        in front of it on the server.
+# and shows "Сума за събиране" - what the customer pays the courier - in the order form's own
+# words, priced by the server (.../way-back/preview, the code the order itself is priced with)
+# after every change. **The button waits for that price.** A window that cannot get one creates
+# nothing: that is what keeps a newer portal from sending a наложен платеж to a server that
+# would ignore it.
 RETURN_HTML = FONT_LINK + '<div id="bo-return"></div>'
 RETURN_CSS = TOKENS + """html,body{background:var(--card)}
-.ret{display:grid;gap:14px;padding:6px 8px 10px;font-family:var(--body)}
+.ret{display:grid;gap:12px;padding:6px 8px 10px;font-family:var(--body)}
 .top{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .top h2{font-family:var(--display);font-size:19px;font-weight:800;margin:0}
 .x{border:0;background:transparent;font-size:22px;line-height:1;color:var(--muted);cursor:pointer;padding:2px 6px;border-radius:8px}
@@ -820,10 +833,22 @@ RETURN_CSS = TOKENS + """html,body{background:var(--card)}
 .who{background:var(--ground);border-radius:10px;padding:10px 12px;min-width:0}
 .who .n{font-family:var(--display);font-weight:800;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .who .e{color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-label{display:grid;gap:5px;font-size:13px;font-weight:600;color:var(--ink)}
-label input{width:100%;box-sizing:border-box;font:15px var(--body);padding:10px 12px;border:1px solid var(--line-strong);border-radius:10px;background:#fff;color:var(--ink)}
-label input:focus{outline:2px solid var(--accent);outline-offset:0;border-color:transparent}
+label{display:grid;gap:5px;font-size:13px;font-weight:600;color:var(--ink);min-width:0}
+label input,label textarea{width:100%;box-sizing:border-box;font:15px var(--body);padding:10px 12px;border:1px solid var(--line-strong);border-radius:10px;background:#fff;color:var(--ink)}
+label textarea{resize:none;height:62px;line-height:1.35}
+label input:focus,label textarea:focus{outline:2px solid var(--accent);outline-offset:0;border-color:transparent}
+label input::placeholder,label textarea::placeholder{color:var(--faint);font-size:13px}
+label input[disabled],label textarea[disabled]{opacity:.6}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .hint{font-size:13px;color:var(--muted)}
+.sum{background:var(--ground);border-radius:10px;padding:10px 12px;display:grid;gap:3px;min-height:46px;align-content:center}
+.sum .tot{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:14px;font-weight:600;color:var(--ink)}
+.sum .tot b{font-family:var(--display);font-size:17px;font-weight:800;white-space:nowrap}
+.sum .parts{font-size:12.5px;color:var(--muted);line-height:1.5}
+.sum .parts b{font-weight:600;color:var(--ink);white-space:nowrap}
+.sum .wait{font-size:13px;color:var(--muted)}
+.sum.bad{background:#FBE9E7;color:#B42318;font-size:13px}
+.link{border:0;background:transparent;color:inherit;text-decoration:underline;font:inherit;cursor:pointer;padding:0;margin-left:6px}
 .msg{font-size:13px;border-radius:10px;padding:10px 12px;display:none}
 .msg.err{display:block;background:#FBE9E7;color:#B42318}
 .actions{display:flex;justify-content:flex-end;gap:8px}
@@ -833,10 +858,79 @@ label input:focus{outline:2px solid var(--accent);outline-offset:0;border-color:
 RETURN_JS = r"""const $ = (id) => document.getElementById(id);
 const pad = (n) => String(n).padStart(2, '0');
 const ymd = (d) => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const eur = (v) => Number(v || 0).toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const DECLARED_MAX = 5112.92;
 let built = false, shown = null, busy = false, lastAt = null;
+// The price of what is in the fields, asked from the server after every change. `asked` names
+// the last question; only its answer counts. While there is no price - none yet, a newer
+// question on its way, a refusal - the button waits: nothing is created without one.
+let asked = null, timer = null, waiting = false, price = null, priceError = '', canRetry = false, lastPriceAt = null;
+// The fields open with what the first order carried (its declared value, its note), which
+// comes with the first answer - unless the client was quicker and typed there already.
+let opened = false, typedDec = false, typedNote = false;
 
-function say(text) { const m = $('msg'); m.className = text ? 'msg err' : 'msg'; m.textContent = text || ''; }
-function paint() { $('go').disabled = busy; $('go').textContent = busy ? 'Създаваме…' : 'Създай поръчката'; }
+// A refusal takes the place of the grey line above the sum, so the window keeps its height.
+function say(text) { const m = $('msg'); m.className = text ? 'msg err' : 'msg'; m.textContent = text || ''; $('hint').style.display = text ? 'none' : ''; }
+
+// '' is "none"; a number with at most two decimals, comma or point; anything else is NaN.
+function amount(text) {
+  const s = String(text || '').replace(/\s/g, '').replace(',', '.');
+  if (s === '') return null;
+  return /^\d+(\.\d{1,2})?$/.test(s) ? Number(s) : NaN;
+}
+function fields() {
+  const cod = amount($('cod').value), dec = amount($('dec').value);
+  if (Number.isNaN(cod)) return { error: 'Наложеният платеж трябва да е число, напр. 200 или 200,50.' };
+  if (Number.isNaN(dec)) return { error: 'Обявената стойност трябва да е число, напр. 500.' };
+  if (dec !== null && dec > DECLARED_MAX) return { error: 'Обявената стойност е най-много 5 112,92 €.' };
+  return { cod: cod ? String(cod) : null, dec: dec ? String(dec) : null, notes: $('note').value.trim() };
+}
+
+function ask(typed) {
+  clearTimeout(timer); timer = null;
+  const f = typed ? fields() : {};
+  if (f.error) { asked = null; waiting = false; price = null; priceError = f.error; canRetry = false; paint(); return; }
+  asked = Math.random().toString(36).slice(2); waiting = true; priceError = ''; paint();
+  appsmith.updateModel({ action: 'preview', seq: asked, typed: !!typed, cod: f.cod || null, dec: f.dec || null, notes: f.notes || '' });
+  appsmith.triggerEvent('onAction');
+}
+// A moment after the last key, so a sum being typed is asked about once.
+function soon() { clearTimeout(timer); waiting = true; paint(); timer = setTimeout(() => ask(true), 500); }
+
+function sumHtml(p) {
+  const part = (label, v) => '<span>' + label + '</span> <b>' + eur(v) + '</b>';
+  const fees = [part('доставка', p.delivery)];
+  if (Number(p.cod_fee) > 0) fees.push(part('такса НП', p.cod_fee));
+  if (Number(p.declared_fee) > 0) fees.push(part('обявена стойност', p.declared_fee));
+  const top = Number(p.collected) > 0
+    ? '<div class="tot"><span>Сума за събиране:</span><b>' + eur(p.collected) + '</b></div>'
+    : '<div class="tot"><span>Шофьорът не събира нищо.</span></div>';
+  // Our fees on the client's own фактура ("Получателят не плаща нищо" on the first order, or a
+  // client whose fees are invoiced): the door collects the наложен платеж alone, or nothing.
+  if (Number(p.invoiced) > 0) {
+    return top + '<div class="parts"><span>' + (p.by_invoice ? 'Във вашата месечна фактура:' : 'Във вашата седмична фактура:') + '</span> <b>' + eur(p.invoiced) + '</b> (' + fees.join(' · ') + ')</div>';
+  }
+  const parts = (Number(p.cod_amount) > 0 ? [part('наложен платеж', p.cod_amount)] : []).concat(fees);
+  const card = Number(p.collected_card) !== Number(p.collected)
+    ? '<div class="parts"><span>при плащане с карта:</span> <b>' + eur(p.collected_card) + '</b></div>' : '';
+  return top + '<div class="parts">' + parts.join(' · ') + '</div>' + card;
+}
+
+function paint() {
+  $('go').disabled = busy || waiting || !price || !!priceError;
+  $('go').textContent = busy ? 'Създаваме…' : 'Създай поръчката';
+  ['day', 'cod', 'dec', 'note'].forEach((id) => { $(id).disabled = busy; });
+  const s = $('sum');
+  if (priceError) {
+    s.className = 'sum bad';
+    s.innerHTML = '<div><span>' + esc(priceError) + '</span>' + (canRetry ? '<button class="link" data-act="retry">Опитай отново</button>' : '') + '</div>';
+  } else if (waiting || !price) {
+    s.className = 'sum'; s.innerHTML = '<span class="wait">Изчисляваме…</span>';
+  } else {
+    s.className = 'sum'; s.innerHTML = sumHtml(price);
+  }
+}
 
 function build() {
   document.documentElement.dataset.theme = 'light';
@@ -845,18 +939,34 @@ function build() {
       '<div class="top"><h2>Върни на клиента</h2><button class="x" data-act="close" title="Затвори">×</button></div>' +
       '<div class="who"><div class="n" id="nm"></div><div class="e" id="rf"></div></div>' +
       '<label>Дата на доставка<input id="day" type="date"></label>' +
-      '<div class="hint">Създава се поръчка за връщане до същия клиент и адрес.</div>' +
+      '<div class="two">' +
+        '<label>Наложен платеж (EUR)<input id="cod" type="text" inputmode="decimal" autocomplete="off" placeholder="ако има, напр. 200"></label>' +
+        '<label>Обявена стойност (EUR)<input id="dec" type="text" inputmode="decimal" autocomplete="off" placeholder="до 5 112,92 €"></label>' +
+      '</div>' +
+      '<label>Бележки за куриера<textarea id="note" maxlength="2000" placeholder="Специални указания, етаж, звънец..."></textarea></label>' +
+      '<div class="hint" id="hint">Създава се поръчка за връщане до същия клиент и адрес.</div>' +
+      '<div class="sum" id="sum"></div>' +
       '<div class="msg" id="msg"></div>' +
       '<div class="actions"><button class="btn" data-act="close">Отказ</button><button class="btn go" id="go">Създай поръчката</button></div>' +
     '</div>';
   built = true;
+  document.addEventListener('input', (e) => {
+    if (busy) return;
+    if (e.target.id === 'cod') { say(''); soon(); }
+    if (e.target.id === 'dec') { typedDec = true; say(''); soon(); }
+    if (e.target.id === 'note') { typedNote = true; }   // a note changes no price
+  });
   document.addEventListener('click', (e) => {
     if (e.target.closest('[data-act="close"]')) { appsmith.updateModel({ action: 'close' }); appsmith.triggerEvent('onAction'); return; }
+    if (e.target.closest('[data-act="retry"]') && !busy) { ask(opened); return; }
     if (e.target.closest('#go') && !busy) {
       const day = $('day').value;
       if (!day) { say('Изберете дата.'); return; }
+      const f = fields();
+      if (f.error) { say(f.error); return; }
+      if (waiting || !price || priceError) return;
       busy = true; say(''); paint();
-      appsmith.updateModel({ action: 'create', day: day });
+      appsmith.updateModel({ action: 'create', day: day, typed: true, cod: f.cod, dec: f.dec, notes: f.notes });
       appsmith.triggerEvent('onAction');
     }
   });
@@ -870,14 +980,41 @@ function render() {
   if (key !== shown) {
     // Another press of the list's button: tomorrow again, and nothing left over from the last time.
     shown = key; busy = false;
+    clearTimeout(timer); timer = null; asked = null; waiting = false; price = null; priceError = ''; canRetry = false;
+    opened = false; typedDec = false; typedNote = false;
     const t = new Date(); t.setDate(t.getDate() + 1);
     $('day').min = ymd(new Date());
     $('day').value = ymd(t);
+    $('cod').value = ''; $('dec').value = ''; $('note').value = '';
     say('');
+    if (o.id) ask(false);   // the first look: the first order's own terms, and what it carried
   }
   $('nm').textContent = o.name || '';
   $('rf').textContent = [o.ref, o.address].filter(Boolean).join(' · ');
-  // The server said no (a day too early, already created...): its own sentence, and the button works again.
+
+  // An answer about the price. Only this opening's (key), and only once (at).
+  const pv = m.preview || null;
+  if (pv && pv.key === key && pv.at !== lastPriceAt) {
+    lastPriceAt = pv.at;
+    let again = false;
+    if (pv.data && !opened) {
+      opened = true;
+      const f = pv.data.first || {};
+      if (!typedDec && f.declared_value && $('dec').value === '') {
+        $('dec').value = String(Number(f.declared_value)).replace('.', ',');
+        again = pv.typed === true;   // that answer priced the fields before this one was filled
+      }
+      if (!typedNote && f.notes && $('note').value === '') { $('note').value = f.notes; }
+    }
+    if (pv.seq === asked) {
+      if (timer === null) waiting = false;
+      if (pv.error) { price = null; priceError = pv.error; canRetry = true; } else { price = pv.data; priceError = ''; canRetry = false; }
+    }
+    if (again) soon();
+  }
+
+  // The server said no to the order itself (a day too early, already created...): its own
+  // sentence, and the button works again.
   const r = m.result || null;
   if (r && r.key === key && r.at !== lastAt) { lastAt = r.at; busy = false; say(r.error || ''); }
   paint();
@@ -887,43 +1024,55 @@ appsmith.onModelChange(render);"""
 
 # The day as the order form sends it (CreateOrderAPI): today = "from now", sent as no date; a later
 # day = its midnight here. A refusal comes back as the server's own sentence, shown in the window.
+# 'preview' asks the price of what is in the fields and hands the answer back through the store
+# (way_back_preview: which opening, which question, the figures or the server's sentence).
 RETURN_ON = ("{{(async () => { const m = BoReturn.model || {}; "
              "if (m.action === 'close') { return closeModal('BoReturnModal'); } "
-             "if (m.action !== 'create') { return; } "
+             "if (m.action !== 'create' && m.action !== 'preview') { return; } "
              "const o = appsmith.store.way_back || {}; const en = appsmith.store.bo_lang === 'en'; "
+             "const key = String(o.id || '') + '|' + String(o.at || ''); "
+             "const terms = { typed: m.typed === true, cod_amount: m.cod || null, declared_value: m.dec || null, notes: m.notes || '' }; "
+             "if (m.action === 'preview') { const seq = m.seq; "
+             "try { await ReturnToCustomer.run(Object.assign({ order: o.id, preview: true }, terms)); const b = ReturnToCustomer.data || {}; "
+             "if (!b.preview) { throw new Error(b.error || 'no preview'); } "
+             "return storeValue('way_back_preview', { at: Date.now(), key: key, seq: seq, typed: terms.typed, data: b }, false); } "
+             "catch (e) { const b = ReturnToCustomer.data || {}; "
+             "return storeValue('way_back_preview', { at: Date.now(), key: key, seq: seq, typed: terms.typed, "
+             "error: (!b.preview && b.error) || (en ? 'The price could not be worked out.' : 'Цената не можа да се изчисли.') }, false); } } "
              "const day = m.day ? moment(m.day, 'YYYY-MM-DD').startOf('day') : null; "
              "const scheduledAt = day && day.isAfter(moment()) ? day.toISOString() : null; "
-             "try { await ReturnToCustomer.run({ order: o.id, scheduled_at: scheduledAt }); const b = ReturnToCustomer.data || {}; "
+             "try { await ReturnToCustomer.run(Object.assign({ order: o.id, scheduled_at: scheduledAt }, terms)); const b = ReturnToCustomer.data || {}; "
              "if (!b.created) { throw new Error(b.error || 'not created'); } "
              "closeModal('BoReturnModal'); "
              "showAlert((en ? 'A return order was created for ' : 'Създадена е поръчка за връщане към ') + (b.customer || o.name || ''), 'success'); "
              "return GetOrdersList.run(); } "
              "catch (e) { const b = ReturnToCustomer.data || {}; "
-             "await storeValue('way_back_result', { at: Date.now(), key: String(o.id || '') + '|' + String(o.at || ''), "
-             "error: b.error || (en ? 'The return order could not be created.' : 'Поръчката за връщане не можа да се създаде.') }, false); "
+             "await storeValue('way_back_result', { at: Date.now(), key: key, "
+             "error: (!b.preview && b.error) || (en ? 'The return order could not be created.' : 'Поръчката за връщане не можа да се създаде.') }, false); "
              "if (b.duplicate) { return GetOrdersList.run(); } } })()}}")
 
+RET_H = 600   # the window's height in px; the widget inside is 20 px less (its rows x 10)
 RET_MODAL, RET_CANVAS = 'boretnmod1', 'boretncnv1'
 w('Dashboard/widgets/BoReturnModal/BoReturnModal.json', {
     "animateLoading": True, "borderRadius": "18px", "bottomRow": 60, "boxShadow": "none",
     "canEscapeKeyClose": True, "canOutsideClickClose": True,
     "children": [{
-        "borderRadius": "18px", "bottomRow": 340, "boxShadow": "none", "canExtend": True, "detachFromLayout": True,
+        "borderRadius": "18px", "bottomRow": RET_H, "boxShadow": "none", "canExtend": True, "detachFromLayout": True,
         "dynamicBindingPathList": [], "dynamicHeight": "AUTO_HEIGHT", "flexLayers": [], "isDisabled": False, "isLoading": False,
         "isVisible": True, "key": "retncanvas", "leftColumn": 0, "maxDynamicHeight": 9000, "minDynamicHeight": 4,
-        "minHeight": 340, "minWidth": 450, "mobileBottomRow": 340, "mobileLeftColumn": 0, "mobileRightColumn": 460,
+        "minHeight": RET_H, "minWidth": 450, "mobileBottomRow": RET_H, "mobileLeftColumn": 0, "mobileRightColumn": 460,
         "mobileTopRow": 0, "needsErrorInfo": False, "parentColumnSpace": 1, "parentId": RET_MODAL, "parentRowSpace": 1,
         "renderMode": "CANVAS", "responsiveBehavior": "fill", "rightColumn": 460, "shouldScrollContents": False,
         "topRow": 0, "type": "CANVAS_WIDGET", "version": 1, "widgetId": RET_CANVAS, "widgetName": "BoReturnCanvas"}],
     # No "isVisible" here: on a MODAL_WIDGET it means "open when the page loads" (see BoAccountModal).
-    "detachFromLayout": True, "dynamicBindingPathList": [], "dynamicHeight": "FIXED", "height": 340, "isCanvas": True,
+    "detachFromLayout": True, "dynamicBindingPathList": [], "dynamicHeight": "FIXED", "height": RET_H, "isCanvas": True,
     "isLoading": False, "key": "retnmodal1", "leftColumn": 0, "maxDynamicHeight": 9000,
-    "minDynamicHeight": 24, "minHeight": 340, "mobileBottomRow": 60, "mobileLeftColumn": 0, "mobileRightColumn": 24,
+    "minDynamicHeight": 24, "minHeight": RET_H, "mobileBottomRow": 60, "mobileLeftColumn": 0, "mobileRightColumn": 24,
     "mobileTopRow": 0, "needsErrorInfo": False, "parentColumnSpace": 10.171875, "parentId": "0", "parentRowSpace": 10,
     "renderMode": "CANVAS", "rightColumn": 24, "shouldScrollContents": False, "topRow": 0, "type": "MODAL_WIDGET",
     "version": 2, "widgetId": RET_MODAL, "widgetName": "BoReturnModal", "width": 460})
-custom('BoReturn', 0, 32, RETURN_HTML, RETURN_CSS, RETURN_JS,
-       "{{ { order: appsmith.store.way_back || null, result: appsmith.store.way_back_result || null } }}",
+custom('BoReturn', 0, (RET_H - 20) // 10, RETURN_HTML, RETURN_CSS, RETURN_JS,
+       "{{ { order: appsmith.store.way_back || null, result: appsmith.store.way_back_result || null, preview: appsmith.store.way_back_preview || null } }}",
        "FIXED", "retn0rdr1a", on=RETURN_ON, parent=RET_CANVAS, folder='BoReturnModal/')
 
 # The merchant's OWN token: the endpoint changes the password of whoever it belongs to.

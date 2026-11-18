@@ -11,7 +11,7 @@
           "value": "application/json"
         }
       ],
-      "body": "{{ {\n\t\"scheduled_at\": this.params.scheduled_at || null\n} }}",
+      "body": "{{ {\n\t\"scheduled_at\": this.params.scheduled_at || null,\n\t\"typed\": this.params.typed === true,\n\t\"cod_amount\": this.params.cod_amount || null,\n\t\"declared_value\": this.params.declared_value || null,\n\t\"notes\": this.params.notes || \"\"\n} }}",
       "bodyFormData": [],
       "encodeParamsToggle": true,
       "formData": {
@@ -30,7 +30,7 @@
       "httpMethod": "POST",
       "httpVersion": "HTTP11",
       "paginationType": "NONE",
-      "path": "/int/v1/portal/orders/{{this.params.order}}/way-back",
+      "path": "/int/v1/portal/orders/{{this.params.order}}/way-back{{this.params.preview === true ? '/preview' : ''}}",
       "pluginSpecifiedTemplates": [
         {
           "value": true

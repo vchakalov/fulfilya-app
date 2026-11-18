@@ -1,3 +1,7 @@
 {{ {
-	"scheduled_at": this.params.scheduled_at || null
+	"scheduled_at": this.params.scheduled_at || null,
+	"typed": this.params.typed === true,
+	"cod_amount": this.params.cod_amount || null,
+	"declared_value": this.params.declared_value || null,
+	"notes": this.params.notes || ""
 } }}
