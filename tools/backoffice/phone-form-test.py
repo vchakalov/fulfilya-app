@@ -311,6 +311,19 @@ SCREEN_STEPS = r"""
 })();
 """
 
+# the page puts the block's model back to its default (as a press on BG|EN did): the block must tell again
+RESET_STEPS = r"""
+(async () => {
+  window.appsmith._ready();
+  await new Promise((r) => setTimeout(r, 2500));
+  const before = window.__log.length;
+  window.appsmith.model = { screen: true };
+  window.appsmith._change();
+  await new Promise((r) => setTimeout(r, 100));
+  document.getElementById('__out').textContent = JSON.stringify({ before, after: window.__log.length, w: window.appsmith.model.w });
+})();
+"""
+
 NODE_LOGIN = r"""
 const fs = require('fs');
 const dir = process.argv[2];
@@ -362,12 +375,33 @@ const out = []; const ok = (name, cond, got) => out.push({ name, ok: !!cond, got
   // the computer page's card: shown always, except on a narrow screen - and shown if the width block is not there at all
   const card = JSON.parse(fs.readFileSync(dir + '/../con_login/con_login.json', 'utf8'));
   const shown = (scope) => new Function(...Object.keys(scope), 'return (' + inner(card.isVisible) + ')')(...Object.values(scope));
-  const at = (w, open) => shown({ BoScreen: { model: { w } }, BoLoginPhoneModal: { isVisible: open } });
+  const at = (w, open) => shown({ appsmith: { store: { bo_w: w } }, BoLoginPhoneModal: { isVisible: open } });
   ok('the computer login is shown from 700 px up, whatever the phone window does', [700, 1024, 1633].every((w) => at(w, true) === true && at(w, false) === true && at(w, undefined) === true), [at(700, true), at(1633, true)]);
   ok('... and on a phone whose window did not open: the page it has today, never an empty one', at(375, false) === true && at(375, undefined) === true && at(320, 'true') === true, [at(375, false), at(375, undefined)]);
-  ok('... and before the width is known', shown({ BoScreen: {}, BoLoginPhoneModal: { isVisible: true } }) === true && at(0, true) === true && at('x', true) === true, [at(0, true)]);
-  ok('... and with no width block or no phone window on the page at all', shown({ BoLoginPhoneModal: { isVisible: true } }) === true && shown({ BoScreen: { model: { w: 375 } } }) === true && shown({}) === true, [shown({})]);
+  ok('... and before the width is known', shown({ appsmith: { store: {} }, BoLoginPhoneModal: { isVisible: true } }) === true && at(0, true) === true && at('x', true) === true, [at(0, true)]);
+  ok('... and with no phone window on the page at all', shown({ appsmith: { store: { bo_w: 375 } } }) === true, [shown({ appsmith: { store: { bo_w: 375 } } })]);
   ok('it is hidden only behind an OPEN phone window on a narrow screen', at(699, true) === false && at(375, true) === false && at(320, true) === false, [at(699, true), at(375, true)]);
+  ok('the width it goes by is the one the page kept, not the width block\'s own model (which a press on BG|EN empties)', /appsmith\.store\.bo_w/.test(card.isVisible) && !/BoScreen/.test(card.isVisible), card.isVisible);
+
+  // what each page does when its width block tells it the width
+  const screens = { login: JSON.parse(fs.readFileSync(dir + '/../BoScreen.json', 'utf8')), dashboard: JSON.parse(fs.readFileSync(dir + '/../../../Dashboard/widgets/BoScreen.json', 'utf8')) };
+  const hear = async (which, w, kept) => {
+    const calls = [];
+    const scope = { BoScreen: { model: w === null ? {} : { w } }, appsmith: { store: kept === undefined ? {} : { bo_w: kept } },
+      storeValue(k, v, persist) { calls.push(['store', k, v, persist]); scope.appsmith.store[k] = v; return Promise.resolve(); }, showModal(n) { calls.push(['show', n]); } };
+    await new Function(...Object.keys(scope), 'return (' + inner(screens[which].onAction) + ')')(...Object.values(scope));
+    return calls;
+  };
+  const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  ok('the login page keeps the width and, on a narrow screen, opens the phone login', same(await hear('login', 375), [['store', 'bo_w', 375, false], ['show', 'BoLoginPhoneModal']]), await hear('login', 375));
+  ok('... told the same width again: nothing is written twice, the window is only asked for again', same(await hear('login', 375, 375), [['show', 'BoLoginPhoneModal']]), await hear('login', 375, 375));
+  ok('... on a computer it keeps the width and opens nothing', same(await hear('login', 1280), [['store', 'bo_w', 1280, false]]) && same(await hear('login', 700), [['store', 'bo_w', 700, false]]), await hear('login', 700));
+  ok('... 699 px is still a phone', same(await hear('login', 699), [['store', 'bo_w', 699, false], ['show', 'BoLoginPhoneModal']]), await hear('login', 699));
+  ok('... no width, no action', same(await hear('login', null), []) && same(await hear('login', 0), []), await hear('login', null));
+  ok('the Dashboard keeps the width (for "Нова поръчка") and opens nothing', same(await hear('dashboard', 375), [['store', 'bo_w', 375, false]]) && same(await hear('dashboard', 375, 375), []), await hear('dashboard', 375));
+  ok('both width blocks have a model with nothing in it that can change', screens.login.defaultModel === '{{ { screen: true } }}' && screens.dashboard.defaultModel === screens.login.defaultModel, [screens.login.defaultModel, screens.dashboard.defaultModel]);
+  const lm = fs.readFileSync(dir + '/../../../Dashboard/jsobjects/LocationManager/LocationManager.js', 'utf8');
+  ok('"Нова поръчка" goes by the width the page kept', /const narrow = [^\n]*Number\(appsmith\.store\.bo_w\)/.test(lm) && (lm.match(/const narrow/g) || []).length === 1, (lm.match(/const narrow[^\n]*/) || [''])[0].slice(0, 160));
   ok('that rule is marked as bound, beside the two the card had', JSON.stringify(card.dynamicBindingPathList.map((x) => x.key)) === JSON.stringify(['borderRadius', 'boxShadow', 'isVisible']), card.dynamicBindingPathList);
   console.log(JSON.stringify(out));
 })().catch((e) => { console.log(JSON.stringify([{ name: 'the login handler test itself ran', ok: false, got: String(e && e.stack || e) }])); });
@@ -418,7 +452,7 @@ def login_static():
     screen = read(os.path.join(LOGIN, 'BoScreen.json'))
     card = read(os.path.join(LOGIN, 'con_login', 'con_login.json'))
     ok('the width block sits under the login card, on a row of its own', screen['parentId'] == '0' and screen['topRow'] >= card['bottomRow'] and screen['bottomRow'] - screen['topRow'] == 1, [screen['topRow'], card['bottomRow']])
-    ok('all it can do is open the phone login', screen['onAction'] == "{{showModal('BoLoginPhoneModal')}}" and screen['events'] == ['onAction'], screen['onAction'])
+    ok('all it does: keep the width, and open the phone login', "storeValue('bo_w', w, false)" in screen['onAction'] and "showModal('BoLoginPhoneModal')" in screen['onAction'] and screen['events'] == ['onAction'], screen['onAction'])
     return out
 
 
@@ -482,12 +516,16 @@ def main():
             #      309 px on a 360 px one, 260 px on a 320 px one
             for width in (339, 309, 260):
                 failed += report(f'the login header at {width} px', answer(tmp, f'head{width}', page(head, {'lang': 'bg'}, HEAD_STEPS, width, 112)) or none)
-            # ---- the login's width block: asks for the phone login on a phone, never on a computer
+            # ---- the width block (the same on both pages): tells the page its width when ready and once more a
+            #      moment later, at every width - what the page does with it is checked with the handlers
             results = []
-            for width, want, window in ((375, 2, '500,300'), (699, 2, '800,300'), (700, 0, '800,300'), (1280, 0, '1400,300')):
-                got = answer(tmp, f'screen{width}', page(screen, {'lang': 'bg'}, SCREEN_STEPS, width, 10), window) or {}
-                results.append({'name': f'at {width} px it ' + ('asks for the phone login (when ready, and once more)' if want else 'asks for nothing') + ' and reports the width',
-                                'ok': got.get('asks') == want and got.get('w') == width, 'got': got})
+            for name, block in (('login', screen), ('Dashboard', json.load(open(os.path.join(PAGES, 'Dashboard', 'widgets', 'BoScreen.json'), encoding='utf-8')))):
+                for width, window in ((375, '500,300'), (700, '800,300'), (1280, '1400,300')):
+                    got = answer(tmp, f'screen{name}{width}', page(block, {'screen': True}, SCREEN_STEPS, width, 10), window) or {}
+                    results.append({'name': f'{name}, {width} px: it tells the page its width, twice (ready, and a moment later)', 'ok': got.get('asks') == 2 and got.get('w') == width, 'got': got})
+            # ... and when its model is emptied (what a press on BG|EN did), it tells again
+            got = answer(tmp, 'screenreset', page(screen, {'screen': True}, RESET_STEPS, 375, 10), '500,300') or {}
+            results.append({'name': 'its model emptied by the page: it tells the width again', 'ok': got.get('before') == 2 and got.get('after') == 3 and got.get('w') == 375, 'got': got})
             failed += report('the login page\'s width block', results)
             if shots:
                 os.makedirs(shots, exist_ok=True)

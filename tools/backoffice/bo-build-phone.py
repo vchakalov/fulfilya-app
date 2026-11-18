@@ -500,17 +500,35 @@ appsmith.onModelChange(render);
 """
 
 SCREEN_JS = r"""
-// Nothing to see here: this block only tells the page how wide it is, so "Нова поръчка" can open the form
-// drawn for a phone on a narrow screen (LocationManager.openNewOrder reads `w`).
-let told = 0;
-function tell() {
+// Nothing to see here: this block tells the page how wide it is. The page keeps the number in its own
+// store (`bo_w`, see SCREEN_ON) - NOT in this block's model, which Appsmith puts back to its default
+// whenever that default is worked out again: found 2026-11-18 on the login (a press on BG|EN and the width
+// was gone, the squeezed page was back behind the phone window) and, on Ico's phone, as "Нова поръчка"
+// opening the computer form. So the width is told when the block is ready, once more a moment later, on
+// every resize, and again whenever the model has lost it.
+let sent = 0;
+function tell(again) {
   const w = Math.round(window.innerWidth || document.documentElement.clientWidth || 0);
-  if (w > 0 && (appsmith.model || {}).w !== w) { told = w; appsmith.updateModel({ w: w }); }
+  if (w <= 0) return;
+  if (again || sent !== w || (appsmith.model || {}).w !== w) {
+    sent = w;
+    appsmith.updateModel({ w: w });
+    appsmith.triggerEvent('onAction');
+  }
 }
-appsmith.onReady(tell);
-appsmith.onModelChange(tell);
-window.addEventListener('resize', tell);
+appsmith.onReady(() => { tell(true); setTimeout(() => tell(true), 1200); });
+appsmith.onModelChange(() => tell(false));
+window.addEventListener('resize', () => tell(false));
 """
+
+# The block's model has nothing in it that can change, so Appsmith has no reason to work it out again.
+SCREEN_MODEL = "{{ { screen: true } }}"
+# What the page does when the block tells it the width: keeps it for this visit (not written to the browser's
+# storage - the next visit measures again). `then` is what a page adds of its own.
+def screen_on(then=''):
+    return ("{{(async () => { const w = Number((BoScreen.model || {}).w) || 0; if (w <= 0) { return; } "
+            "if (Number(appsmith.store.bo_w) !== w) { await storeValue('bo_w', w, false); } " + then + "})()}}")
+
 
 
 def custom(name, key, top, bottom, html, css, js, model, on=None, parent=None):
@@ -566,7 +584,7 @@ FILES[os.path.join(W, 'BoOrderPhoneModal', 'BoOrderPhone.json')] = custom(
 # One row, in the row the page leaves empty between the header (0-8) and the Табло (9-58).
 FILES[os.path.join(W, 'BoScreen.json')] = custom(
     'BoScreen', 'scrnw1dth1', 8, 9, '<div></div>', 'html,body{margin:0;background:transparent;overflow:hidden}', SCREEN_JS,
-    "{{ { lang: appsmith.store.bo_lang || 'bg' } }}")
+    SCREEN_MODEL, on=screen_on())
 
 # ---------------------------------------------------------------- the one way into the form
 LM = os.path.join(PAGES, 'Dashboard', 'jsobjects', 'LocationManager', 'LocationManager.js')
@@ -578,7 +596,9 @@ NEW_OPEN = """    // A phone gets the form drawn for a phone (BoOrderPhone, 2026
     // 1100 px wide, and on a narrow screen every field shrinks with it. The page's width comes from BoScreen; with
     // no answer from it the usual window opens, as it always has. The phone form writes into the fields above
     // and runs their own actions, so everything set here - the warehouse, a draft, the options - is what it shows.
-    const narrow = (() => { try { const w = Number((BoScreen.model || {}).w) || 0; return w > 0 && w < %d; } catch (e) { return false; } })();
+    // The width is the one the page KEPT (appsmith.store.bo_w, written when BoScreen tells it) - the block's own
+    // model can be empty at this very moment, which is how a phone got the computer form on 2026-11-18.
+    const narrow = (() => { try { const w = Number(appsmith.store.bo_w) || Number((BoScreen.model || {}).w) || 0; return w > 0 && w < %d; } catch (e) { return false; } })();
     if (narrow) {
       // (After a short wait: the options set a few lines up are not awaited there.)
       await storeValue('phone_order_asked', Date.now(), false);
@@ -601,6 +621,11 @@ lm = open(LM, encoding='utf-8').read()
 if "showModal('BoOrderPhoneModal')" not in lm:
     assert lm.count(OLD_OPEN) == 1, 'LocationManager.openNewOrder no longer ends the way this script expects'
     lm = lm.replace(OLD_OPEN, NEW_OPEN)
+else:
+    # Already there: the block is put again as this script writes it today (from its first line to the window it opens).
+    start = lm.index('    // A phone gets the form drawn for a phone (BoOrderPhone, 2026-11-18)')
+    end = lm.index(OLD_OPEN, start) + len(OLD_OPEN)
+    lm = lm[:start] + NEW_OPEN + lm[end:]
 FILES[LM] = lm
 
 
@@ -686,19 +711,10 @@ appsmith.onReady(() => {
 assert PANEL['onAction'].count('BoLogin.model') == 1, 'BoLogin.onAction no longer reads its model once'
 HEAD_ON = PANEL['onAction'].replace('BoLogin.model', 'BoLoginPhoneHead.model')
 
-LOGIN_SCREEN_JS = r"""
-// Nothing to see here: this block tells the page how wide it is and, on a narrow screen, asks it to open
-// the login drawn for a phone (BoLoginPhoneModal). Asked once the page is ready and once more a moment later
-// (opening a window that is open does nothing). If this block never answers, the page stays as it is.
-let asked = 0;
-function tell() {
-  const w = Math.round(window.innerWidth || document.documentElement.clientWidth || 0);
-  if (w > 0 && (appsmith.model || {}).w !== w) { appsmith.updateModel({ w: w }); }
-  if (w > 0 && w < __NARROW__ && asked < 3) { asked += 1; appsmith.triggerEvent('onAction'); }
-}
-appsmith.onReady(() => { tell(); setTimeout(tell, 1200); });
-window.addEventListener('resize', tell);
-""".replace('__NARROW__', str(NARROW))
+# The login's width block is the same block (SCREEN_JS). What this page adds when it hears the width: on a
+# narrow screen the phone login is opened (opening a window that is open does nothing). If the block never
+# answers, the page stays as it is.
+LOGIN_SCREEN_ON = screen_on("if (w < %d) { showModal('BoLoginPhoneModal'); } " % NARROW)
 
 # "Вход": the computer page's own button, after its two fields are filled from the phone's.
 BUTTON = load(os.path.join(AUTH, 'btn_signIn.json'))
@@ -777,13 +793,15 @@ FILES[os.path.join(LOGIN_DIR, 'PhoneHelp.json')] = phone_copy('txt_help', 'Phone
 # hidden only while the phone window IS OPEN (a MODAL_WIDGET's isVisible is "open") AND the screen is narrow. So
 # a phone whose window did not open keeps the page it has today, never an empty one; a computer keeps its page
 # whatever the window's state; and with no BoScreen or no window on the page at all (the try) it is shown.
+# The width is the one the page kept (appsmith.store.bo_w), not the block's model: after a press on BG|EN the
+# model was back at its default, the width gone with it, and the squeezed page stood behind the window again.
 CARD_PATH = os.path.join(A, 'con_login', 'con_login.json')
-CARD_SHOWN = ("{{(() => { try { const w = Number((BoScreen.model || {}).w) || 0; "
+CARD_SHOWN = ("{{(() => { try { const w = Number(appsmith.store.bo_w) || 0; "
               "return !(BoLoginPhoneModal.isVisible === true && w > 0 && w < %d); } "
               "catch (e) { return true; } })()}}" % NARROW)
 card = load(CARD_PATH)
 if card.get('isVisible') != CARD_SHOWN:
-    assert card.get('isVisible') is True or 'BoScreen.model' in str(card.get('isVisible')), 'con_login.isVisible is not this script\'s: ' + str(card.get('isVisible'))
+    assert card.get('isVisible') is True or 'BoLoginPhoneModal.isVisible' in str(card.get('isVisible')), 'con_login.isVisible is not this script\'s: ' + str(card.get('isVisible'))
     card['isVisible'] = CARD_SHOWN
     card['dynamicBindingPathList'] = paths(card, 'dynamicBindingPathList', 'isVisible')
     card['dynamicPropertyPathList'] = paths(card, 'dynamicPropertyPathList', 'isVisible')
@@ -791,8 +809,8 @@ if card.get('isVisible') != CARD_SHOWN:
 FILES[CARD_PATH] = json.dumps(dict(sorted(card.items())), ensure_ascii=False, indent=2)
 # One row under the login card (rows 0-64), where the page has nothing.
 FILES[os.path.join(A, 'BoScreen.json')] = custom(
-    'BoScreen', 'lgscrnw1d2', 64, 65, '<div></div>', 'html,body{margin:0;background:transparent;overflow:hidden}', LOGIN_SCREEN_JS,
-    PANEL['defaultModel'], on="{{showModal('BoLoginPhoneModal')}}")
+    'BoScreen', 'lgscrnw1d2', 64, 65, '<div></div>', 'html,body{margin:0;background:transparent;overflow:hidden}', SCREEN_JS,
+    SCREEN_MODEL, on=LOGIN_SCREEN_ON)
 
 
 def text_of(content):

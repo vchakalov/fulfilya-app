@@ -61,7 +61,7 @@
   "isCanvas": true,
   "isDeprecated": false,
   "isLoading": false,
-  "isVisible": "{{(() => { try { const w = Number((BoScreen.model || {}).w) || 0; return !(BoLoginPhoneModal.isVisible === true && w > 0 && w < 700); } catch (e) { return true; } })()}}",
+  "isVisible": "{{(() => { try { const w = Number(appsmith.store.bo_w) || 0; return !(BoLoginPhoneModal.isVisible === true && w > 0 && w < 700); } catch (e) { return true; } })()}}",
   "key": "wa7a1coj08",
   "leftColumn": 0,
   "maxDynamicHeight": 9000,

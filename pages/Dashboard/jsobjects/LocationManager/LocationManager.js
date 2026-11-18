@@ -370,7 +370,9 @@ updateNewDropoffFromGeocode: () => {
     // 1100 px wide, and on a narrow screen every field shrinks with it. The page's width comes from BoScreen; with
     // no answer from it the usual window opens, as it always has. The phone form writes into the fields above
     // and runs their own actions, so everything set here - the warehouse, a draft, the options - is what it shows.
-    const narrow = (() => { try { const w = Number((BoScreen.model || {}).w) || 0; return w > 0 && w < 700; } catch (e) { return false; } })();
+    // The width is the one the page KEPT (appsmith.store.bo_w, written when BoScreen tells it) - the block's own
+    // model can be empty at this very moment, which is how a phone got the computer form on 2026-11-18.
+    const narrow = (() => { try { const w = Number(appsmith.store.bo_w) || Number((BoScreen.model || {}).w) || 0; return w > 0 && w < 700; } catch (e) { return false; } })();
     if (narrow) {
       // (After a short wait: the options set a few lines up are not awaited there.)
       await storeValue('phone_order_asked', Date.now(), false);

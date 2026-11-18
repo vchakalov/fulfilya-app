@@ -6,7 +6,7 @@
   "borderWidth": "0",
   "bottomRow": 65,
   "boxShadow": "none",
-  "defaultModel": "{{ { lang: appsmith.store.bo_lang || 'bg' } }}",
+  "defaultModel": "{{ { screen: true } }}",
   "dynamicBindingPathList": [
     {
       "key": "theme"
@@ -36,7 +36,7 @@
   "mobileRightColumn": 64,
   "mobileTopRow": 64,
   "needsErrorInfo": false,
-  "onAction": "{{showModal('BoLoginPhoneModal')}}",
+  "onAction": "{{(async () => { const w = Number((BoScreen.model || {}).w) || 0; if (w <= 0) { return; } if (Number(appsmith.store.bo_w) !== w) { await storeValue('bo_w', w, false); } if (w < 700) { showModal('BoLoginPhoneModal'); } })()}}",
   "originalBottomRow": 65,
   "originalTopRow": 64,
   "parentColumnSpace": 10.484375,
@@ -48,7 +48,7 @@
   "srcDoc": {
     "html": "<div></div>",
     "css": "html,body{margin:0;background:transparent;overflow:hidden}",
-    "js": "\n// Nothing to see here: this block tells the page how wide it is and, on a narrow screen, asks it to open\n// the login drawn for a phone (BoLoginPhoneModal). Asked once the page is ready and once more a moment later\n// (opening a window that is open does nothing). If this block never answers, the page stays as it is.\nlet asked = 0;\nfunction tell() {\n  const w = Math.round(window.innerWidth || document.documentElement.clientWidth || 0);\n  if (w > 0 && (appsmith.model || {}).w !== w) { appsmith.updateModel({ w: w }); }\n  if (w > 0 && w < 700 && asked < 3) { asked += 1; appsmith.triggerEvent('onAction'); }\n}\nappsmith.onReady(() => { tell(); setTimeout(tell, 1200); });\nwindow.addEventListener('resize', tell);\n"
+    "js": "\n// Nothing to see here: this block tells the page how wide it is. The page keeps the number in its own\n// store (`bo_w`, see SCREEN_ON) - NOT in this block's model, which Appsmith puts back to its default\n// whenever that default is worked out again: found 2026-11-18 on the login (a press on BG|EN and the width\n// was gone, the squeezed page was back behind the phone window) and, on Ico's phone, as \"Нова поръчка\"\n// opening the computer form. So the width is told when the block is ready, once more a moment later, on\n// every resize, and again whenever the model has lost it.\nlet sent = 0;\nfunction tell(again) {\n  const w = Math.round(window.innerWidth || document.documentElement.clientWidth || 0);\n  if (w <= 0) return;\n  if (again || sent !== w || (appsmith.model || {}).w !== w) {\n    sent = w;\n    appsmith.updateModel({ w: w });\n    appsmith.triggerEvent('onAction');\n  }\n}\nappsmith.onReady(() => { tell(true); setTimeout(() => tell(true), 1200); });\nappsmith.onModelChange(() => tell(false));\nwindow.addEventListener('resize', () => tell(false));\n"
   },
   "theme": "{{appsmith.theme}}",
   "topRow": 64,
@@ -56,7 +56,7 @@
   "uncompiledSrcDoc": {
     "html": "<div></div>",
     "css": "html,body{margin:0;background:transparent;overflow:hidden}",
-    "js": "\n// Nothing to see here: this block tells the page how wide it is and, on a narrow screen, asks it to open\n// the login drawn for a phone (BoLoginPhoneModal). Asked once the page is ready and once more a moment later\n// (opening a window that is open does nothing). If this block never answers, the page stays as it is.\nlet asked = 0;\nfunction tell() {\n  const w = Math.round(window.innerWidth || document.documentElement.clientWidth || 0);\n  if (w > 0 && (appsmith.model || {}).w !== w) { appsmith.updateModel({ w: w }); }\n  if (w > 0 && w < 700 && asked < 3) { asked += 1; appsmith.triggerEvent('onAction'); }\n}\nappsmith.onReady(() => { tell(); setTimeout(tell, 1200); });\nwindow.addEventListener('resize', tell);\n"
+    "js": "\n// Nothing to see here: this block tells the page how wide it is. The page keeps the number in its own\n// store (`bo_w`, see SCREEN_ON) - NOT in this block's model, which Appsmith puts back to its default\n// whenever that default is worked out again: found 2026-11-18 on the login (a press on BG|EN and the width\n// was gone, the squeezed page was back behind the phone window) and, on Ico's phone, as \"Нова поръчка\"\n// opening the computer form. So the width is told when the block is ready, once more a moment later, on\n// every resize, and again whenever the model has lost it.\nlet sent = 0;\nfunction tell(again) {\n  const w = Math.round(window.innerWidth || document.documentElement.clientWidth || 0);\n  if (w <= 0) return;\n  if (again || sent !== w || (appsmith.model || {}).w !== w) {\n    sent = w;\n    appsmith.updateModel({ w: w });\n    appsmith.triggerEvent('onAction');\n  }\n}\nappsmith.onReady(() => { tell(true); setTimeout(() => tell(true), 1200); });\nappsmith.onModelChange(() => tell(false));\nwindow.addEventListener('resize', () => tell(false));\n"
   },
   "version": 1,
   "widgetId": "bolgscrnw1",
