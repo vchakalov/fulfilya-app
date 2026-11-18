@@ -1,0 +1,64 @@
+{
+  "animateLoading": true,
+  "backgroundColor": "transparent",
+  "borderColor": "transparent",
+  "borderRadius": "0px",
+  "borderWidth": "0",
+  "bottomRow": 65,
+  "boxShadow": "none",
+  "defaultModel": "{{ { lang: appsmith.store.bo_lang || 'bg' } }}",
+  "dynamicBindingPathList": [
+    {
+      "key": "theme"
+    },
+    {
+      "key": "defaultModel"
+    }
+  ],
+  "dynamicHeight": "FIXED",
+  "dynamicTriggerPathList": [
+    {
+      "key": "onAction"
+    }
+  ],
+  "events": [
+    "onAction"
+  ],
+  "isLoading": false,
+  "isVisible": true,
+  "key": "lgscrnw1d2",
+  "leftColumn": 0,
+  "maxDynamicHeight": 9000,
+  "minDynamicHeight": 4,
+  "minWidth": 200,
+  "mobileBottomRow": 65,
+  "mobileLeftColumn": 0,
+  "mobileRightColumn": 64,
+  "mobileTopRow": 64,
+  "needsErrorInfo": false,
+  "onAction": "{{showModal('BoLoginPhoneModal')}}",
+  "originalBottomRow": 65,
+  "originalTopRow": 64,
+  "parentColumnSpace": 10.484375,
+  "parentId": "0",
+  "parentRowSpace": 10,
+  "renderMode": "CANVAS",
+  "responsiveBehavior": "fill",
+  "rightColumn": 64,
+  "srcDoc": {
+    "html": "<div></div>",
+    "css": "html,body{margin:0;background:transparent;overflow:hidden}",
+    "js": "\n// Nothing to see here: this block tells the page how wide it is and, on a narrow screen, asks it to open\n// the login drawn for a phone (BoLoginPhoneModal). Asked once the page is ready and once more a moment later\n// (opening a window that is open does nothing). If this block never answers, the page stays as it is.\nlet asked = 0;\nfunction tell() {\n  const w = Math.round(window.innerWidth || document.documentElement.clientWidth || 0);\n  if (w > 0 && (appsmith.model || {}).w !== w) { appsmith.updateModel({ w: w }); }\n  if (w > 0 && w < 700 && asked < 3) { asked += 1; appsmith.triggerEvent('onAction'); }\n}\nappsmith.onReady(() => { tell(); setTimeout(tell, 1200); });\nwindow.addEventListener('resize', tell);\n"
+  },
+  "theme": "{{appsmith.theme}}",
+  "topRow": 64,
+  "type": "CUSTOM_WIDGET",
+  "uncompiledSrcDoc": {
+    "html": "<div></div>",
+    "css": "html,body{margin:0;background:transparent;overflow:hidden}",
+    "js": "\n// Nothing to see here: this block tells the page how wide it is and, on a narrow screen, asks it to open\n// the login drawn for a phone (BoLoginPhoneModal). Asked once the page is ready and once more a moment later\n// (opening a window that is open does nothing). If this block never answers, the page stays as it is.\nlet asked = 0;\nfunction tell() {\n  const w = Math.round(window.innerWidth || document.documentElement.clientWidth || 0);\n  if (w > 0 && (appsmith.model || {}).w !== w) { appsmith.updateModel({ w: w }); }\n  if (w > 0 && w < 700 && asked < 3) { asked += 1; appsmith.triggerEvent('onAction'); }\n}\nappsmith.onReady(() => { tell(); setTimeout(tell, 1200); });\nwindow.addEventListener('resize', tell);\n"
+  },
+  "version": 1,
+  "widgetId": "bolgscrnw1",
+  "widgetName": "BoScreen"
+}

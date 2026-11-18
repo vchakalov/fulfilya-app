@@ -7,10 +7,15 @@
 1. THE BLOCK, in headless Chrome at 375 px: the block's own html/css/js from BoOrderPhone.json with a stand-in
    for Appsmith's `appsmith` object. It opens, types, presses every button and checks what the block shows and
    what it hands to the page (the `action` + values of each event).
+   The same for the LOGIN's two blocks: its yellow header at the two widths it has on phones, and its width
+   block, which must ask for the phone login under 700 px and for nothing from 700 px up.
 2. THE HANDLER, in Node: the widget's onAction binding run against stand-ins for the computer form's fields,
    queries and actions. Checks that every action writes the phone's values into those fields first, that
    "Създай" runs the form's own create code and closes the phone window, and that it refuses to create when a
-   field did not take the value.
+   field did not take the value. The login's "Вход" the same way: it fills the computer page's two fields, runs
+   that page's own sign-in once, and signs nobody in when a field did not take the value.
+3. THE LOGIN'S FILES, read as files: each field, text and the button must be the computer page's own widget,
+   differing only in where it sits (and, for three of them, in the wiring named in COPIES).
 """
 import html
 import json
@@ -41,7 +46,7 @@ window.appsmith = {
   model: __MODEL__,
   onReady(f) { this._ready = f; }, onModelChange(f) { this._change = f; },
   updateModel(p) { Object.assign(this.model, p); },
-  triggerEvent(n) { window.__log.push(JSON.parse(JSON.stringify({ action: this.model.action, v: this.model.v, quote: this.model.quote, which: this.model.which, item: this.model.item, index: this.model.index }))); },
+  triggerEvent(n) { window.__log.push(JSON.parse(JSON.stringify({ action: this.model.action, v: this.model.v, quote: this.model.quote, which: this.model.which, item: this.model.item, index: this.model.index, lang: this.model.lang, w: this.model.w }))); },
 };
 window.__set = (patch) => { Object.assign(window.appsmith.model, patch); window.appsmith._change(); };
 """
@@ -266,12 +271,153 @@ const out = []; const ok = (name, cond, got) => out.push({ name, ok: !!cond, got
 """
 
 
-def page(widget, model, script=''):
-    """The block inside a frame 375 px wide - a phone's width, and how Appsmith itself shows a block (Chrome's own
-    window cannot be made narrower than about 500 px). The frame's answer is copied out for --dump-dom."""
+LOGIN = os.path.join(PAGES, 'Authentication', 'widgets')
+LOGIN_DIR = os.path.join(LOGIN, 'BoLoginPhoneModal')
+COMPUTER = os.path.join(LOGIN, 'con_login', 'tab_auth')
+
+HEAD_STEPS = r"""
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const out = []; const ok = (name, cond, got) => out.push({ name, ok: !!cond, got: cond ? undefined : got });
+const last = () => window.__log[window.__log.length - 1] || {};
+(async () => {
+  window.appsmith._ready();
+  await sleep(120);
+  const head = document.querySelector('.head'), h = document.getElementById('h'), pill = document.getElementById('lang');
+  const box = (el) => el.getBoundingClientRect();
+  ok('the header shows the lockup and the headline', document.querySelector('.brand b').textContent === 'Fulfilya' && h.textContent === 'Поръчките ви, на едно място.', h.textContent);
+  ok('nothing scrolls sideways', document.documentElement.scrollWidth <= window.innerWidth, [document.documentElement.scrollWidth, window.innerWidth]);
+  ok('the headline ends inside the yellow', box(h).bottom <= box(head).bottom - 6 && box(h).right <= box(head).right - 6, [box(h).bottom, box(head).bottom]);
+  ok('the lockup and the pill do not meet', box(document.querySelector('.brand')).right <= box(pill).left - 4, [box(document.querySelector('.brand')).right, box(pill).left]);
+  ok('the lockup is not cut', box(document.querySelector('.brand em')).right <= box(document.querySelector('.brand')).right + 0.5 && document.querySelector('.brand').scrollWidth <= document.querySelector('.brand').clientWidth + 1, [document.querySelector('.brand').scrollWidth, document.querySelector('.brand').clientWidth]);
+  ok('the pill is big enough for a thumb (at least 28 px high)', box(pill).height >= 28, box(pill).height);
+  ok('the pill offers the other language', pill.textContent === 'EN', pill.textContent);
+  pill.click(); await sleep(30);
+  ok('a tap on it asks the page for English', window.__log.length === 1 && last().action === 'lang' && last().lang === 'en', last());
+  window.__set({ lang: 'en' });
+  ok('in English the headline follows and the pill offers Bulgarian', h.textContent === 'Your orders, all in one place.' && pill.textContent === 'BG', [h.textContent, pill.textContent]);
+  ok('... and still fits', box(h).bottom <= box(head).bottom - 6, [box(h).bottom, box(head).bottom]);
+  pill.click(); await sleep(30);
+  ok('a tap on it asks for Bulgarian', last().action === 'lang' && last().lang === 'bg', last());
+  document.getElementById('__out').textContent = JSON.stringify(out);
+})().catch((e) => { document.getElementById('__out').textContent = JSON.stringify([{ name: 'the test itself ran', ok: false, got: String(e && e.stack || e) }]); });
+"""
+
+# what the width block of the login page does on a screen of this width: how many times it asks for the phone login
+SCREEN_STEPS = r"""
+(async () => {
+  window.appsmith._ready();
+  await new Promise((r) => setTimeout(r, 2500));
+  document.getElementById('__out').textContent = JSON.stringify({ asks: window.__log.length, w: window.appsmith.model.w, inner: window.innerWidth });
+})();
+"""
+
+NODE_LOGIN = r"""
+const fs = require('fs');
+const dir = process.argv[2];
+const read = (n) => JSON.parse(fs.readFileSync(dir + '/' + n + '.json', 'utf8'));
+const inner = (b) => b.trim().replace(/^\{\{/, '').replace(/\}\}$/, '');
+const button = read('PhoneSignInButton'), password = read('PhonePasswordInput'), welcome = read('PhoneWelcome');
+function world(o) {
+  const calls = [];
+  const field = (stuck) => ({ text: '', setValue(v) { if (!stuck) this.text = v; calls.push('set'); return Promise.resolve(); } });
+  const w = {
+    appsmith: { store: { bo_lang: o.lang || 'bg', loginError: '' } },
+    PhoneEmailInput: { text: o.email }, PhonePasswordInput: { text: o.password },
+    EmailInput: field(o.stuck === 'email'), PasswordInput: field(o.stuck === 'password'),
+    AuthManager: { login() { calls.push('login'); w.sent = [w.EmailInput.text, w.PasswordInput.text]; return Promise.resolve(); } },
+    storeValue(k, v) { w.appsmith.store[k] = v; calls.push('store:' + k); return Promise.resolve(); },
+  };
+  return { w, calls };
+}
+async function press(o) {
+  const { w, calls } = world(o);
+  const names = Object.keys(w);
+  await new Function(...names, 'return (' + inner(button.onClick) + ')')(...names.map((n) => w[n]));
+  return { w, calls };
+}
+const evalIn = (binding, scope) => new Function(...Object.keys(scope), 'return (' + inner(binding) + ')')(...Object.values(scope));
+const out = []; const ok = (name, cond, got) => out.push({ name, ok: !!cond, got: cond ? undefined : got });
+(async () => {
+  const secret = 'Pa"ss\\w0rd \'x\' {{1}}';
+  let r = await press({ email: 'shop@example.bg', password: secret });
+  ok('"Вход" fills the computer page\'s two fields and runs its own sign-in, once', r.calls.filter((c) => c === 'login').length === 1 && r.w.sent[0] === 'shop@example.bg' && r.w.sent[1] === secret, [r.calls, r.w.sent]);
+  ok('... the fields are filled BEFORE the sign-in runs', r.calls.indexOf('login') > r.calls.lastIndexOf('set'), r.calls);
+  ok('... and no error is written', !r.calls.includes('store:loginError'), r.calls);
+  r = await press({ email: 'shop@example.bg', password: '' });
+  ok('with no password nothing happens', r.calls.length === 0, r.calls);
+  r = await press({ email: '', password: secret });
+  ok('with no email nothing happens', r.calls.length === 0, r.calls);
+  r = await press({ email: 'shop@example.bg', password: secret, stuck: 'password' });
+  ok('a field that did not take the value: no sign-in, and it says so in Bulgarian', !r.calls.includes('login') && r.w.appsmith.store.loginError === 'Формата не успя да предаде въведеното. Моля, натиснете бутона отново.', [r.calls, r.w.appsmith.store.loginError]);
+  r = await press({ email: 'shop@example.bg', password: secret, stuck: 'email', lang: 'en' });
+  ok('... in English on an English page', !r.calls.includes('login') && r.w.appsmith.store.loginError === 'The form could not pass on what you typed. Please press the button again.', r.w.appsmith.store.loginError);
+  ok('"Go" on the keyboard does what the button does, and the field keeps its text', password.onSubmit === button.onClick && password.resetOnSubmit === false && password.dynamicTriggerPathList.some((x) => x.key === 'onSubmit'), [password.resetOnSubmit, password.dynamicTriggerPathList]);
+  const off = (e, p) => evalIn(button.isDisabled, { PhoneEmailInput: { text: e }, PhonePasswordInput: { text: p } });
+  ok('the button waits for both fields - the phone\'s own', off('', '') === true && off('a@b.bg', '') === true && off('', 'x') === true && off('a@b.bg', 'x') === false && !/(^|[^e])EmailInput|[^e]PasswordInput/.test(button.isDisabled.replace(/Phone(Email|Password)Input/g, '')), button.isDisabled);
+  const line = (store) => [evalIn(welcome.text, { appsmith: { store } }), evalIn(welcome.textColor, { appsmith: { store } })];
+  ok('the line under "Вход" welcomes, in grey', JSON.stringify(line({ bo_lang: 'bg', loginError: '' })) === JSON.stringify(['Въведете данните си за достъп до вашия BackOffice.', '#6E6E73']), line({ bo_lang: 'bg', loginError: '' }));
+  ok('... in English too', line({ bo_lang: 'en' })[0] === 'Enter your details to reach your BackOffice.', line({ bo_lang: 'en' }));
+  ok('... and shows what went wrong, in the error\'s red', JSON.stringify(line({ bo_lang: 'bg', loginError: 'Invalid credentials' })) === JSON.stringify(['Invalid credentials', '#B42318']), line({ bo_lang: 'bg', loginError: 'Invalid credentials' }));
+  ok('both are marked as bound', welcome.dynamicBindingPathList.some((x) => x.key === 'text') && welcome.dynamicBindingPathList.some((x) => x.key === 'textColor'), welcome.dynamicBindingPathList);
+  console.log(JSON.stringify(out));
+})().catch((e) => { console.log(JSON.stringify([{ name: 'the login handler test itself ran', ok: false, got: String(e && e.stack || e) }])); });
+"""
+
+# what a phone copy may differ in from the computer page's widget it was made from
+PLACED = {'widgetName', 'widgetId', 'parentId', 'leftColumn', 'rightColumn', 'topRow', 'bottomRow', 'originalTopRow', 'originalBottomRow',
+          'parentColumnSpace', 'parentRowSpace', 'mobileTopRow', 'mobileBottomRow', 'mobileLeftColumn', 'mobileRightColumn'}
+COPIES = {'PhoneSignInTitle': ('txt_signIn', set()), 'PhoneEmailInput': ('EmailInput', set()), 'PhoneHelp': ('txt_help', set()),
+          'PhoneWelcome': ('txt_welcome', {'text', 'textColor', 'dynamicBindingPathList', 'dynamicPropertyPathList'}),
+          'PhonePasswordInput': ('PasswordInput', {'onSubmit', 'resetOnSubmit', 'dynamicTriggerPathList'}),
+          'PhoneSignInButton': ('btn_signIn', {'onClick', 'isDisabled'})}
+
+
+def login_static():
+    """The files of the phone login, read as files: the right place, the right parents, and each field the computer page's own."""
+    out = []
+    ok = lambda name, cond, got=None: out.append({'name': name, 'ok': bool(cond), 'got': None if cond else got})
+    read = lambda path: json.load(open(path, encoding='utf-8'))
+    modal = read(os.path.join(LOGIN_DIR, 'BoLoginPhoneModal.json'))
+    canvas = modal['children'][0]
+    ok('the window opens only when asked, and only signing in closes it', 'isVisible' not in modal and modal['canEscapeKeyClose'] is False and modal['canOutsideClickClose'] is False,
+       {k: modal.get(k) for k in ('isVisible', 'canEscapeKeyClose', 'canOutsideClickClose')})
+    ok('it scrolls on a phone shorter than it', modal['shouldScrollContents'] is True, modal['shouldScrollContents'])
+    inside = {n[:-5]: read(os.path.join(LOGIN_DIR, n)) for n in sorted(os.listdir(LOGIN_DIR)) if n != 'BoLoginPhoneModal.json'}
+    ok('eight things in it', sorted(inside) == sorted(list(COPIES) + ['BoLoginPhoneHead']), sorted(inside))
+    ok('all of them in the window\'s canvas', all(d['parentId'] == canvas['widgetId'] for d in inside.values()), {n: d['parentId'] for n, d in inside.items()})
+    rows = sorted((d['topRow'], d['bottomRow'], n) for n, d in inside.items())
+    ok('one under another, none over the next', all(rows[i][1] <= rows[i + 1][0] for i in range(len(rows) - 1)), rows)
+    ok('all inside the window\'s height', rows[-1][1] * 10 <= canvas['bottomRow'] - 20 and modal['height'] == canvas['bottomRow'], [rows[-1], canvas['bottomRow']])
+    ok('the fields are nearly the window\'s width', all(d['leftColumn'] <= 3 and d['rightColumn'] >= 61 for d in inside.values()), {n: (d['leftColumn'], d['rightColumn']) for n, d in inside.items()})
+    for name, (source, own) in COPIES.items():
+        was, now = read(os.path.join(COMPUTER, source + '.json')), inside.get(name, {})
+        differs = {k for k in set(was) | set(now) if was.get(k) != now.get(k)}
+        ok(f'{name} is the computer page\'s {source}, only placed' + (' and wired' if own else ''), differs <= PLACED | own and own <= differs, sorted(differs - PLACED - own) or sorted(own - differs))
+    # one page, one set of names
+    names, ids = [], []
+    def walk(d):
+        names.append(d.get('widgetName')); ids.append(d.get('widgetId'))
+        for c in d.get('children', []) or []:
+            walk(c)
+    for folder, _, files in os.walk(LOGIN):
+        for f in files:
+            if f.endswith('.json'):
+                walk(read(os.path.join(folder, f)))
+    ok('no name is used twice on the login page', len(names) == len(set(names)), sorted(n for n in set(names) if names.count(n) > 1))
+    ok('no widget id is used twice on the login page', len(ids) == len(set(ids)), sorted(i for i in set(ids) if ids.count(i) > 1))
+    screen = read(os.path.join(LOGIN, 'BoScreen.json'))
+    card = read(os.path.join(LOGIN, 'con_login', 'con_login.json'))
+    ok('the width block sits under the login card, on a row of its own', screen['parentId'] == '0' and screen['topRow'] >= card['bottomRow'] and screen['bottomRow'] - screen['topRow'] == 1, [screen['topRow'], card['bottomRow']])
+    ok('all it can do is open the phone login', screen['onAction'] == "{{showModal('BoLoginPhoneModal')}}" and screen['events'] == ['onAction'], screen['onAction'])
+    return out
+
+
+def page(widget, model, script='', width=375, height=540):
+    """The block inside a frame of a phone's width - how Appsmith itself shows a block (Chrome's own window cannot be
+    made narrower than about 500 px). The frame's answer is copied out for --dump-dom."""
     doc = inner(widget, model, script)
     return ('<!doctype html><meta charset="utf-8"><body style="margin:0;background:#66686B">'
-            '<iframe id="f" style="display:block;width:375px;height:540px;border:0;background:#fff" srcdoc="' + html.escape(doc, quote=True) + '"></iframe>'
+            f'<iframe id="f" style="display:block;width:{width}px;height:{height}px;border:0;background:#fff" srcdoc="' + html.escape(doc, quote=True) + '"></iframe>'
             '<pre id="__out" style="display:none"></pre><script>setInterval(() => { try { const o = document.getElementById("f").contentDocument.getElementById("__out");'
             ' if (o && o.textContent) document.getElementById("__out").textContent = o.textContent; } catch (e) {} }, 50);</script></body>')
 
@@ -284,6 +430,23 @@ def inner(widget, model, script=''):
             + '</script><script>{\n' + script + '\n}</script></body>')
 
 
+def answer(tmp, name, doc, window='500,540'):
+    """Runs a page in headless Chrome and returns what it left in #__out (parsed), or None."""
+    path = os.path.join(tmp, name + '.html')
+    open(path, 'w', encoding='utf-8').write(doc)
+    dom = subprocess.run([CHROME, '--headless=new', '--disable-gpu', '--window-size=' + window, '--virtual-time-budget=12000', '--dump-dom', 'file://' + path],
+                         capture_output=True, text=True, timeout=120).stdout
+    m = re.search(r'<pre id="__out"[^>]*>(.*?)</pre>', dom, re.S)
+    return json.loads(html.unescape(m.group(1))) if m and m.group(1).strip() else None
+
+
+def shot(tmp, name, doc, to, window='500,540'):
+    path = os.path.join(tmp, name + '.html')
+    open(path, 'w', encoding='utf-8').write(doc)
+    subprocess.run([CHROME, '--headless=new', '--disable-gpu', '--hide-scrollbars', '--force-device-scale-factor=2', '--window-size=' + window, '--virtual-time-budget=3000',
+                    '--screenshot=' + to, 'file://' + path], capture_output=True, timeout=120)
+
+
 def report(title, results):
     bad = [r for r in results if not r['ok']]
     print(f'{title}: {len(results) - len(bad)} of {len(results)} checks pass')
@@ -294,39 +457,48 @@ def report(title, results):
 
 def main():
     widget = json.load(open(WIDGET, encoding='utf-8'))
+    head = json.load(open(os.path.join(LOGIN_DIR, 'BoLoginPhoneHead.json'), encoding='utf-8'))
+    screen = json.load(open(os.path.join(LOGIN, 'BoScreen.json'), encoding='utf-8'))
+    shots = sys.argv[sys.argv.index('--shots') + 1] if '--shots' in sys.argv else None
     failed = 0
+    none = [{'name': 'the page answered', 'ok': False, 'got': 'nothing'}]
     with tempfile.TemporaryDirectory() as tmp:
         if not CHROME:
-            print('the block: SKIPPED - no Chrome found'); failed += 1
+            print('the blocks: SKIPPED - no Chrome found'); failed += 1
         else:
-            path = os.path.join(tmp, 'steps.html')
-            open(path, 'w', encoding='utf-8').write(page(widget, MODEL, STEPS))
-            dom = subprocess.run([CHROME, '--headless=new', '--disable-gpu', '--window-size=500,540', '--virtual-time-budget=12000', '--dump-dom', 'file://' + path],
-                                 capture_output=True, text=True, timeout=120).stdout
-            m = re.search(r'<pre id="__out"[^>]*>(.*?)</pre>', dom, re.S)
-            results = json.loads(html.unescape(m.group(1))) if m and m.group(1).strip() else [{'name': 'the page answered', 'ok': False, 'got': dom[:300]}]
-            failed += report('the block at 375 px', results)
-            if '--shots' in sys.argv:
-                out = sys.argv[sys.argv.index('--shots') + 1]
-                os.makedirs(out, exist_ok=True)
+            # ---- the order form
+            failed += report('the order form at 375 px', answer(tmp, 'steps', page(widget, MODEL, STEPS)) or none)
+            # ---- the login's header, at the width it has on an ordinary phone and on the narrowest one
+            for width in (347, 292):
+                failed += report(f'the login header at {width} px', answer(tmp, f'head{width}', page(head, {'lang': 'bg'}, HEAD_STEPS, width, 112)) or none)
+            # ---- the login's width block: asks for the phone login on a phone, never on a computer
+            results = []
+            for width, want, window in ((375, 2, '500,300'), (699, 2, '800,300'), (700, 0, '800,300'), (1280, 0, '1400,300')):
+                got = answer(tmp, f'screen{width}', page(screen, {'lang': 'bg'}, SCREEN_STEPS, width, 10), window) or {}
+                results.append({'name': f'at {width} px it ' + ('asks for the phone login (when ready, and once more)' if want else 'asks for nothing') + ' and reports the width',
+                                'ok': got.get('asks') == want and got.get('w') == width, 'got': got})
+            failed += report('the login page\'s width block', results)
+            if shots:
+                os.makedirs(shots, exist_ok=True)
                 filled = dict(MODEL, open={'at': 1, 'values': {'name': 'Мария Петрова', 'phone': '0888 123 456', 'pickup': 'ул. Шипка 12, София', 'dropoff': 'бул. Витоша 15, София', 'zip': '1000',
                                                                 'service': 'rate-std', 'payer': 'all', 'declared': 'no', 'amount': '43,14'}},
                               items=[{'name': 'Орхидея в саксия', 'sku': '', 'quantity': 2, 'weight_kg': 3, 'length_cm': 24, 'width_cm': 24, 'height_cm': 70}],
                               fees='Сума за събиране: 49,39 €\nСтока (наложен платеж) 43,14 € · доставка 5,39 € · такса НП 0,86 €', dropoffLine='✓ Адресът е намерен')
                 for i in range(4):
-                    p = os.path.join(tmp, f'tab{i}.html')
-                    open(p, 'w', encoding='utf-8').write(page(widget, filled, f"window.appsmith._ready(); setTimeout(() => document.querySelector('[data-tab=\"{i}\"]').click(), 60);"))
-                    subprocess.run([CHROME, '--headless=new', '--disable-gpu', '--hide-scrollbars', '--force-device-scale-factor=2', '--window-size=500,540', '--virtual-time-budget=3000',
-                                    '--screenshot=' + os.path.join(out, f'tab{i}.png'), 'file://' + p], capture_output=True, timeout=120)
-                print('pictures saved in ' + out)
-        node = os.path.join(tmp, 'handler.js')
-        open(node, 'w', encoding='utf-8').write(NODE)
-        res = subprocess.run(['node', node, WIDGET], capture_output=True, text=True, timeout=120)
-        try:
-            failed += report('the handler', json.loads(res.stdout.strip().splitlines()[-1]))
-        except Exception:
-            print('the handler: did not run -> ' + (res.stderr or res.stdout)[:600]); failed += 1
-    print('PHONE FORM ' + ('OK' if not failed else f'FAILED ({failed})'))
+                    shot(tmp, f'tab{i}', page(widget, filled, f"window.appsmith._ready(); setTimeout(() => document.querySelector('[data-tab=\"{i}\"]').click(), 60);"), os.path.join(shots, f'tab{i}.png'))
+                for width in (347, 292):
+                    shot(tmp, f'headshot{width}', page(head, {'lang': 'bg'}, 'window.appsmith._ready();', width, 112), os.path.join(shots, f'login-head-{width}.png'), '500,112')
+                print('pictures saved in ' + shots)
+        failed += report('the login\'s files', login_static())
+        for name, code, arg in (('the order form\'s handler', NODE, WIDGET), ('the login\'s "Вход"', NODE_LOGIN, LOGIN_DIR)):
+            node = os.path.join(tmp, 'handler.js')
+            open(node, 'w', encoding='utf-8').write(code)
+            res = subprocess.run(['node', node, arg], capture_output=True, text=True, timeout=120)
+            try:
+                failed += report(name, json.loads(res.stdout.strip().splitlines()[-1]))
+            except Exception:
+                print(name + ': did not run -> ' + (res.stderr or res.stdout)[:600]); failed += 1
+    print('PHONE FORM + LOGIN ' + ('OK' if not failed else f'FAILED ({failed})'))
     return 1 if failed else 0
 
 

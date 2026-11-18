@@ -31,7 +31,13 @@ to go on if any differs: an order is never created from something other than wha
 What it reads back: the fees text is the computer form's own (Text32.text), the two address lines too
 (Text34 / Text34Copy), the product list is the same store key, and the options come from the same queries.
 
-  python3 tools/backoffice/bo-build-phone.py            # writes the four files into pages/
+THE LOGIN PAGE, the same way (added the same day - Ico's phone screenshot of it): a BoScreen on that page opens
+BoLoginPhoneModal on a narrow screen. In it the page's own fields, button and texts, copied from its widget
+files and only made wider (Appsmith's own inputs, so a phone still offers the saved password), under a small
+yellow header block (BoLoginPhoneHead). "Вход" fills the computer page's two fields and runs its own sign-in.
+The notes are beside the code, further down.
+
+  python3 tools/backoffice/bo-build-phone.py            # writes the files into pages/ (4 for the form, 9 for the login)
   python3 tools/backoffice/bo-build-phone.py --check    # writes nothing; fails if pages/ is not what it would write
 
 Test: tools/backoffice/phone-form-test.py (the block in headless Chrome at a phone's width).
@@ -528,26 +534,32 @@ def custom(name, key, top, bottom, html, css, js, model, on=None, parent=None):
     return dict(sorted(d.items()))
 
 
+def window(name, wid, canvas_name, canvas_id, height, key, canvas_key, escape=True, scroll=False):
+    """A window (MODAL_WIDGET) 440 px wide with one canvas. What is in it are files of their own beside it."""
+    return {
+        "animateLoading": True, "borderRadius": "0.375rem", "bottomRow": 60, "boxShadow": "none",
+        # Not closed by a tap beside it: on a phone that is a thumb on the edge, and what was typed so far would be gone from view.
+        "canEscapeKeyClose": escape, "canOutsideClickClose": False,
+        "children": [{
+            "borderRadius": "0.375rem", "bottomRow": height, "boxShadow": "none", "canExtend": True, "detachFromLayout": True,
+            "dynamicBindingPathList": [], "dynamicHeight": "AUTO_HEIGHT", "flexLayers": [], "isDisabled": False, "isLoading": False,
+            "isVisible": True, "key": canvas_key, "leftColumn": 0, "maxDynamicHeight": 9000, "minDynamicHeight": 4,
+            "minHeight": height, "minWidth": 450, "mobileBottomRow": height, "mobileLeftColumn": 0, "mobileRightColumn": 440,
+            "mobileTopRow": 0, "needsErrorInfo": False, "parentColumnSpace": 1, "parentId": wid, "parentRowSpace": 1,
+            "renderMode": "CANVAS", "responsiveBehavior": "fill", "rightColumn": 440, "shouldScrollContents": False,
+            "topRow": 0, "type": "CANVAS_WIDGET", "version": 1, "widgetId": canvas_id, "widgetName": canvas_name}],
+        # No "isVisible" here: on a MODAL_WIDGET it means "open when the page loads" (see BoAccountModal in bo-build.py).
+        "detachFromLayout": True, "dynamicBindingPathList": [], "dynamicHeight": "FIXED", "height": height, "isCanvas": True,
+        "isLoading": False, "key": key, "leftColumn": 0, "maxDynamicHeight": 9000,
+        "minDynamicHeight": 24, "minHeight": height, "mobileBottomRow": 60, "mobileLeftColumn": 0, "mobileRightColumn": 24,
+        "mobileTopRow": 0, "needsErrorInfo": False, "parentColumnSpace": 10.171875, "parentId": "0", "parentRowSpace": 10,
+        "renderMode": "CANVAS", "rightColumn": 24, "shouldScrollContents": scroll, "topRow": 0, "type": "MODAL_WIDGET",
+        "version": 2, "widgetId": wid, "widgetName": name, "width": 440}
+
+
 FILES = {}
-FILES[os.path.join(W, 'BoOrderPhoneModal', 'BoOrderPhoneModal.json')] = {
-    "animateLoading": True, "borderRadius": "0.375rem", "bottomRow": 60, "boxShadow": "none",
-    # Not closed by a tap beside it: on a phone that is a thumb on the edge, and the order typed so far would be gone from view.
-    "canEscapeKeyClose": True, "canOutsideClickClose": False,
-    "children": [{
-        "borderRadius": "0.375rem", "bottomRow": HEIGHT, "boxShadow": "none", "canExtend": True, "detachFromLayout": True,
-        "dynamicBindingPathList": [], "dynamicHeight": "AUTO_HEIGHT", "flexLayers": [], "isDisabled": False, "isLoading": False,
-        "isVisible": True, "key": "ordphcanvs", "leftColumn": 0, "maxDynamicHeight": 9000, "minDynamicHeight": 4,
-        "minHeight": HEIGHT, "minWidth": 450, "mobileBottomRow": HEIGHT, "mobileLeftColumn": 0, "mobileRightColumn": 440,
-        "mobileTopRow": 0, "needsErrorInfo": False, "parentColumnSpace": 1, "parentId": MODAL, "parentRowSpace": 1,
-        "renderMode": "CANVAS", "responsiveBehavior": "fill", "rightColumn": 440, "shouldScrollContents": False,
-        "topRow": 0, "type": "CANVAS_WIDGET", "version": 1, "widgetId": CANVAS, "widgetName": "BoOrderPhoneCanvas"}],
-    # No "isVisible" here: on a MODAL_WIDGET it means "open when the page loads" (see BoAccountModal in bo-build.py).
-    "detachFromLayout": True, "dynamicBindingPathList": [], "dynamicHeight": "FIXED", "height": HEIGHT, "isCanvas": True,
-    "isLoading": False, "key": "ordphmodal", "leftColumn": 0, "maxDynamicHeight": 9000,
-    "minDynamicHeight": 24, "minHeight": HEIGHT, "mobileBottomRow": 60, "mobileLeftColumn": 0, "mobileRightColumn": 24,
-    "mobileTopRow": 0, "needsErrorInfo": False, "parentColumnSpace": 10.171875, "parentId": "0", "parentRowSpace": 10,
-    "renderMode": "CANVAS", "rightColumn": 24, "shouldScrollContents": False, "topRow": 0, "type": "MODAL_WIDGET",
-    "version": 2, "widgetId": MODAL, "widgetName": "BoOrderPhoneModal", "width": 440}
+FILES[os.path.join(W, 'BoOrderPhoneModal', 'BoOrderPhoneModal.json')] = window(
+    'BoOrderPhoneModal', MODAL, 'BoOrderPhoneCanvas', CANVAS, HEIGHT, 'ordphmodal', 'ordphcanvs')
 FILES[os.path.join(W, 'BoOrderPhoneModal', 'BoOrderPhone.json')] = custom(
     'BoOrderPhone', 'ordph0ne1a', 0, (HEIGHT - 20) // 10, HTML, CSS, JS, MODEL, on=ON, parent=CANVAS)
 # One row, in the row the page leaves empty between the header (0-8) and the Табло (9-58).
@@ -591,6 +603,173 @@ if "showModal('BoOrderPhoneModal')" not in lm:
 FILES[LM] = lm
 
 
+# ================================================================ the LOGIN page on a phone
+# (Ico 2026-11-18, his phone's screenshot of the login: "yes add the login page".)
+#
+# The same squeeze, one page earlier: the yellow panel and the form sit side by side (27 + 37 of the 64
+# columns), so on a phone the two fields are about 120 px wide. The same answer: the page itself is not
+# changed. A phone gets a window of its own, opened by a BoScreen on this page as soon as it has loaded on a
+# narrow screen; if that block never answers, the page is what it was. The look is the one Maria picked on
+# 2026-10-24 (layout B: the yellow header on top, the form under it - TODO 78).
+#
+# THE TWO FIELDS ARE APPSMITH'S OWN INPUTS, NOT A BLOCK. A block (CUSTOM_WIDGET) is a sandboxed frame, and a
+# phone offers a saved password by the site's address - inside that frame there is none. That open question
+# is what kept LoginTest (bo-build-login2.py, the whole login as one block) waiting since October. So the
+# fields, the button and the texts are COPIES OF THE COMPUTER PAGE'S OWN WIDGETS, read from its files when
+# this script runs and only made wider, and "Вход" writes the two values into the computer page's fields and
+# runs that page's own sign-in (AuthManager.login; FleetbaseAuth reads EmailInput / PasswordInput). Nothing
+# about signing in is new, and a rule changed on the computer page reaches the phone by running this script.
+A = os.path.join(PAGES, 'Authentication', 'widgets')
+AUTH = os.path.join(A, 'con_login', 'tab_auth')
+LOGIN_MODAL = 'bologphmd1'
+LOGIN_CANVAS = 'bologphcv1'
+LOGIN_HEIGHT = 520      # the window, px: short enough for a small phone with the browser's bars showing
+MARK_SMALL = open(os.path.join(HERE, 'mark-small.b64')).read().strip()   # mark.b64 at 288 px: a third of the weight
+
+PANEL = load(os.path.join(A, 'con_login', 'BoLogin.json'))
+
+HEAD_HTML = ('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&display=swap">'
+             '<div class="head"><div class="top"><div class="brand"><i></i><b>Fulfilya</b><em>BackOffice</em></div>'
+             '<button class="lang" id="lang" type="button">EN</button></div><h1 id="h">Поръчките ви, на едно място.</h1></div>')
+
+HEAD_CSS = """:root{--ink:#1D1D1F;--accent-ink:#8A6500;--accent-soft:#FFF6D6;
+--display:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;--mark:url(data:image/png;base64,__MARK__)}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:transparent}
+body{font-family:var(--display);color:var(--ink);-webkit-font-smoothing:antialiased}
+.head{position:relative;overflow:hidden;height:100%;border-radius:12px;background:var(--accent-soft);padding:12px 14px;
+display:flex;flex-direction:column;justify-content:space-between;gap:8px}
+/* the same oversized mark the computer page's panel carries, off the bottom corner */
+.head::after{content:"";position:absolute;right:-14%;bottom:-62%;width:66%;aspect-ratio:1024/610;
+background:var(--mark) center/contain no-repeat;opacity:.09;pointer-events:none}
+.head>*{position:relative;z-index:1}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.brand{display:flex;align-items:center;gap:8px;min-width:0}
+.brand i{width:32px;aspect-ratio:1024/610;background:var(--mark) center/contain no-repeat;flex:none}
+.brand b{font-weight:800;font-size:22px;letter-spacing:-.025em}
+.brand em{font-style:normal;font-weight:700;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;
+color:var(--accent-ink);background:#fff;border-radius:6px;padding:4px 7px}
+.lang{border:1px solid rgba(138,101,0,.25);background:#fff;color:var(--accent-ink);border-radius:999px;padding:7px 12px;
+font-family:var(--display);font-weight:700;font-size:11px;letter-spacing:.06em;cursor:pointer;flex:none}
+h1{margin:0;font-weight:800;font-size:18px;line-height:1.15;letter-spacing:-.02em;text-wrap:balance}
+""".replace('__MARK__', MARK_SMALL)
+
+HEAD_JS = r"""
+// The header of the phone login: the lockup, the headline and BG|EN - what the yellow panel of the
+// computer page carries, without the rest. The language is kept by the page, as there.
+const HEADLINE = { bg: 'Поръчките ви, на едно място.', en: 'Your orders, all in one place.' };
+function face() {
+  const en = ((appsmith.model || {}).lang) === 'en';
+  const b = document.getElementById('lang');
+  // the control offers the OTHER language
+  b.textContent = en ? 'BG' : 'EN';
+  b.dataset.lang = en ? 'bg' : 'en';
+  b.title = en ? 'Switch to Bulgarian' : 'Switch to English';
+  document.getElementById('h').textContent = en ? HEADLINE.en : HEADLINE.bg;
+}
+appsmith.onReady(() => {
+  face();
+  appsmith.onModelChange(face);
+  document.getElementById('lang').addEventListener('click', (e) => {
+    appsmith.updateModel({ action: 'lang', lang: e.currentTarget.dataset.lang });
+    appsmith.triggerEvent('onAction');
+  });
+});
+"""
+
+# BG|EN is stored exactly as the computer page's panel stores it: its own handler, pointed at this block.
+assert PANEL['onAction'].count('BoLogin.model') == 1, 'BoLogin.onAction no longer reads its model once'
+HEAD_ON = PANEL['onAction'].replace('BoLogin.model', 'BoLoginPhoneHead.model')
+
+LOGIN_SCREEN_JS = r"""
+// Nothing to see here: this block tells the page how wide it is and, on a narrow screen, asks it to open
+// the login drawn for a phone (BoLoginPhoneModal). Asked once the page is ready and once more a moment later
+// (opening a window that is open does nothing). If this block never answers, the page stays as it is.
+let asked = 0;
+function tell() {
+  const w = Math.round(window.innerWidth || document.documentElement.clientWidth || 0);
+  if (w > 0 && (appsmith.model || {}).w !== w) { appsmith.updateModel({ w: w }); }
+  if (w > 0 && w < __NARROW__ && asked < 3) { asked += 1; appsmith.triggerEvent('onAction'); }
+}
+appsmith.onReady(() => { tell(); setTimeout(tell, 1200); });
+window.addEventListener('resize', tell);
+""".replace('__NARROW__', str(NARROW))
+
+# "Вход": the computer page's own button, after its two fields are filled from the phone's.
+BUTTON = load(os.path.join(AUTH, 'btn_signIn.json'))
+SIGN_IN_OWN = inner(BUTTON['onClick'])
+assert re.fullmatch(r'[A-Za-z_][\w.]*\(\)', SIGN_IN_OWN), 'the computer login button no longer runs one call: ' + SIGN_IN_OWN
+SIGN_IN = """{{(async () => {
+  const email = PhoneEmailInput.text || '';
+  const password = PhonePasswordInput.text || '';
+  if (!email || !password) { return; }
+  // The sign-in below is the computer page's own, and it reads that page's two fields. They are filled first
+  // and compared with what was typed here: nobody is signed in with something other than what is on the screen.
+  await Promise.all([EmailInput.setValue(email), PasswordInput.setValue(password)]);
+  if ((EmailInput.text || '') !== email || (PasswordInput.text || '') !== password) {
+    await storeValue('loginError', appsmith.store.bo_lang === 'en'
+      ? 'The form could not pass on what you typed. Please press the button again.'
+      : 'Формата не успя да предаде въведеното. Моля, натиснете бутона отново.');
+    return;
+  }
+  return %s;
+})()}}""" % SIGN_IN_OWN
+
+
+def phone_copy(source, name, wid, top, bottom, left=3, right=61, **changes):
+    """One of the computer login's own widgets, as it is in its file today, placed in the phone window."""
+    d = load(os.path.join(AUTH, source + '.json'))
+    for k in ('mobileTopRow', 'mobileBottomRow', 'mobileLeftColumn', 'mobileRightColumn'):
+        d.pop(k, None)
+    d.update({'widgetName': name, 'widgetId': wid, 'parentId': LOGIN_CANVAS, 'leftColumn': left, 'rightColumn': right,
+              'topRow': top, 'bottomRow': bottom, 'originalTopRow': top, 'originalBottomRow': bottom,
+              'parentColumnSpace': 6.875, 'parentRowSpace': 10})
+    d.update(changes)
+    return dict(sorted(d.items()))
+
+
+def paths(d, key, *names):
+    """The widget's list of bound / triggered properties, with these in it."""
+    have = [x['key'] for x in d.get(key, [])]
+    return [{'key': k} for k in have + [n for n in names if n not in have]]
+
+
+WELCOME = load(os.path.join(AUTH, 'txt_welcome.json'))
+ERROR = load(os.path.join(AUTH, 'ErrorMessage.json'))
+PASSWORD = load(os.path.join(AUTH, 'PasswordInput.json'))
+# One line under "Вход": the page's welcome, or - in the error's own colour - what went wrong. The computer page
+# keeps a second, hidden line for the error; on a phone that is 40 px of empty window above the fields.
+assert ERROR['text'] == "{{appsmith.store.loginError || ''}}", 'the computer login shows its error from somewhere else now'
+assert len(re.findall(r'\bEmailInput\b', BUTTON['isDisabled'])) == 1 and len(re.findall(r'\bPasswordInput\b', BUTTON['isDisabled'])) == 1
+
+LOGIN_DIR = os.path.join(A, 'BoLoginPhoneModal')
+FILES[os.path.join(LOGIN_DIR, 'BoLoginPhoneModal.json')] = window(
+    # No way out of it but signing in: no Esc, no tap beside it. It scrolls if a phone is shorter than it.
+    'BoLoginPhoneModal', LOGIN_MODAL, 'BoLoginPhoneCanvas', LOGIN_CANVAS, LOGIN_HEIGHT, 'logphmodal', 'logphcanvs', escape=False, scroll=True)
+FILES[os.path.join(LOGIN_DIR, 'BoLoginPhoneHead.json')] = custom(
+    'BoLoginPhoneHead', 'logphhead1', 0, 12, HEAD_HTML, HEAD_CSS, HEAD_JS, PANEL['defaultModel'], on=HEAD_ON, parent=LOGIN_CANVAS)
+FILES[os.path.join(LOGIN_DIR, 'PhoneSignInTitle.json')] = phone_copy('txt_signIn', 'PhoneSignInTitle', 'bologphtt1', 13, 18)
+FILES[os.path.join(LOGIN_DIR, 'PhoneWelcome.json')] = phone_copy(
+    'txt_welcome', 'PhoneWelcome', 'bologphwl1', 18, 23,
+    text="{{appsmith.store.loginError || (%s)}}" % inner(WELCOME['text']),
+    textColor="{{appsmith.store.loginError ? '%s' : '%s'}}" % (ERROR['textColor'], WELCOME['textColor']),
+    dynamicBindingPathList=paths(WELCOME, 'dynamicBindingPathList', 'textColor'),
+    dynamicPropertyPathList=paths(WELCOME, 'dynamicPropertyPathList', 'textColor'))
+FILES[os.path.join(LOGIN_DIR, 'PhoneEmailInput.json')] = phone_copy('EmailInput', 'PhoneEmailInput', 'bologphem1', 23, 30)
+FILES[os.path.join(LOGIN_DIR, 'PhonePasswordInput.json')] = phone_copy(
+    # "Go" on the phone's keyboard signs in: the keyboard covers the button. The field keeps what was typed.
+    'PasswordInput', 'PhonePasswordInput', 'bologphpw1', 30, 37, onSubmit=SIGN_IN, resetOnSubmit=False,
+    dynamicTriggerPathList=paths(PASSWORD, 'dynamicTriggerPathList', 'onSubmit'))
+FILES[os.path.join(LOGIN_DIR, 'PhoneSignInButton.json')] = phone_copy(
+    'btn_signIn', 'PhoneSignInButton', 'bologphbt1', 38, 44, onClick=SIGN_IN,
+    isDisabled=re.sub(r'\bPasswordInput\b', 'PhonePasswordInput', re.sub(r'\bEmailInput\b', 'PhoneEmailInput', BUTTON['isDisabled'])))
+FILES[os.path.join(LOGIN_DIR, 'PhoneHelp.json')] = phone_copy('txt_help', 'PhoneHelp', 'bologphhp1', 45, 50)
+# One row under the login card (rows 0-64), where the page has nothing.
+FILES[os.path.join(A, 'BoScreen.json')] = custom(
+    'BoScreen', 'lgscrnw1d2', 64, 65, '<div></div>', 'html,body{margin:0;background:transparent;overflow:hidden}', LOGIN_SCREEN_JS,
+    PANEL['defaultModel'], on="{{showModal('BoLoginPhoneModal')}}")
+
+
 def text_of(content):
     return content if isinstance(content, str) else json.dumps(content, ensure_ascii=False, indent=2) + '\n'
 
@@ -617,3 +796,4 @@ if __name__ == '__main__':
         print('The phone form in pages/ is not what this script builds from the computer form today - run it without --check.')
         sys.exit(1)
     print('phone form: the handler is %d characters, built from the computer form\'s own nine handlers' % len(ON))
+    print('phone login: the computer page\'s own seven widgets, wider; "Вход" runs ' + SIGN_IN_OWN)

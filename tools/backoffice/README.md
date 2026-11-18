@@ -44,6 +44,12 @@ over `pages/`, commit, and Ico pulls in the Appsmith editor (Discard & pull) and
   computer form? Run this script again** (`--check` fails when pages/ is stale) - never edit BoOrderPhone.json by hand.
   It writes straight into `pages/` (four files) and imports nothing from the other generators. Test:
   `python3 tools/backoffice/phone-form-test.py` (the block in headless Chrome inside a 375 px frame + the handler in Node).
+  **The same script builds the LOGIN for a phone** (Ico, the same day): a BoScreen on the Authentication page opens
+  BoLoginPhoneModal under 700 px. Its fields, button and texts are copies of the computer page's own widgets, read
+  from their files and only placed wider - Appsmith's own inputs, NOT a block, so a phone still offers the saved
+  password (the open question that kept LoginTest / `bo-build-login2.py` waiting). "Вход" fills the computer page's
+  two fields and runs its own `AuthManager.login`. The yellow header is the one block (BoLoginPhoneHead, with
+  `mark-small.b64` = `mark.b64` at 288 px). The computer login page is not changed: nine new files, none edited.
 
 `bo_i18n.py` is shared: every widget embeds the whole dictionary, so adding one phrase rewrites
 **every** widget JSON. That is expected — rerun all the generators together, never one alone.
