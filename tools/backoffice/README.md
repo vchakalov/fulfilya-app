@@ -49,7 +49,9 @@ over `pages/`, commit, and Ico pulls in the Appsmith editor (Discard & pull) and
   from their files and only placed wider - Appsmith's own inputs, NOT a block, so a phone still offers the saved
   password (the open question that kept LoginTest / `bo-build-login2.py` waiting). "Вход" fills the computer page's
   two fields and runs its own `AuthManager.login`. The yellow header is the one block (BoLoginPhoneHead, with
-  `mark-small.b64` = `mark.b64` at 288 px). The computer login page is not changed: nine new files, none edited.
+  `mark-small.b64` = `mark.b64` at 288 px). Nine new files, and ONE property of the computer page: its card
+  (`con_login.isVisible`) is not shown behind an OPEN phone window on a narrow screen - otherwise the squeezed page
+  shows through around the window. The rule fails open (no window, no width, 700 px or more: shown as always).
 
 `bo_i18n.py` is shared: every widget embeds the whole dictionary, so adding one phrase rewrites
 **every** widget JSON. That is expected — rerun all the generators together, never one alone.

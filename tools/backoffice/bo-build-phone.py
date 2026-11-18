@@ -35,9 +35,10 @@ THE LOGIN PAGE, the same way (added the same day - Ico's phone screenshot of it)
 BoLoginPhoneModal on a narrow screen. In it the page's own fields, button and texts, copied from its widget
 files and only made wider (Appsmith's own inputs, so a phone still offers the saved password), under a small
 yellow header block (BoLoginPhoneHead). "Вход" fills the computer page's two fields and runs its own sign-in.
-The notes are beside the code, further down.
+On a narrow screen the computer page's card is not shown behind it (one property, con_login.isVisible, that
+fails open); on a computer nothing differs. The notes are beside the code, further down.
 
-  python3 tools/backoffice/bo-build-phone.py            # writes the files into pages/ (4 for the form, 9 for the login)
+  python3 tools/backoffice/bo-build-phone.py            # writes the files into pages/ (4 for the form, 10 for the login)
   python3 tools/backoffice/bo-build-phone.py --check    # writes nothing; fails if pages/ is not what it would write
 
 Test: tools/backoffice/phone-form-test.py (the block in headless Chrome at a phone's width).
@@ -609,7 +610,8 @@ FILES[LM] = lm
 # The same squeeze, one page earlier: the yellow panel and the form sit side by side (27 + 37 of the 64
 # columns), so on a phone the two fields are about 120 px wide. The same answer: the page itself is not
 # changed. A phone gets a window of its own, opened by a BoScreen on this page as soon as it has loaded on a
-# narrow screen; if that block never answers, the page is what it was. The look is the one Maria picked on
+# narrow screen; if that block never answers, the page is what it was. (One property of the page does
+# change - its card is not shown on a narrow screen; see CARD_SHOWN below.) The look is the one Maria picked on
 # 2026-10-24 (layout B: the yellow header on top, the form under it - TODO 78).
 #
 # THE TWO FIELDS ARE APPSMITH'S OWN INPUTS, NOT A BLOCK. A block (CUSTOM_WIDGET) is a sandboxed frame, and a
@@ -652,6 +654,9 @@ color:var(--accent-ink);background:#fff;border-radius:6px;padding:4px 7px}
 .lang{border:1px solid rgba(138,101,0,.25);background:#fff;color:var(--accent-ink);border-radius:999px;padding:7px 12px;
 font-family:var(--display);font-weight:700;font-size:11px;letter-spacing:.06em;cursor:pointer;flex:none}
 h1{margin:0;font-weight:800;font-size:18px;line-height:1.15;letter-spacing:-.02em;text-wrap:balance}
+/* The block is 339 px wide on a 390 px phone and 260 px on a 320 px one (measured on the branch). Under 290 px
+   the lockup, its "BackOffice" tag and the pill do not fit side by side: the tag goes, the name and the pill stay. */
+@media (max-width:289px){.brand em{display:none}}
 """.replace('__MARK__', MARK_SMALL)
 
 HEAD_JS = r"""
@@ -764,6 +769,26 @@ FILES[os.path.join(LOGIN_DIR, 'PhoneSignInButton.json')] = phone_copy(
     'btn_signIn', 'PhoneSignInButton', 'bologphbt1', 38, 44, onClick=SIGN_IN,
     isDisabled=re.sub(r'\bPasswordInput\b', 'PhonePasswordInput', re.sub(r'\bEmailInput\b', 'PhoneEmailInput', BUTTON['isDisabled'])))
 FILES[os.path.join(LOGIN_DIR, 'PhoneHelp.json')] = phone_copy('txt_help', 'PhoneHelp', 'bologphhp1', 45, 50)
+# THE ONE CHANGE TO THE COMPUTER PAGE: its card (con_login - the yellow panel and the form) is not shown on a
+# narrow screen. Seen on the branch: the phone window opens over the squeezed page, and that page shows through
+# around it, dimmed - it reads as a fault. Hidden, there is an empty page behind the window, and the page has one
+# email and one password field, not two (a phone fills a saved login into the fields it finds). The fields still
+# exist for "Вход" to fill, like the fields of a closed window. The rule FAILS OPEN, twice over: the card is
+# hidden only while the phone window IS OPEN (a MODAL_WIDGET's isVisible is "open") AND the screen is narrow. So
+# a phone whose window did not open keeps the page it has today, never an empty one; a computer keeps its page
+# whatever the window's state; and with no BoScreen or no window on the page at all (the try) it is shown.
+CARD_PATH = os.path.join(A, 'con_login', 'con_login.json')
+CARD_SHOWN = ("{{(() => { try { const w = Number((BoScreen.model || {}).w) || 0; "
+              "return !(BoLoginPhoneModal.isVisible === true && w > 0 && w < %d); } "
+              "catch (e) { return true; } })()}}" % NARROW)
+card = load(CARD_PATH)
+if card.get('isVisible') != CARD_SHOWN:
+    assert card.get('isVisible') is True or 'BoScreen.model' in str(card.get('isVisible')), 'con_login.isVisible is not this script\'s: ' + str(card.get('isVisible'))
+    card['isVisible'] = CARD_SHOWN
+    card['dynamicBindingPathList'] = paths(card, 'dynamicBindingPathList', 'isVisible')
+    card['dynamicPropertyPathList'] = paths(card, 'dynamicPropertyPathList', 'isVisible')
+# as Appsmith writes this file: keys in order, no newline at the end
+FILES[CARD_PATH] = json.dumps(dict(sorted(card.items())), ensure_ascii=False, indent=2)
 # One row under the login card (rows 0-64), where the page has nothing.
 FILES[os.path.join(A, 'BoScreen.json')] = custom(
     'BoScreen', 'lgscrnw1d2', 64, 65, '<div></div>', 'html,body{margin:0;background:transparent;overflow:hidden}', LOGIN_SCREEN_JS,

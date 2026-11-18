@@ -359,6 +359,16 @@ const out = []; const ok = (name, cond, got) => out.push({ name, ok: !!cond, got
   ok('... in English too', line({ bo_lang: 'en' })[0] === 'Enter your details to reach your BackOffice.', line({ bo_lang: 'en' }));
   ok('... and shows what went wrong, in the error\'s red', JSON.stringify(line({ bo_lang: 'bg', loginError: 'Invalid credentials' })) === JSON.stringify(['Invalid credentials', '#B42318']), line({ bo_lang: 'bg', loginError: 'Invalid credentials' }));
   ok('both are marked as bound', welcome.dynamicBindingPathList.some((x) => x.key === 'text') && welcome.dynamicBindingPathList.some((x) => x.key === 'textColor'), welcome.dynamicBindingPathList);
+  // the computer page's card: shown always, except on a narrow screen - and shown if the width block is not there at all
+  const card = JSON.parse(fs.readFileSync(dir + '/../con_login/con_login.json', 'utf8'));
+  const shown = (scope) => new Function(...Object.keys(scope), 'return (' + inner(card.isVisible) + ')')(...Object.values(scope));
+  const at = (w, open) => shown({ BoScreen: { model: { w } }, BoLoginPhoneModal: { isVisible: open } });
+  ok('the computer login is shown from 700 px up, whatever the phone window does', [700, 1024, 1633].every((w) => at(w, true) === true && at(w, false) === true && at(w, undefined) === true), [at(700, true), at(1633, true)]);
+  ok('... and on a phone whose window did not open: the page it has today, never an empty one', at(375, false) === true && at(375, undefined) === true && at(320, 'true') === true, [at(375, false), at(375, undefined)]);
+  ok('... and before the width is known', shown({ BoScreen: {}, BoLoginPhoneModal: { isVisible: true } }) === true && at(0, true) === true && at('x', true) === true, [at(0, true)]);
+  ok('... and with no width block or no phone window on the page at all', shown({ BoLoginPhoneModal: { isVisible: true } }) === true && shown({ BoScreen: { model: { w: 375 } } }) === true && shown({}) === true, [shown({})]);
+  ok('it is hidden only behind an OPEN phone window on a narrow screen', at(699, true) === false && at(375, true) === false && at(320, true) === false, [at(699, true), at(375, true)]);
+  ok('that rule is marked as bound, beside the two the card had', JSON.stringify(card.dynamicBindingPathList.map((x) => x.key)) === JSON.stringify(['borderRadius', 'boxShadow', 'isVisible']), card.dynamicBindingPathList);
   console.log(JSON.stringify(out));
 })().catch((e) => { console.log(JSON.stringify([{ name: 'the login handler test itself ran', ok: false, got: String(e && e.stack || e) }])); });
 """
@@ -468,8 +478,9 @@ def main():
         else:
             # ---- the order form
             failed += report('the order form at 375 px', answer(tmp, 'steps', page(widget, MODEL, STEPS)) or none)
-            # ---- the login's header, at the width it has on an ordinary phone and on the narrowest one
-            for width in (347, 292):
+            # ---- the login's header at the widths it really has (measured on the branch): 339 px on a 390 px phone,
+            #      309 px on a 360 px one, 260 px on a 320 px one
+            for width in (339, 309, 260):
                 failed += report(f'the login header at {width} px', answer(tmp, f'head{width}', page(head, {'lang': 'bg'}, HEAD_STEPS, width, 112)) or none)
             # ---- the login's width block: asks for the phone login on a phone, never on a computer
             results = []
@@ -486,7 +497,7 @@ def main():
                               fees='Сума за събиране: 49,39 €\nСтока (наложен платеж) 43,14 € · доставка 5,39 € · такса НП 0,86 €', dropoffLine='✓ Адресът е намерен')
                 for i in range(4):
                     shot(tmp, f'tab{i}', page(widget, filled, f"window.appsmith._ready(); setTimeout(() => document.querySelector('[data-tab=\"{i}\"]').click(), 60);"), os.path.join(shots, f'tab{i}.png'))
-                for width in (347, 292):
+                for width in (339, 309, 260):
                     shot(tmp, f'headshot{width}', page(head, {'lang': 'bg'}, 'window.appsmith._ready();', width, 112), os.path.join(shots, f'login-head-{width}.png'), '500,112')
                 print('pictures saved in ' + shots)
         failed += report('the login\'s files', login_static())

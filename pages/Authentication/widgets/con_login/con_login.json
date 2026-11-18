@@ -44,16 +44,24 @@
     },
     {
       "key": "boxShadow"
+    },
+    {
+      "key": "isVisible"
     }
   ],
   "dynamicHeight": "FIXED",
+  "dynamicPropertyPathList": [
+    {
+      "key": "isVisible"
+    }
+  ],
   "dynamicTriggerPathList": [],
   "hideCard": false,
   "iconSVG": "/static/media/icon.1977dca3370505e2db3a8e44cfd54907.svg",
   "isCanvas": true,
   "isDeprecated": false,
   "isLoading": false,
-  "isVisible": true,
+  "isVisible": "{{(() => { try { const w = Number((BoScreen.model || {}).w) || 0; return !(BoLoginPhoneModal.isVisible === true && w > 0 && w < 700); } catch (e) { return true; } })()}}",
   "key": "wa7a1coj08",
   "leftColumn": 0,
   "maxDynamicHeight": 9000,
